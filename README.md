@@ -1,10 +1,18 @@
 # SPURJAGD
 
+> **Verbindliche Projektentscheidungen für alle Entwicklungsagenten:** [AGENTS.md](./AGENTS.md) lesen. Zielgruppe ausschließlich Kinder und Jugendliche. Voll spielbare kostenlose Grundversion ohne Werbung. Optionale spätere Kinder-Themenpakete (Piraten, Detektive/Gangster etc.).
+
+
 Mehrsprachiger Generator für Schnitzeljagden, Rätseltouren und Gruppenabenteuer.
 
-## Projektstand: Prototyp 0.4
+## Projektstand: Entwicklungszweig 0.5 (noch nicht als Release verifiziert)
 
 Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Oberfläche ist auf Deutsch und Englisch vorbereitet.
+
+### Im Repository vorhanden
+- Deterministischer Rätsel-Prototyp in `src/puzzles.ts`: rückwärts erzeugte Aufgaben aus 3-stelligen Codes (Mathematik, Symbolzählung, Caesar-Verschlüsselung).
+- Algorithmische Selbstprüfung, inklusive Tests für 000 bis 999 in `tests/puzzles.test.mjs`.
+- Noch **keine Integration** dieser Rätsel in UI, Projektformat oder A4-Spielpakete; Qualitäts- und Build-Prüfungen stehen aus.
 
 ### Bereits umgesetzt
 - Vierstufiger Assistent für Teilnehmer, Standorte, Zeitansätze und Spielplan
