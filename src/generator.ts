@@ -1,4 +1,7 @@
 export type GameGoal = 'locks' | 'word' | 'cards';
+export type StartMode = 'shared' | 'distributed';
+export type RouteMode = 'same' | 'varied';
+export type FinishMode = 'meeting' | 'start';
 export type Location = { id: string; name: string; description: string };
 export interface GameConfig {
   players: number;
@@ -10,11 +13,16 @@ export interface GameConfig {
   puzzleMinutes: number;
   walkingMinutes: number;
   startFinishMinutes: number;
+  startMode?: StartMode;
+  routeMode?: RouteMode;
+  finishMode?: FinishMode;
+  meetingPoint?: string;
 }
 export interface TeamPlan {
   name: string;
   memberCount: number;
   stations: Location[];
+  finish: string;
 }
 export interface GamePlan {
   teams: TeamPlan[];
@@ -29,6 +37,11 @@ function checkInt(value: number, min: number, max: number, description: string) 
 }
 export function createPlan(config: GameConfig): GamePlan {
   const { players, groupSize, durationMinutes, locations, puzzleMinutes, walkingMinutes, startFinishMinutes } = config;
+  const startMode = config.startMode ?? 'distributed';
+  const routeMode = config.routeMode ?? 'same';
+  const finishMode = config.finishMode ?? 'meeting';
+  const meetingPoint = config.meetingPoint?.trim() || 'Treffpunkt';
+  if (!['shared','distributed'].includes(startMode) || !['same','varied'].includes(routeMode) || !['meeting','start'].includes(finishMode)) throw new Error('Ungültige Routenoption');
   checkInt(players, 1, 100, 'Teilnehmerzahl');
   checkInt(groupSize, 1, 10, 'Gruppengröße');
   checkInt(durationMinutes, 15, 480, 'Spieldauer');
@@ -52,13 +65,25 @@ export function createPlan(config: GameConfig): GamePlan {
     else break;
   }
   if (stopsPerTeam === 0) throw new Error('Die Zeit reicht nicht für eine Station. Dauer erhöhen oder Zeitansätze reduzieren.');
-  const teams = Array.from({ length: teamCount }, (_, i) => ({
-    name: COLORS[i] ?? 'Team ' + (i + 1),
-    memberCount: base + (i < extra ? 1 : 0),
-    stations: Array.from({ length: stopsPerTeam }, (_, j) => places[(i + j) % places.length]),
-  }));
+  const teams = Array.from({ length: teamCount }, (_, i) => {
+    const startIndex = startMode === 'distributed' ? i % places.length : 0;
+    // Same route = same clockwise order, starting at the chosen station.
+    // Varied route = alternate travel direction; routes are not distance-optimized.
+    const direction = routeMode === 'varied' && i % 2 === 1 ? -1 : 1;
+    const stations = Array.from({ length: stopsPerTeam }, (_, j) =>
+      places[(startIndex + direction * j + places.length * j) % places.length]);
+    return {
+      name: COLORS[i] ?? 'Team ' + (i + 1),
+      memberCount: base + (i < extra ? 1 : 0),
+      stations,
+      finish: finishMode === 'start' ? stations[0].name : meetingPoint,
+    };
+  });
   const cautions: string[] = [];
-  if (teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
+  if (startMode === 'distributed' && teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
+  if (startMode === 'shared') cautions.push('Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.');
+  if (routeMode === 'varied' && places.length < 3) cautions.push('Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.');
+  if (finishMode === 'start') cautions.push('Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.');
   if (stopsPerTeam < places.length) cautions.push('Zeitbudget: Nicht alle Standorte werden pro Team besucht.');
   cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.');
   return {
