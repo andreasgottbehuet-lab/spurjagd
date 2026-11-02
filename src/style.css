@@ -32,3 +32,10 @@
 @media(max-width:780px){.wizard{padding:25px 5% 40px}.steps{grid-template-columns:repeat(2,1fr)}.step-button{font-size:12px;padding:12px 7px}.wizard-panel{padding:22px}.stats .stat{padding:11px}.stats .stat strong{font-size:26px}}
 @media(max-width:400px){.stats{gap:5px}.stats .stat span{font-size:11px}}
 @media print{.hero,.site-header,.steps,.wizard-actions,.secondary,.text-button,.print,footer{display:none!important}.wizard{padding:0;max-width:none}.wizard-panel{border:0;box-shadow:none;padding:0}.location-card{break-inside:avoid}.team{break-inside:avoid}.warnings{background:none}.result-panel{border:0}}
+
+/* Route setup */
+.route-options{margin-top:24px;padding:19px;border:1px solid #d9e5dc;background:#f7faf6;border-radius:13px}
+.route-options h3{margin:0 0 14px;font-size:17px}
+.route-options .form-grid{margin:0 0 14px}
+.route-options .helper{margin:8px 0 0}
+@media(max-width:520px){.route-options{padding:14px}.route-options .form-grid{grid-template-columns:1fr}}
