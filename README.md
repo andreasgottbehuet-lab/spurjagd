@@ -2,51 +2,53 @@
 
 Mehrsprachiger Generator für Schnitzeljagden, Rätseltouren und Gruppenabenteuer.
 
-## Projektstatus
-**Planungsprototyp 0.1** – noch kein vollständiger Rätsel- oder PDF-Generator.
+## Projektstand: Prototyp 0.2
 
-- Responsive Oberfläche auf Deutsch und Englisch (erste Übersetzung).
-- Teilnehmerzahl, Gruppengröße, Altersgruppe, Dauer, Orte und Spielziel konfigurierbar.
-- Automatische ausgeglichene Teamverteilung und versetzte Reihenfolge der Standorte.
-- Browser-Druckansicht für den vorläufigen Plan.
-- Keine Anmeldung, Datenbank oder serverseitige Speicherung der Eingaben.
-- Vorkonfiguration für Cloudflare Workers Static Assets.
+Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Oberfläche ist auf Deutsch und Englisch vorbereitet.
 
-### Einschränkungen
-- Standortzeit (15 Minuten) ist nur eine Planungsannahme, keine geprüfte Wegzeit.
-- Derzeit keine automatische Berechnung realer Wege, Aufsicht oder Verkehrssicherheit.
-- Noch keine Rätsel, Schloss-Codes, finale Lösungswörter oder vollständigen PDFs.
-- Vorsicht: Druckansicht ist ein Plan, kein fertig einsetzbares Schatzsuche-Paket.
+### Bereits umgesetzt
+- Vierstufiger Assistent für Teilnehmer, Standorte, Zeitansätze und Spielplan
+- Teilnehmerzahl und Gruppengröße mit möglichst gleichmäßiger Teamverteilung
+- Standortnamen und individuelle Standortbeschreibungen; Stationen hinzufügen und entfernen
+- Zeitberechnung anhand der **vom Nutzer festgelegten** durchschnittlichen Rätsel- und Gehzeit sowie Zeit für Start/Finale
+- Automatische Begrenzung der Stationen je Team auf das verfügbare Zeitbudget
+- Versetzte Reihenfolge und Startorte; Warnhinweis, wenn Teams sich Startorte teilen
+- Vorläufige Druckansicht des Spielplans
+- Tests der Berechnungs- und Validierungslogik
+- Kein Login, keine Datenbank, keine serverseitige Speicherung der Eingaben
 
-## Lokal starten
-Node.js LTS installieren, dann:
+### Grenzen dieser Version
+- Die Gehzeit gilt pauschal **pro Wegabschnitt**, nicht als Entfernungs- oder Routingberechnung. Start- und Rückweg werden mitgezählt.
+- Die Stationen werden zyklisch verteilt. Eine optimale Reihenfolge im Straßennetz oder Vermeidung gleichzeitig belegter Standorte ist **nicht** berechnet.
+- Standortbeschreibungen führen noch nicht automatisch zu Rätseln.
+- Spielziele sind Auswahloptionen; Codes, Lösungswörter, Rätselbibliothek und vollständige PDF-Pakete fehlen noch.
+- Zeitansätze sind keine Sicherheitsprüfung; Zugänge, Querungen, Aufsicht und Wetter müssen Erwachsene prüfen.
+- Vorschau ist noch nicht für den öffentlichen Regelbetrieb geeignet; Impressum und Datenschutz stehen aus.
+
+## Lokal ausführen
+Node.js 22 oder höher installieren:
 
 ```bash
 npm install
+npm test
+npm run build
 npm run dev
 ```
 
-Build prüfen:
-
-```bash
-npm run build
-npm test
-```
-
 ## Cloudflare Workers
-Für das vorhandene GitHub-Repository folgende Einstellungen verwenden:
+Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
 - Build-Befehl: `npm run build`
-- Deploy-Befehl: `npx wrangler deploy`
+- Bereitstellungsbefehl: `npx wrangler deploy`
 - Projektname: `spurjagd`
 
-Die Datei `wrangler.jsonc` weist Cloudflare an, die statischen Assets aus `dist` auszuliefern. Die Domain `spurjagd.de` wird erst nach Aktivierung bei netcup angebunden.
+`wrangler.jsonc` stellt die statischen Assets aus `dist` bereit. Domain `spurjagd.de` wird nach Aktivierung bei netcup über Cloudflare-DNS angebunden.
 
-## Nächste Entwicklung
-1. Konsistente Rätselbibliothek mit altersgerechten Erklärungen und Lösungen.
-2. Vollständige Stationscodes, Wort- und Bilderrätsel mit automatischen Prüfungen.
-3. Druckfertige Teambriefe, Einzelseiten, Aufbau- und Lösungsblätter.
-4. Standortbeschreibungen und realistische Routenplanung.
-5. Freigabeprozess, Impressum, Datenschutz, optionaler Support-Link.
+## Geplant für Version 0.3
+1. Standorttyp (Feuerwehr, Spielplatz, Sportplatz, Wiese, frei).
+2. Geprüfte Rätselbibliothek mit altersabhängigen Hilfen.
+3. Pro Station vollständiger Schloss-Code oder Wort-/Bildbaustein.
+4. Eindeutige Lösungsprüfung, Hilfekarten, Spielleiterunterlagen.
+5. PDF-Erstellung direkt im Browser, ohne fortlaufende Serverkosten.
 
-## Sprache
-Deutsche Oberfläche ist führend. Englische Texte sind vorerst nur eine technische Vorbereitung. Sprachabhängige Rätsel müssen separat fachlich geprüft werden.
+## Mehrsprachigkeit
+Deutsch ist führend, Englisch als technische Oberfläche vorbereitet. Rätseltexte und Wortlösungen sind pro Sprache eigenständig zu prüfen.
