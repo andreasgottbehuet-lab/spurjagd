@@ -53,3 +53,23 @@ test('Ungueltige Team- und Zeitparameter werden abgewiesen',()=>{
   assert.throws(()=>createPlan(config({groupSize:0})),/Gruppengröße/);
   assert.throws(()=>createPlan(config({walkingMinutes:-1})),/Gehzeit/);
 });
+
+test('Alle Teams können denselben Start und dieselbe Strecke nutzen', () => {
+  const plan = createPlan(config({ startMode:'shared', routeMode:'same', finishMode:'meeting', meetingPoint:'Zuhause' }));
+  assert.ok(plan.teams.every(t=>t.stations[0].name==='Spielplatz'));
+  assert.ok(plan.teams.every(t=>t.stations.map(x=>x.name).join(',') === plan.teams[0].stations.map(x=>x.name).join(',')));
+  assert.ok(plan.teams.every(t=>t.finish==='Zuhause'));
+});
+test('Verteilte Startpunkte mit wechselnder Umlaufrichtung', () => {
+  const plan = createPlan(config({startMode:'distributed', routeMode:'varied'}));
+  assert.deepEqual(plan.teams.map(t=>t.stations[0].name),['Spielplatz','Wiese','Feuerwehr','Sportplatz']);
+  assert.deepEqual(plan.teams[1].stations.map(t=>t.name),['Wiese','Spielplatz','Sportplatz']);
+  assert.equal(plan.teams[0].stations.length,3);
+  assert.ok(plan.teams.every(t=>new Set(t.stations.map(x=>x.id)).size===t.stations.length));
+});
+test('Gemeinsamer Start mit wechselnden Richtungen und eigenem Ziel',()=>{
+  const plan=createPlan(config({startMode:'shared',routeMode:'varied',finishMode:'start'}));
+  assert.deepEqual(plan.teams[0].stations.map(x=>x.name),['Spielplatz','Wiese','Feuerwehr']);
+  assert.deepEqual(plan.teams[1].stations.map(x=>x.name),['Spielplatz','Sportplatz','Feuerwehr']);
+  assert.ok(plan.teams.every(t=>t.finish==='Spielplatz'));
+});
