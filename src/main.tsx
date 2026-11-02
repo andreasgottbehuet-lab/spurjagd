@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createPlan, type GameGoal, type Location } from './generator';
+import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
 import './style.css';
 
@@ -22,16 +22,20 @@ function App() {
   const [puzzleMinutes, setPuzzleMinutes] = useState(10);
   const [walkingMinutes, setWalkingMinutes] = useState(5);
   const [startFinishMinutes, setStartFinishMinutes] = useState(10);
+  const [startMode, setStartMode] = useState<StartMode>('distributed');
+  const [routeMode, setRouteMode] = useState<RouteMode>('same');
+  const [finishMode, setFinishMode] = useState<FinishMode>('meeting');
+  const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -43,7 +47,7 @@ function App() {
     <div className="app">
       <header className="site-header">
         <a className="brand" href="/" aria-label="Spurjagd Startseite"><span className="mark">↗</span> SPURJAGD</a>
-        <div className="header-actions"><span className="prototype">PROTOTYP 0.2</span>
+        <div className="header-actions"><span className="prototype">PROTOTYP 0.3</span>
           <label className="visually-hidden" htmlFor="language">Sprache</label>
           <select id="language" value={lang} onChange={e => setLang(e.target.value as Language)}><option value="de">DE</option><option value="en">EN</option></select>
         </div>
@@ -94,6 +98,33 @@ function App() {
                 <label className="radio"><input type="radio" checked={goal==='word'} onChange={()=>setGoal('word')}/>{t.word}</label>
                 <label className="radio"><input type="radio" checked={goal==='cards'} onChange={()=>setGoal('cards')}/>{t.cards}</label>
               </fieldset>
+              <div className="route-options">
+                <h3>{tx('Start, Strecke und Ziel festlegen', 'Configure start, route and finish')}</h3>
+                <div className="form-grid">
+                  <label>{tx('Startpunkte', 'Starting points')}
+                    <select value={startMode} onChange={e=>setStartMode(e.target.value as StartMode)}>
+                      <option value="shared">{tx('Alle am selben Ort', 'Same for all teams')}</option>
+                      <option value="distributed">{tx('Auf verschiedene Orte verteilen', 'Distributed across locations')}</option>
+                    </select>
+                  </label>
+                  <label>{tx('Routenführung', 'Route direction')}
+                    <select value={routeMode} onChange={e=>setRouteMode(e.target.value as RouteMode)}>
+                      <option value="same">{tx('Gleiche Umlaufrichtung', 'Same circuit direction')}</option>
+                      <option value="varied">{tx('Wechselnde Umlaufrichtung', 'Alternating circuit direction')}</option>
+                    </select>
+                  </label>
+                  <label>{tx('Zielpunkt', 'Finish location')}
+                    <select value={finishMode} onChange={e=>setFinishMode(e.target.value as FinishMode)}>
+                      <option value="meeting">{tx('Gemeinsamer Treffpunkt', 'Shared meeting point')}</option>
+                      <option value="start">{tx('Zur eigenen Startstation', 'Back to own starting location')}</option>
+                    </select>
+                  </label>
+                  {finishMode==='meeting' && <label>{tx('Name des Treffpunkts', 'Meeting point name')}
+                    <input value={meetingPoint} maxLength={80} onChange={e=>setMeetingPoint(e.target.value)}/>
+                  </label>}
+                </div>
+                <p className="helper">{tx('Bei gleicher Umlaufrichtung und verteilten Startpunkten beginnt jedes Team an einer anderen Stelle derselben Runde. Wechselnde Umlaufrichtung kehrt die Folge für jedes zweite Team um. Entfernungen werden noch nicht berechnet.', 'With the same circuit direction and distributed starts, teams enter the same circuit at different locations. Alternating direction reverses the order for every second team. Distances are not calculated yet.')}</p>
+              </div>
               <p className="helper">{tx('Zeitannahmen für die Planung. Sie ersetzen keine Prüfung der Wege vor Ort.','Planning assumptions only. Check actual routes before the event.')}</p>
               <div className="form-grid">
                 <label>{tx('Rätselzeit je Station (Min.)','Puzzle time per stop (min)')}<input type="number" min="1" max="60" value={puzzleMinutes} onChange={e=>setPuzzleMinutes(Number(e.target.value))}/></label>
@@ -113,7 +144,7 @@ function App() {
                 <div className="team-list">{plan.value.teams.map((team,i)=>
                   <article className="team" key={i}>
                     <h3>{en ? 'Team ' + (i+1) : 'Team '+team.name}<span>{team.memberCount} {en?'participants':'Kinder'}</span></h3>
-                    <p>{team.stations.map(s => s.name).join(' → ')} → {tx('Ziel','Finish')}</p>
+                    <p>{team.stations.map(s => s.name).join(' → ')} → {team.finish}</p>
                   </article>
                 )}</div>
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
