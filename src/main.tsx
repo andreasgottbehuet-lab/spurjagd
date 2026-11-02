@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
+import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
 
 const initialLocations: Location[] = [
@@ -28,6 +29,15 @@ function App() {
   const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
+  const [projectId, setProjectId] = useState<string>(() => newGameId());
+  const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
+  const [projects, setProjects] = useState<SavedGame[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const [storageMessage, setStorageMessage] = useState('');
+  const importRef = useRef<HTMLInputElement>(null);
+  const skipSave = useRef(false);
+  const [selectedProject, setSelectedProject] = useState('');
+
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
@@ -42,6 +52,91 @@ function App() {
   const addLocation = () => {
     setLocations(old => [...old, { id: 'loc-' + nextLocationId, name: '', description: '' }]);
     setNextLocationId(n => n + 1);
+  };
+  const applyGame = (project: SavedGame) => {
+    const c = project.config;
+    skipSave.current = true;
+    setProjectId(project.id);
+    setSelectedProject(project.id);
+    setProjectTitle(project.title);
+    setPlayers(c.players);
+    setGroupSize(c.groupSize);
+    setDuration(c.durationMinutes);
+    setAge(c.age);
+    setGoal(c.goal);
+    setLocations(c.locations.map(x => ({...x})));
+    setPuzzleMinutes(c.puzzleMinutes);
+    setWalkingMinutes(c.walkingMinutes);
+    setStartFinishMinutes(c.startFinishMinutes);
+    setStartMode(c.startMode ?? 'distributed');
+    setRouteMode(c.routeMode ?? 'same');
+    setFinishMode(c.finishMode ?? 'meeting');
+    setMeetingPoint(c.meetingPoint ?? 'Zuhause / Treffpunkt');
+    setNextLocationId(Math.max(5, c.locations.length + 10));
+    setStorageMessage('');
+  };
+  useEffect(() => {
+    try {
+      const saved = loadGames();
+      setProjects(saved);
+      const current = saved.find(p=>p.id===activeGameId()) ?? saved[0];
+      if (current) {
+        // Apply asynchronously only as a reaction to initial loading; save is gated until initialization is complete.
+        applyGame(current);
+      }
+    } catch(e) { setStorageMessage('Lokale Speicherung: ' + String(e)); }
+    setStorageReady(true);
+  }, []);
+  useEffect(() => {
+    if (!storageReady) return;
+    if (skipSave.current) { skipSave.current = false; return; }
+    const timeout = window.setTimeout(() => {
+      try {
+        const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:new Date().toISOString(), config: { ...config, locations:config.locations.map(x=>({...x})) } };
+        const saved = saveGame(project);
+        setProjects(saved);
+        setSelectedProject(projectId);
+        setStorageMessage('');
+      } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
+    }, 650);
+    return () => window.clearTimeout(timeout);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  const newProject = () => {
+    const fresh: SavedGame = {
+      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
+      config: { ...config, locations:initialLocations.map(x=>({...x})) },
+    };
+    try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
+    catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
+  };
+  const removeProject = () => {
+    if (!window.confirm(tx('Dieses Projekt wirklich löschen?', 'Delete this project?'))) return;
+    try {
+      const remaining = deleteGame(projectId);
+      setProjects(remaining);
+      if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
+      else { setProjectId(newGameId()); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setStorageMessage(''); }
+    } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
+  };
+  const exportProject = () => {
+    try {
+      const project: SavedGame = {version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+      downloadBackup(project);
+      setStorageMessage(tx('Projektdatei wurde zum Download vorbereitet.', 'Project backup prepared for download.'));
+    } catch(e){ setStorageMessage('Export fehlgeschlagen: '+String(e)); }
+  };
+  const importProject = async (file?: File) => {
+    if (!file) return;
+    try {
+      if (file.size > 200_000) throw new Error('Datei zu groß.');
+      const imported = parseGameBackup(await file.text());
+      const restored: SavedGame = {...imported,id:newGameId(),title:imported.title+' (Import)',updatedAt:new Date().toISOString()};
+      const updated = saveGame(restored);
+      setProjects(updated);
+      applyGame(restored);
+      setStorageMessage(tx('Projekt aus Sicherung wiederhergestellt.', 'Project restored from backup.'));
+    } catch(e){ setStorageMessage('Import fehlgeschlagen: '+String(e)); }
+    finally { if (importRef.current) importRef.current.value=''; }
   };
   return (
     <div className="app">
@@ -58,6 +153,31 @@ function App() {
           <h1>{t.tagline}</h1>
           <p className="intro">{t.intro}</p>
           <a href="#planer" className="hero-link">{t.plan} <span aria-hidden="true">↘</span></a>
+        </section>
+        <section className="project-bar" aria-label={tx('Projektverwaltung','Project management')}>
+          <div className="project-title">
+            <label htmlFor="projectTitle">{tx('Projektname','Project name')}</label>
+            <input id="projectTitle" value={projectTitle} maxLength={100} onChange={e=>setProjectTitle(e.target.value)}/>
+          </div>
+          <div className="project-select">
+            <label htmlFor="savedProjects">{tx('Gespeicherte Projekte','Saved projects')}</label>
+            <select id="savedProjects" value={selectedProject} onChange={e=>{
+              const project=projects.find(p=>p.id===e.target.value);
+              if(project){setActiveGameId(project.id);applyGame(project);setActiveStep(1);}
+            }}>
+              {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}
+              {projects.map(p=><option value={p.id} key={p.id}>{p.title}</option>)}
+            </select>
+          </div>
+          <div className="project-actions">
+            <button type="button" className="secondary" onClick={newProject}>{tx('Neu','New')}</button>
+            <button type="button" className="secondary" onClick={exportProject}>{tx('Sichern','Export')}</button>
+            <button type="button" className="secondary" onClick={()=>importRef.current?.click()}>{tx('Laden','Import')}</button>
+            <button type="button" className="text-button" onClick={removeProject}>{tx('Löschen','Delete')}</button>
+            <input ref={importRef} type="file" accept=".json,application/json" className="visually-hidden" onChange={e=>void importProject(e.target.files?.[0])}/>
+          </div>
+          {storageMessage && <p className="storage-message" role="status">{storageMessage}</p>}
+          <p className="storage-note">{tx('Automatische Speicherung in diesem Browser. Für andere Geräte die JSON-Sicherung verwenden.', 'Automatically saved in this browser. Export a JSON backup to use another device.')}</p>
         </section>
         <section id="planer" className="wizard">
           <nav className="steps" aria-label={tx('Planungsschritte','Planning steps')}>
