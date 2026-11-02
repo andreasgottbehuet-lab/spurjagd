@@ -2,7 +2,7 @@
 
 Mehrsprachiger Generator für Schnitzeljagden, Rätseltouren und Gruppenabenteuer.
 
-## Projektstand: Prototyp 0.3
+## Projektstand: Prototyp 0.4
 
 Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Oberfläche ist auf Deutsch und Englisch vorbereitet.
 
@@ -18,9 +18,14 @@ Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Obe
 - Warnhinweise bei gemeinsamen Starts und begrenzten Standorten
 - Vorläufige Druckansicht des Spielplans
 - Tests der Berechnungs-, Validierungs- und Routenoptionen; GitHub Actions führt Tests und Build bei Änderungen aus
+- Mehrere lokale Projekte im Browser: automatisches Speichern, Wechseln, Neuanlegen und Löschen
+- Validierter Export und Import als versionierte JSON-Sicherungsdatei; importierte Projekte erhalten eine neue ID
 - Kein Login, keine Datenbank, keine serverseitige Speicherung der Eingaben
 
 ### Grenzen dieser Version
+- Der Browser speichert Projekte nur auf diesem Gerät und in diesem Browserprofil (localStorage). Löschen von Browserdaten kann Projekte entfernen. Regelmäßig JSON-Backups exportieren.
+- Kein Synchronisieren zwischen Geräten; JSON-Backups enthalten alle Standortbeschreibungen im Klartext.
+- Die öffentliche Anwendung benötigt vor dem Produktivstart passende Rechtstexte und eine Datenschutzprüfung.
 - Die Gehzeit gilt pauschal **pro Wegabschnitt**, nicht als Entfernungs- oder Routingberechnung. Start- und Rückweg werden mitgezählt.
 - Routen entsprechen einem einfachen Stationsrundkurs: gleiche Richtung oder wechselnde Richtung. Unterschiedliche, frei optimierte oder manuell zugewiesene Routen und konfliktfreie Zeitfenster fehlen noch.
 - Bei gleichem Start können mehrere Teams gleichzeitig an derselben Station ankommen. Eine automatische Wartezeitplanung fehlt.
