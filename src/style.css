@@ -39,3 +39,16 @@
 .route-options .form-grid{margin:0 0 14px}
 .route-options .helper{margin:8px 0 0}
 @media(max-width:520px){.route-options{padding:14px}.route-options .form-grid{grid-template-columns:1fr}}
+
+/* Project management */
+.project-bar{max-width:855px;margin:25px auto 0;padding:22px;background:#fff;border:1px solid #dae4df;border-radius:16px;display:grid;grid-template-columns:1fr 1fr;gap:15px 20px}
+.project-bar label{font-size:12px;font-weight:750;display:block;margin-bottom:7px}
+.project-bar input:not([type=file]),.project-bar select{width:100%;font-size:14px}
+.project-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;grid-column:1/-1}
+.project-actions .secondary{font-size:13px;padding:9px 13px}
+.project-actions .text-button{padding:9px 13px;font-weight:700}
+.storage-message,.storage-note{grid-column:1/-1;margin:0;font-size:12px;line-height:1.6;color:#60776d}
+.storage-message{color:#365d75;font-weight:700}
+@media(max-width:950px){.project-bar{margin:22px 5% 0}}
+@media(max-width:620px){.project-bar{grid-template-columns:1fr}.project-actions{gap:6px}}
+@media print{.project-bar{display:none!important}}
