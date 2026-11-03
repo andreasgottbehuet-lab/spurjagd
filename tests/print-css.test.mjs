@@ -106,3 +106,10 @@ test('A5-Kinderblätter tragen ihre Umschlagkennung und Blattart',()=>{
  assert.ok(source.includes("sheet.dataset.envelopeId??''"));
  assert.ok(source.includes("sheet.dataset.sheetKind??''"));
 });
+
+test('A5-Etiketten besitzen eine eindeutige Umschlagkennung und werden vor Druck kontrolliert',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('className="print-label" data-envelope-id={envelope.id}'));
+ assert.ok(source.includes("packet?.querySelectorAll<HTMLElement>('.print-label[data-envelope-id]')"));
+ assert.ok(source.includes('auditRenderedLabels(printManifest?.envelopes??[],labelIds)'));
+});
