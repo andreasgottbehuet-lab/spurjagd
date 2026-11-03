@@ -323,16 +323,41 @@ function App() {
                     {plan.value.teams.map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                     <h2>Codes und Lösungen</h2>
                     {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
+                    <h2>Wegrätsel – Lösungen</h2>
+                    {plan.value.teams.map(team=><p key={team.name}><strong>{team.name}:</strong> {team.stations.map((station,i)=>station.name+" → "+(team.stations[i+1]?.name??team.finish)).join(" | ")}</p>)}
                     <h2>Vorbereitung und Sicherheit</h2>
-                    <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Nächste Station jeder Gruppe vor Spielbeginn festlegen. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
+                    <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Die drei Blätter jeder Station gemeinsam ausgeben; die Reihenfolge der Bearbeitung ist frei. Schloss-Code und Wegrätsel müssen beide gelöst werden. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
                   </article>
-                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;if(!challenge)return null;return <article className="print-sheet" key={teamIndex+'-'+location.id}>
-                    <h1>{projectTitle}</h1><p><strong>Nur für Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length}</p><h2>Station: {location.name}</h2>
-                    <p>Bearbeitet die drei Aufgaben der Reihe nach. Jede Lösung ergibt eine Ziffer. Tragt die Ziffern von links nach rechts in euer Schloss ein.</p>
-                    {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}<p>Meine Ziffer: ______</p></div>)}
-                    <p><strong>Unser Code: __ __ __</strong></p>
-                  </article>;}))}
-                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=><article className="print-sheet hint-sheet" key={"hint-"+teamIndex+"-"+location.id}><h1>Geheimer nächster Hinweis</h1><p>Team {team.name} · nach Station {location.name}</p><p className="print-question">Geht als Nächstes zu: {team.stations[stationIndex+1]?.name??team.finish}</p><p>Dieses Blatt getrennt vom Rätselblatt in einen verschlossenen Umschlag legen und erst nach der richtigen Lösung öffnen.</p></article>))}
+                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{
+                    const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
+                    if(!challenge)return null;
+                    const destination=team.stations[stationIndex+1]?.name??team.finish;
+                    return <React.Fragment key={teamIndex+'-'+location.id}>
+                      <article className="print-sheet">
+                        <h1>{projectTitle}</h1>
+                        <p><strong>Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/3</p>
+                        <h2>Stationsaufgaben: {location.name}</h2>
+                        <p>Löst die Aufgaben. Die Ergebnisse ergeben euren Schloss-Code in der richtigen Reihenfolge.</p>
+                        {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}</div>)}
+                      </article>
+                      <article className="print-sheet">
+                        <h1>Antwortblatt</h1>
+                        <p><strong>Team {team.name}</strong> · {location.name} · Blatt 2/3</p>
+                        <p>Hier könnt ihr rechnen, schreiben und eure Lösungen eintragen.</p>
+                        {[1,2,3].map(n=><div className="answer-space" key={n}><strong>Aufgabe {n}: Ziffer ______</strong><div className="writing-lines">________________________________________________<br/>________________________________________________<br/>________________________________________________</div></div>)}
+                        <p className="print-question">Unser Schloss-Code: __ __ __</p>
+                      </article>
+                      <article className="print-sheet">
+                        <h1>Wegrätsel</h1>
+                        <p><strong>Team {team.name}</strong> · {location.name} · Blatt 3/3</p>
+                        <p>Löst das Wegrätsel, um euren nächsten Ort herauszufinden. Ihr dürft alle drei Blätter gleichzeitig bearbeiten.</p>
+                        <p className="print-question">Bringt die Buchstaben in die richtige Reihenfolge:</p>
+                        <p className="route-letters">{[...destination].reverse().join(' · ')}</p>
+                        <p>Unser nächster Ort: __________________________________</p>
+                        <p className="helper">Hinweis: Lest die Buchstaben vom Ende zum Anfang. Leerzeichen gehören zum Ortsnamen.</p>
+                      </article>
+                    </React.Fragment>;
+                  }))}
                   <article className="print-sheet"><h1>Stationsetiketten</h1>{plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((location,stationIndex)=><p className="print-label" key={teamIndex+'-'+location.id}><strong>Team {team.name} · {location.name}</strong><span>Umschlag {stationIndex+1} von {team.stations.length} · Nächsten Ort erst nach Lösung bekanntgeben · Material nach Spielende einsammeln</span></p>))}</article>
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
