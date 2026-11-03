@@ -21,6 +21,7 @@ function ChildCardView({ card }: { card: ChildCard }) {
           <strong>{i + 1}. {p.instruction}</strong>
           {p.render && <div className="print-symbols">{Array.from({ length: p.render.count }, (_, j) => <span key={j}>{p.render?.symbol}</span>)}</div>}
           <p>{p.question}</p>
+          {p.instruction.includes('Verschiebe jeden Buchstaben') && <p className="print-alphabet">A B C D E F G H I J K L M N O P Q R S T U V W X Y Z</p>}
           <div className="print-answer-line">Ziffer: ______</div>
         </section>)}
       </div>
