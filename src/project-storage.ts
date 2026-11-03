@@ -73,7 +73,8 @@ export function serializeGameBackup(project: SavedGame): string {
 }
 export function loadGames(): SavedGame[] {
   const raw = localStorage.getItem(KEY);
-  if (!raw) return [];
+  if (raw === null) return [];
+  if (raw === '') throw new Error('Lokale Projektdaten sind leer oder beschädigt.');
   const items: unknown = JSON.parse(raw);
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
   const projects=items as SavedGame[];
