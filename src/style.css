@@ -78,3 +78,5 @@
  .print-label span{display:block;font-size:9pt}
  .symbols{font-size:22pt;letter-spacing:5pt}
 }
+
+@media print{.answer-space{margin:13mm 0;break-inside:avoid}.writing-lines{font-size:11pt;line-height:2.5;margin-top:5mm;color:#666}.route-letters{font-size:18pt;font-weight:800;letter-spacing:2pt;overflow-wrap:anywhere;line-height:1.8}.print-sheet .helper{display:block!important;color:#444}}
