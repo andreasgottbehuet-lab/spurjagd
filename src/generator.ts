@@ -92,6 +92,20 @@ export function createPlan(config: GameConfig): GamePlan {
     };
   });
   const cautions: string[] = [];
+  // Compare scheduled station slots, assuming all teams start at the same time.
+  // This is a warning only; real walking and puzzle times may vary.
+  for (let slot = 0; slot < stopsPerTeam; slot++) {
+    const visitors = new Map<string, string[]>();
+    for (const team of teams) {
+      const station = team.stations[slot];
+      visitors.set(station.id, [...(visitors.get(station.id) ?? []), team.name]);
+    }
+    for (const [stationId, groupNames] of visitors) {
+      if (groupNames.length < 2) continue;
+      const station = places.find(place => place.id === stationId);
+      cautions.push('Möglicher Andrang an Station ' + (slot + 1) + ' (' + (station?.name ?? stationId) + '): ' + groupNames.length + ' Teams bei gleichzeitigem Start. Startzeiten oder Stationskapazität prüfen.');
+    }
+  }
   if (startMode === 'distributed' && teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
   if (startMode === 'shared') cautions.push('Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.');
   if (routeMode === 'varied' && places.length < 3) cautions.push('Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.');
