@@ -65,3 +65,5 @@ test('Druckfreigabe weist doppelte Stations-IDs zurück',()=>{
 });
 
 test('Unlösbare oder offen verratene Ortsrätsel verhindern Druck',()=>{const c=config();c.routeClueModes.a='description';c.locations[0].description='Spielplatz';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('Ortsbeschreibung')||issue.includes('Wegrätsel')));});
+
+test('Eigenes Wegrätsel darf den Zielort nicht nennen',()=>{const c=config();c.routeClueModes.b='custom';c.routeClueTexts.b='Geht direkt zur Wiese.';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('nennt bereits den Zielort')));});
