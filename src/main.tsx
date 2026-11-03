@@ -8,14 +8,10 @@ import { auditPrintPacket } from './print-audit';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import { auditRenderedPrintCategories, auditRenderedEnvelopes } from './print-dom-audit';
+import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
 import './style.css';
 
-const initialLocations: Location[] = [
-  { id: 'loc-1', name: 'Spielplatz', description: 'Schaukeln, Rutsche, Klettergerüst' },
-  { id: 'loc-2', name: 'Wiese', description: 'Offene Wiese mit Bäumen' },
-  { id: 'loc-3', name: 'Feuerwehrplatz', description: 'Öffentlicher Platz neben der Feuerwehr' },
-  { id: 'loc-4', name: 'Sportplatz', description: 'Sportfläche mit Fußballtoren' },
-];
+const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
 
 function App() {
   const [lang, setLang] = useState<Language>('de');
@@ -172,7 +168,7 @@ function App() {
     if(!saveCurrentBeforeSwitch()) return;
     const fresh: SavedGame = {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})), meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',startMode:'distributed',routeMode:'same',finishMode:'meeting',stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{} },
+      config:createDefaultGameConfig(),
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -183,7 +179,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:{...config,locations:initialLocations.map(x=>({...x})),meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',startMode:'distributed',routeMode:'same',finishMode:'meeting',stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{}}};applyGame(fresh);setSelectedProject('');setStorageMessage('');setActiveStep(1); }
+      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};applyGame(fresh);setSelectedProject('');setStorageMessage('');setActiveStep(1); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
