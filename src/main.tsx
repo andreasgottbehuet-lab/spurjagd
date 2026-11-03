@@ -6,6 +6,7 @@ import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generat
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
 import { createPrintManifest } from './print-manifest';
+import { auditPrintManifest } from './print-manifest-audit';
 import './style.css';
 
 const initialLocations: Location[] = [
@@ -66,6 +67,7 @@ function App() {
   ];
   if (plan.value) printIssues.push(...auditPrintPacket(config,plan.value,projectId));
   const printManifest = plan.value ? createPrintManifest(plan.value) : null;
+  if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest));
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks') return [];
