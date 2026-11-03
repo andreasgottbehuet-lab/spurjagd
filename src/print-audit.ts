@@ -13,7 +13,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
   if(plan.teams.length!==expected.teams.length || plan.stopsPerTeam!==expected.stopsPerTeam) issues.push('Gruppenplan stimmt nicht mit den Eingaben überein.');
   else for(let i=0;i<expected.teams.length;i++){
    const actual=plan.teams[i], correct=expected.teams[i];
-   if(actual.name!==correct.name || actual.memberCount!==correct.memberCount || actual.finish!==correct.finish || actual.stations.map(s=>s.id).join('|')!==correct.stations.map(s=>s.id).join('|')) issues.push('Gruppenroute '+correct.name+' weicht von der Planung ab.');
+   if(actual.name!==correct.name || actual.memberCount!==correct.memberCount || actual.finish!==correct.finish || actual.stations.some((station,j)=>station.id!==correct.stations[j]?.id || station.name!==correct.stations[j]?.name || station.description!==correct.stations[j]?.description)) issues.push('Gruppenroute '+correct.name+' weicht von der Planung ab.');
   }
  } catch(error) { issues.push('Gruppenplanung konnte nicht geprüft werden: '+(error instanceof Error?error.message:String(error))); }
  const locations=new Map(config.locations.map(location=>[location.id,location]));
