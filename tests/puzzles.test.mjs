@@ -169,3 +169,17 @@ test('Fragenrätsel akzeptieren ausschließlich geprüfte Fragen und Antworten',
  wrong.rows[0].solution='Erfundene Antwort';
  assert.equal(verifyRouteQuestions(wrong),false);
 });
+
+test('Wegrätsel vermeiden wiederholte Fragen, wenn alternative Aufgaben vorhanden sind',()=>{
+ const clue=generateCreativeRouteClue('AAAA','', 'questions',hashSeed('question-variants'));
+ assert.equal(verifyCreativeRouteClue(clue),true);
+ assert.equal(new Set(clue.rows.slice(0,2).map(row=>row.question)).size,2);
+ assert.equal(clue.rows.length,4);
+});
+test('Fragenbank deckt alle Buchstaben und deutsche Umlaute in Ortsnamen ab',()=>{
+ for(const name of ['ABCDEFGHIJKLMNOPQRSTUVWXYZ','Ärger Öfen Überweg','Feuerwehr','Spielplatz']){
+  const clue=generateCreativeRouteClue(name,'','questions',hashSeed(name));
+  assert.equal(verifyCreativeRouteClue(clue),true,name);
+  assert.equal(clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join(''),normalizeSolutionWord(name));
+ }
+});
