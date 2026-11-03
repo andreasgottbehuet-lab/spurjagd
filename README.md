@@ -6,7 +6,7 @@ Kostenloser, werbefreier Schnitzeljagd-Generator für Kinder und Jugendliche, El
 
 - Vierstufige React-/TypeScript-Anwendung: Teilnehmer, Gruppen, Zeitbudget, Start-/Zielregeln, Stationen und Spielplan.
 - Gemeinsamer oder verteilter Start; gleiche oder wechselnde Routenrichtung. Gleichzeitige Besuche mehrerer Teams an derselben Station werden als mögliche Engstelle gemeldet. Nicht jede Gruppe muss alle Stationen besuchen. Gehzeiten sind Nutzereingaben, keine realen Entfernungsberechnungen.
-- Dreistellige Schloss-Codes je Station einschließlich führender Nullen (z. B. `007`). Drei deterministisch erzeugte und überprüfte Einzelrätsel pro Code: Rechnen, Symbole zählen, Buchstabenverschiebung.
+- Dreistellige Schloss-Codes je Station einschließlich führender Nullen (z. B. `007`). Drei deterministisch erzeugte und überprüfte Einzelrätsel pro Code: Rechnen, Symbole zählen, Buchstabenverschiebung. Rechenaufgaben variieren je Seed und Altersgruppe; die Buchstabenverschiebung ist für jüngere Kinder auf einen Schritt begrenzt.
 - Wegrätsel zum nächsten Ort: Ortsbeschreibung, Buchstabenfragen, Buchstabenverdrehung oder eigene Hinweise. Die Zielorte werden auf den Kinderblättern nicht als Lösung ausgewiesen.
 - **DIN A5 Hochformat als Druckstandard.** Pro Team und Stationsbesuch drei getrennte Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel. Zusätzlich Spielleitungsübersicht und Stationsetiketten. Der gesamte Drucklauf verwendet derzeit A5.
 - Druckprüfung kontrolliert Codes, Routen, Zielorte, Umschlagkennungen und Blattanzahlen. Fehler sperren die Druckfunktion.
