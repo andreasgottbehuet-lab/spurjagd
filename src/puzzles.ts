@@ -115,3 +115,17 @@ export function codeFromPuzzles(challenge: StationChallenge): string {
   if (challenge.puzzles.some(p => !verifyDigitPuzzle(p))) throw new Error('Rätselprüfung fehlgeschlagen');
   return challenge.puzzles.map(p=>String(p.expectedDigit)).join('');
 }
+
+/** Reversible route clue: the answer is the exact destination, including spaces. */
+export interface RoutePuzzle { instruction: string; question: string; hint: string; answer: string; kind: 'reverse' | 'missing-vowels' }
+export function generateRoutePuzzle(destination: string, seed: number): RoutePuzzle {
+  const answer = destination.trim();
+  if (!answer || answer.length > 80) throw new Error('Ungültiger Zielort');
+  const rng = seededRandom(seed);
+  const missingVowels = [...answer].some(ch => /[AEIOUÄÖÜaeiouäöü]/.test(ch));
+  if (missingVowels && rng() >= 0.5) {
+    const question = answer.replace(/[AEIOUÄÖÜaeiouäöü]/g, '_');
+    return {kind:'missing-vowels',instruction:'Ergänzt die fehlenden Selbstlaute (A, E, I, O, U, Ä, Ö, Ü). Welcher Ort ist gemeint?',question,hint:'Die Striche stehen für fehlende Buchstaben.',answer};
+  }
+  return {kind:'reverse',instruction:'Lest die Zeichenfolge von rechts nach links. Welcher Ort ist gemeint?',question:[...answer].reverse().join(''),hint:'Beginnt mit dem letzten Zeichen.',answer};
+}
