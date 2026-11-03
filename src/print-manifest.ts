@@ -10,12 +10,13 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
 export const ORGANIZER_ITEMS_PER_A5_SHEET = 2;
-export function organizerSheetCount(plan:GamePlan):number {
+export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
  const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
  const codes=Math.ceil(stations/ORGANIZER_ITEMS_PER_A5_SHEET);
- const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish))).size;
- return routes+codes+destinations+1;
+ const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));
+ const solutionSheets=[...destinations].reduce((sum,destination)=>sum+routeSheetCount(destination,config),0);
+ return routes+codes+solutionSheets+1;
 }
 
 export interface PrintEnvelope {
@@ -53,6 +54,6 @@ export function createPrintManifest(plan:GamePlan,config?:GameConfig):PrintManif
  const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  // Four labels are assigned to each A5 sheet; physical overflow remains subject to browser print review.
  const labelSheets=Math.ceil(envelopes.length/LABELS_PER_A5_SHEET);
- const organizerSheets=organizerSheetCount(plan);
+ const organizerSheets=organizerSheetCount(plan,config);
  return {envelopes,organizerSheets,labelSheets,taskSheets,minimumSheets:taskSheets+organizerSheets+labelSheets};
 }
