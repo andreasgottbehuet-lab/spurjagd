@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
-import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerCautionSheetCount} from '../src/print-manifest.ts';
+import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerCautionSheetCount, organizerSheetCount} from '../src/print-manifest.ts';
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
 import {generateCreativeRouteClue,verifyRouteQuestions,normalizeSolutionWord} from '../src/puzzles.ts';
 const config={players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Spielplatz',description:''},{id:'b',name:'Wiese',description:''},{id:'c',name:'Feuerwehr',description:''},{id:'d',name:'Sportplatz',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Zuhause'};
@@ -127,4 +127,15 @@ test('Warnungen aus der Routenplanung werden auf eigenen A5-Seiten vollständig 
  const modified=createPrintManifest(plan,c);
  modified.organizerSheets--;
  assert.ok(auditPrintManifest(plan,modified,c).some(issue=>issue.includes('Spielleitungsseiten')));
+});
+
+test('Warnungsseiten haben korrekte Grenzwerte bei 0, 1, 4, 5 und 9 Hinweisen',()=>{
+ const plan=createPlan(config);
+ for(const count of [0,1,4,5,9]){
+  const variant={...plan,cautions:Array.from({length:count},(_,i)=>'Hinweis '+(i+1))};
+  assert.equal(organizerCautionSheetCount(variant),Math.ceil(count/ORGANIZER_CAUTIONS_PER_A5_SHEET));
+  const manifest=createPrintManifest(variant,config);
+  assert.deepEqual(auditPrintManifest(variant,manifest,config),[]);
+  assert.equal(manifest.organizerSheets,organizerSheetCount(variant,config));
+ }
 });
