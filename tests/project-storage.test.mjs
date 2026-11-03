@@ -147,3 +147,12 @@ test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwu
  const importer=source.slice(source.indexOf('const importProject ='),source.indexOf('return (',source.indexOf('const importProject =')));
  assert.ok(importer.includes('if(!saveCurrentBeforeSwitch()) return'));
 });
+
+test('Beschädigte Browserdaten dürfen durch Autostart nicht überschrieben werden',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const init=source.slice(source.indexOf('useEffect(() => {\n    try {\n      const saved = loadGames()'),source.indexOf('useEffect(() => {\n    if (!storageReady)'));
+ assert.ok(init.includes('setStorageReady(true)'));
+ assert.ok(init.includes('setStorageReady(false)'));
+ assert.ok(init.includes('Automatisches Speichern bleibt'));
+ assert.ok(source.includes('if (!storageReady) return;'));
+});
