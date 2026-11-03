@@ -11,6 +11,10 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
 }
 export const ORGANIZER_ITEMS_PER_A5_SHEET = 2;
 export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 4;
+export const ORGANIZER_CAUTIONS_PER_A5_SHEET = 4;
+export function organizerCautionSheetCount(plan:GamePlan):number {
+ return Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
+}
 export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
  const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
@@ -19,7 +23,7 @@ export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const solutionSheets=[...destinations].reduce((sum,destination)=>sum+routeSheetCount(destination,config),0);
  const envelopeCount=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
  const controlSheets=Math.max(1,Math.ceil(envelopeCount/ORGANIZER_ENVELOPES_PER_A5_SHEET));
- return routes+codes+solutionSheets+controlSheets+1; // Separate safety and start-control sheet
+ return routes+codes+solutionSheets+controlSheets+1+organizerCautionSheetCount(plan); // Safety sheet and any route warnings
 }
 
 export interface PrintEnvelope {
