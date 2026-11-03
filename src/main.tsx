@@ -374,7 +374,7 @@ function App() {
                   {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet" key={'control-'+page}>
                     <h1>Spielleitung – Umschlagkontrolle {page+1}</h1>
                     <p>Umschläge je Team nach Stationsnummer sortieren und jeweils nach dem Packen abhaken.</p>
-                    {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p className="print-checklist-row" key={envelope.id}>□ <strong>Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName}</strong><span>{envelope.sheetCount} Kinderblätter · Schloss-Code: <strong>{stationCodes[envelope.stationId]}</strong> · Danach: <strong>{envelope.destination}</strong></span></p>)}
+                    {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p className="print-checklist-row" key={envelope.id}>□ <strong>Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName}</strong><span>{envelope.sheetCount} Kinderblätter (1 Aufgabe, 1 Antwort, {envelope.sheetCount-2} Wegrätsel) · Schloss-Code: <strong>{stationCodes[envelope.stationId]}</strong> · Danach: <strong>{envelope.destination}</strong></span></p>)}
                   </article>)}
                   {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
