@@ -362,3 +362,22 @@ test('Storage errors block project creation, switching and deletion',()=>{
  assert.ok(deletion.includes('storageConflict.current || !storageReady'));
  assert.ok(deletion.includes('return;'));
 });
+
+test('Failed active-project update restores original project list',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let rejectActive=false;
+ globalThis.localStorage={
+  getItem:key=>entries.get(key)??null,
+  setItem:(key,value)=>{if(rejectActive&&key==='spurjagd-active-project-v1')throw new Error('active write denied');entries.set(key,String(value));},
+  removeItem:key=>entries.delete(key)
+ };
+ try{
+  saveGame(sample());
+  rejectActive=true;
+  const fresh={...sample(),id:'replacement',config:createDefaultGameConfig()};
+  assert.throws(()=>replaceLastGame('test-one',fresh),/Wiederherstellung|active write denied/);
+  assert.equal(loadGames()[0].id,'test-one');
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
