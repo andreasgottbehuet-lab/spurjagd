@@ -127,3 +127,9 @@ test('Verteilte Routen mit Richtungswechsel werden auf gleichzeitige Besuche gep
  }
  assert.equal(plan.cautions.some(w=>w.includes('Möglicher Andrang')),false);
 });
+
+test('Mehr Teams als Stationen führen zu konkreten Andrangwarnungen',()=>{
+ const plan=createPlan(config({players:18,groupSize:3,startMode:'distributed',routeMode:'same'}));
+ assert.ok(plan.cautions.some(w=>w.includes('Mehr Teams als Standorte')));
+ assert.ok(plan.cautions.some(w=>w.includes('Möglicher Andrang')&&w.includes('2 Teams')));
+});
