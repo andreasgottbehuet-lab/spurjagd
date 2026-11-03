@@ -142,7 +142,7 @@ test('Altersgerechte Rechenvarianten ergeben bei vielen Seeds die richtige Ziffe
 test('Einfache Buchstabenverschiebung für jüngere Kinder',()=>{
  for(let target=0;target<=9;target++){
   const puzzle=generateDigitPuzzle(target,'cipher','young',target+3);
-  assert.match(puzzle.instruction,/um 1 Stellen/);
+  assert.match(puzzle.instruction,/um 1 Stelle/);
   assert.equal(verifyDigitPuzzle(puzzle),true);
  }
 });
