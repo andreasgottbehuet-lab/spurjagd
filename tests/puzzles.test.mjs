@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -182,4 +182,13 @@ test('Fragenbank deckt alle Buchstaben und deutsche Umlaute in Ortsnamen ab',()=
   assert.equal(verifyCreativeRouteClue(clue),true,name);
   assert.equal(clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join(''),normalizeSolutionWord(name));
  }
+});
+
+test('Wegrätsel dürfen den Zielort nicht durch zusätzliche Leerzeichen oder Satzzeichen verraten',()=>{
+ const destination='Wiese über der Sabine';
+ assert.equal(clueRevealsDestination('Geht zur Wiese, über der Sabine!',destination),true);
+ assert.equal(clueRevealsDestination('Geht zur Wiese   über der Sabine!',destination),true);
+ assert.equal(clueRevealsDestination('Die hohe Wiese am Waldrand',destination),false);
+ const custom=generateCreativeRouteClue(destination,'','custom',7,'Geht zur Wiese, über der Sabine!');
+ assert.equal(verifyCreativeRouteClue(custom),false);
 });
