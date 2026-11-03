@@ -273,7 +273,7 @@ test('Cross-tab edits stop autosave and deletion',()=>{
  assert.ok(source.includes('projectListChanged(event.key)'));
  assert.ok(source.includes('storageConflict.current=true'));
  assert.ok(source.includes('if (!storageReady || storageConflict.current) return;'));
- assert.ok(source.includes("if(storageConflict.current){setStorageMessage('Löschen gesperrt"));
+ assert.ok(source.includes('storageConflict.current || !storageReady'));
 });
 
 test('Empty saved list is corrupt, not first-run',()=>{
