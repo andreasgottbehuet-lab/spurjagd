@@ -43,7 +43,7 @@ test('Vier Etiketten lassen auf A5 Platz für Titel und Seitenränder',()=>{
 
 test('Spielleitung nutzt dynamische A5-Seiten für Routen, Codes und Lösungen',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-'+destination}","Spielleitung – Kontrolle"]){
+ for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-'+destination+'-'+page}","Spielleitung – Kontrolle"]){
   assert.ok(source.includes(marker),marker);
  }
 });
