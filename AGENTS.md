@@ -54,3 +54,8 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - `AGENTS.md` ist die führende Entwicklungsanweisung im Repo. `README.md` beschreibt den tatsächlich implementierten Stand; Behauptungen über bestehende Funktionen nur nach Codeprüfung.
 - Entscheidungen und Änderungen an Zielgruppe, Geschäftsmodell, Datenmodell oder Spielregeln unmittelbar hier dokumentieren; keine parallelen widersprüchlichen Regeldateien.
 - Wichtige Meilensteine nach Möglichkeit zusätzlich im persönlichen Google Drive sichern; niemals ungefragt Dropbox verwenden.
+
+## 7. Schloss-Code-Konfiguration (Erweiterung v0.6)
+- `GameConfig.stationCodes` ist ein optionales Verzeichnis von stabilen Stations-IDs zu Strings. Beim Bearbeiten sind leere oder noch unvollständige Ziffernfolgen bis vier Stellen zulässig; für die Rätsel-Ausgabe sind exakt drei oder vier ASCII-Ziffern erforderlich.
+- `GameConfig.puzzleSeed` ist ein optionaler 32-Bit-Wert. Bei älteren Projekten ohne Seed wird er einmalig aus der bisherigen Projekt-ID abgeleitet; JSON-Importe müssen den ursprünglichen Seed behalten, auch wenn die lokale Projekt-ID gewechselt wird.
+- Das Speicherformat `spurjagd-backup-1` und die Projektversion 1 bleiben rückwärtskompatibel. Geheimcodes und Lösungswege dürfen nicht auf Kinder-Druckseiten erscheinen. Eine gesonderte Spielleitungs-Druckansicht und vollständige A5-Paginierung bleiben eigene Release-Anforderungen.
