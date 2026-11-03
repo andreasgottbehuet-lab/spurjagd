@@ -204,3 +204,18 @@ test('Wegrätsel erkennen Zielort auch mit Umlautumschreibung und unsichtbaren Z
  const clue=generateCreativeRouteClue(destination,'','custom',1,'Geht zur Wiese ueber der Sabine.');
  assert.equal(verifyCreativeRouteClue(clue),false);
 });
+
+test('Zielort bleibt bei Bindestrichen, Zusammenschreibung und getrennten Wörtern geheim',()=>{
+ const cases=[
+  ['Zur Feuerwehr-Platz-Ecke gehen','Feuerwehrplatz',true],
+  ['Zur Feuerwehrplatz-Ecke gehen','Feuerwehr Platz',true],
+  ['Die Wiese-ueber-der-Sabine besuchen','Wiese über der Sabine',true],
+  ['Der Sportplatz ist weit weg','Ort',false],
+  ['Der Motor läuft','Tor',false],
+  ['An der Feuerwehr vorbeigehen','Feuerwehrplatz',false],
+  ['Am Waldplatz stehen','Wald',false]
+ ];
+ for(const [hint,destination,expected] of cases) assert.equal(clueRevealsDestination(hint,destination),expected,hint+' / '+destination);
+ const clue=generateCreativeRouteClue('Feuerwehrplatz','','custom',12,'Zur Feuerwehr-Platz-Ecke gehen');
+ assert.equal(verifyCreativeRouteClue(clue),false);
+});
