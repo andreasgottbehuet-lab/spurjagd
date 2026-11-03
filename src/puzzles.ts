@@ -250,7 +250,19 @@ export function generateCreativeRouteClue(destination: string, description: stri
 export function clueRevealsDestination(clueText:string,destination:string):boolean {
  const fold=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('de').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
  const target=fold(destination);
- return target.length>0 && (' '+fold(clueText)+' ').includes(' '+target+' ');
+ if(!target) return false;
+ const words=fold(clueText).split(' ').filter(Boolean);
+ const compactTarget=target.replace(/ /g,'');
+ // Match complete adjacent words, including hyphenated or concatenated destination names.
+ for(let start=0;start<words.length;start++){
+  let combined='';
+  for(let end=start;end<words.length;end++){
+   combined+=words[end];
+   if(combined===compactTarget) return true;
+   if(combined.length>=compactTarget.length) break;
+  }
+ }
+ return false;
 }
 
 /** Independent checks for route puzzle integrity before printing. */
