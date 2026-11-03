@@ -248,7 +248,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
 
 /** Normalize punctuation and repeated spaces before checking whether a clue reveals its answer. */
 export function clueRevealsDestination(clueText:string,destination:string):boolean {
- const fold=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('de').replace(/ß/g,'ss').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+ const fold=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('de').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
  const target=fold(destination);
  return target.length>0 && (' '+fold(clueText)+' ').includes(' '+target+' ');
 }
