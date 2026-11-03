@@ -59,3 +59,6 @@ Auf der Umschlagkontrollliste werden je Team/Stationsbesuch neben der Kinderblat
 
 ## Dynamische Planungshinweise
 Bei Überschneidungen, gleichzeitigem Start oder anderen Warnungen erzeugt die Anwendung zusätzliche Spielleitungsseiten mit höchstens vier Hinweisen pro A5-Blatt. Die Seitenzahl wird in der Druckübersicht mitgerechnet. Bei der Abnahme eine Konfiguration mit vielen Teams prüfen und sicherstellen, dass **sämtliche** Hinweise aus der Bildschirmansicht auch auf den A5-Seiten erscheinen. Bei vier Teams ohne Stationsüberschneidungen (mit dem immer vorhandenen allgemeinen Gehzeit-Hinweis) bleibt das dokumentierte Grundbeispiel bei mindestens 53 A5-Seiten.
+
+## Zusätzliche Druckkontrolle vor dem Browserdialog
+Beim Klick auf **Drucken** zählt SPURJAGD die tatsächlich im DOM vorhandenen logischen A5-Blätter des Druckpakets und vergleicht sie mit der unabhängig berechneten Gesamtzahl des Druckmanifests. Bei fehlenden oder zusätzlichen Blatt-Elementen wird der Druckdialog nicht geöffnet und eine Fehlermeldung angezeigt. Diese Kontrolle prüft die **Anzahl der vorgesehenen Blatt-Elemente**, nicht die physische Seitenzahl im Browserdruck: Zu lange Texte, unerwartete Umbrüche und Druckerskalierung müssen weiterhin in der Druckvorschau und beim Probedruck kontrolliert werden.
