@@ -154,7 +154,20 @@ function App() {
     }, 650);
     return () => window.clearTimeout(timeout);
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  // Flush the currently edited draft before changing projects; debounce alone can lose edits.
+  const saveCurrentBeforeSwitch = (): boolean => {
+    if (!storageReady) return true;
+    try {
+      const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+      setProjects(saveGame(current));
+      return true;
+    } catch(error) {
+      setStorageMessage('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. '+String(error));
+      return false;
+    }
+  };
   const newProject = () => {
+    if(!saveCurrentBeforeSwitch()) return;
     const fresh: SavedGame = {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
       config: { ...config, locations:initialLocations.map(x=>({...x})), meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',startMode:'distributed',routeMode:'same',finishMode:'meeting',stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{} },
@@ -183,6 +196,7 @@ function App() {
     try {
       if (file.size > 200_000) throw new Error('Datei zu groß.');
       const imported = parseGameBackup(await file.text());
+      if(!saveCurrentBeforeSwitch()) return;
       const restored: SavedGame = {...imported,id:newGameId(),title:imported.title+' (Import)',updatedAt:new Date().toISOString()};
       const updated = saveGame(restored);
       setProjects(updated);
@@ -216,7 +230,7 @@ function App() {
             <label htmlFor="savedProjects">{tx('Gespeicherte Projekte','Saved projects')}</label>
             <select id="savedProjects" value={selectedProject} onChange={e=>{
               const project=projects.find(p=>p.id===e.target.value);
-              if(project){setActiveGameId(project.id);applyGame(project);setActiveStep(1);}
+              if(project && project.id!==projectId && saveCurrentBeforeSwitch()){setActiveGameId(project.id);applyGame(project);setActiveStep(1);}
             }}>
               {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}
               {projects.map(p=><option value={p.id} key={p.id}>{p.title}</option>)}
