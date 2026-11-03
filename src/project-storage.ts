@@ -102,6 +102,15 @@ export function deleteGame(id: string): SavedGame[] {
   if (localStorage.getItem(ACTIVE) === id) localStorage.removeItem(ACTIVE);
   return remaining;
 }
+/** Replace the final saved project without ever writing an empty project list. */
+export function replaceLastGame(oldId:string,replacement:SavedGame):SavedGame[] {
+ if(!isSavedGame(replacement)||replacement.id===oldId) throw new Error('Ersatzprojekt ungültig.');
+ const existing=loadGames();
+ if(existing.length!==1||existing[0].id!==oldId) throw new Error('Das Projekt ist nicht das letzte gespeicherte Projekt.');
+ localStorage.setItem(KEY,JSON.stringify([replacement]));
+ localStorage.setItem(ACTIVE,replacement.id);
+ return [replacement];
+}
 export function activeGameId(): string | null { return localStorage.getItem(ACTIVE); }
 export function setActiveGameId(id: string): void {
   if(!loadGames().some(project=>project.id===id)) throw new Error('Aktives Projekt existiert nicht.');
