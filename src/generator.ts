@@ -18,6 +18,7 @@ export interface GameConfig {
   finishMode?: FinishMode;
   meetingPoint?: string;
   startPoint?: string;
+  stationCodes?: Record<string, string>;
 }
 export interface TeamPlan {
   name: string;
