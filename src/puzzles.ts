@@ -250,7 +250,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
 export function clueRevealsDestination(clueText:string,destination:string):boolean {
  const fold=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('de').replace(/ß/g,'ss').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
  const target=fold(destination);
- return target.length>0 && fold(clueText).includes(target);
+ return target.length>0 && (' '+fold(clueText)+' ').includes(' '+target+' ');
 }
 
 /** Independent checks for route puzzle integrity before printing. */
