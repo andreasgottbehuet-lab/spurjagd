@@ -106,7 +106,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     return result - subtraction === target;
   }
   if (puzzle.kind === 'cipher') {
-    const shift = puzzle.instruction.match(/um (\d+) Stellen/);
+    const shift = puzzle.instruction.match(/um (\d+) Stelle(?:n)?/);
     if (!shift || !/^[A-Z]+$/.test(puzzle.question)) return false;
     const decoded = [...puzzle.question].map(char => ALPHABET[(ALPHABET.indexOf(char) - Number(shift[1]) + 26) % 26]).join('');
     return decoded === DIGIT_WORDS[target];
