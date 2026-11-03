@@ -44,3 +44,6 @@ Bei Fragenrätseln werden höchstens fünf Fragen auf einem A5-Blatt dargestellt
 
 ## Spielleitungs-Lösungsblätter bei langen Ortsnamen
 Fragenrätsel mit mehr als fünf Lösungsbuchstaben erhalten auch in der Spielleitungsübersicht Fortsetzungsblätter. Die Nummerierung und die Seitenzahl müssen mit den Kinder-Wegrätselblättern übereinstimmen. Bei der Druckabnahme für einen langen Zielort sowohl die Kinderseiten als auch die Lösungsseiten kontrollieren.
+
+## Abgleich Umschläge und Gruppenrouten
+Bei mehr als zwei Gruppen liegen mehrere Gruppenroutenseiten vor. Für jeden Umschlag Team, Stationsnummer, Stationsname und die ausgewiesene Blattzahl gegen die zugehörige Gruppenroutenseite und das Etikett prüfen. Bei einem Zielwort mit 26 Buchstaben und Fragenmodus entstehen sechs Wegrätselblätter; je Umschlag sind dann insgesamt acht Kinderblätter vorgesehen.
