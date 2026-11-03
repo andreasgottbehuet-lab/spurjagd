@@ -1,7 +1,7 @@
 export type GameGoal = 'locks' | 'word' | 'cards';
 export type StartMode = 'shared' | 'distributed';
 export type RouteMode = 'same' | 'varied';
-export type FinishMode = 'meeting' | 'start';
+export type FinishMode = 'meeting' | 'start' | 'origin';
 export type Location = { id: string; name: string; description: string };
 export interface GameConfig {
   players: number;
@@ -17,6 +17,7 @@ export interface GameConfig {
   routeMode?: RouteMode;
   finishMode?: FinishMode;
   meetingPoint?: string;
+  startPoint?: string;
 }
 export interface TeamPlan {
   name: string;
@@ -41,7 +42,8 @@ export function createPlan(config: GameConfig): GamePlan {
   const routeMode = config.routeMode ?? 'same';
   const finishMode = config.finishMode ?? 'meeting';
   const meetingPoint = config.meetingPoint?.trim() || 'Treffpunkt';
-  if (!['shared','distributed'].includes(startMode) || !['same','varied'].includes(routeMode) || !['meeting','start'].includes(finishMode)) throw new Error('Ungültige Routenoption');
+  const startPoint = config.startPoint?.trim() || meetingPoint;
+  if (!['shared','distributed'].includes(startMode) || !['same','varied'].includes(routeMode) || !['meeting','start','origin'].includes(finishMode)) throw new Error('Ungültige Routenoption');
   checkInt(players, 1, 100, 'Teilnehmerzahl');
   checkInt(groupSize, 1, 10, 'Gruppengröße');
   checkInt(durationMinutes, 15, 480, 'Spieldauer');
@@ -76,13 +78,14 @@ export function createPlan(config: GameConfig): GamePlan {
       name: COLORS[i] ?? 'Team ' + (i + 1),
       memberCount: base + (i < extra ? 1 : 0),
       stations,
-      finish: finishMode === 'start' ? stations[0].name : meetingPoint,
+      finish: finishMode === 'start' ? stations[0].name : finishMode === 'origin' ? startPoint : meetingPoint,
     };
   });
   const cautions: string[] = [];
   if (startMode === 'distributed' && teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
   if (startMode === 'shared') cautions.push('Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.');
   if (routeMode === 'varied' && places.length < 3) cautions.push('Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.');
+  if (finishMode === 'origin' && startMode === 'distributed') cautions.push('Die Teams starten verteilt an Rätselstationen und kehren zum gemeinsamen Startort zurück.');
   if (finishMode === 'start') cautions.push('Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.');
   if (stopsPerTeam < places.length) cautions.push('Zeitbudget: Nicht alle Standorte werden pro Team besucht.');
   cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.');
