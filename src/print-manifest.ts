@@ -10,13 +10,16 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
 export const ORGANIZER_ITEMS_PER_A5_SHEET = 2;
+export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 6;
 export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
  const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
  const codes=Math.ceil(stations/ORGANIZER_ITEMS_PER_A5_SHEET);
  const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));
  const solutionSheets=[...destinations].reduce((sum,destination)=>sum+routeSheetCount(destination,config),0);
- return routes+codes+solutionSheets+1;
+ const envelopeCount=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
+ const controlSheets=Math.max(1,Math.ceil(envelopeCount/ORGANIZER_ENVELOPES_PER_A5_SHEET));
+ return routes+codes+solutionSheets+controlSheets;
 }
 
 export interface PrintEnvelope {
