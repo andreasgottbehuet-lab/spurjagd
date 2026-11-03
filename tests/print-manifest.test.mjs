@@ -139,3 +139,23 @@ test('Warnungsseiten haben korrekte Grenzwerte bei 0, 1, 4, 5 und 9 Hinweisen',(
   assert.equal(manifest.organizerSheets,organizerSheetCount(variant,config));
  }
 });
+
+test('Umschlag-Blattzahlen und angezeigte Gesamtseiten werden unabhängig abgeglichen',()=>{
+ const plan=createPlan(config);
+ const manifest=createPrintManifest(plan,config);
+ manifest.envelopes[0].sheetCount+=1;
+ assert.ok(auditPrintManifest(plan,manifest,config).some(issue=>issue.includes('Umschlag-Blattzahlen')));
+ const second=createPrintManifest(plan,config);
+ second.minimumSheets+=1;
+ assert.ok(auditPrintManifest(plan,second,config).some(issue=>issue.includes('angezeigte Gesamtblattzahl')));
+});
+
+test('Die Summe der Kinderblätter ist exakt die Summe aller Umschläge',()=>{
+ for(const players of [1,12,60,100]){
+  const c={...config,players,groupSize:1,routeMode:'varied'};
+  const plan=createPlan(c),manifest=createPrintManifest(plan,c);
+  assert.equal(manifest.envelopes.reduce((sum,e)=>sum+e.sheetCount,0),manifest.taskSheets);
+  assert.equal(manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets,manifest.minimumSheets);
+  assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
+ }
+});
