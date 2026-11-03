@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
-import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, type AgeLevel } from './puzzles';
+import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateRoutePuzzle, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
 
@@ -332,6 +332,7 @@ function App() {
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
                     if(!challenge)return null;
                     const destination=team.stations[stationIndex+1]?.name??team.finish;
+                    const routePuzzle=generateRoutePuzzle(destination,hashSeed(projectId+':route:'+teamIndex+':'+stationIndex));
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet">
                         <h1>{projectTitle}</h1>
@@ -351,10 +352,10 @@ function App() {
                         <h1>Wegrätsel</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt 3/3</p>
                         <p>Löst das Wegrätsel, um euren nächsten Ort herauszufinden. Ihr dürft alle drei Blätter gleichzeitig bearbeiten.</p>
-                        <p className="print-question">Bringt die Buchstaben in die richtige Reihenfolge:</p>
-                        <p className="route-letters">{[...destination].reverse().join(' · ')}</p>
+                        <p className="print-question">{routePuzzle.instruction}</p>
+                        <p className="route-letters">{routePuzzle.question}</p>
                         <p>Unser nächster Ort: __________________________________</p>
-                        <p className="helper">Hinweis: Lest die Buchstaben vom Ende zum Anfang. Leerzeichen gehören zum Ortsnamen.</p>
+                        <p className="helper">Tipp: {routePuzzle.hint}</p>
                       </article>
                     </React.Fragment>;
                   }))}
