@@ -82,8 +82,18 @@ test('Keine widersprüchliche A4-Seitengröße im Druckstylesheet',()=>{
 
 test('Druckknopf kontrolliert tatsächliche DOM-Blattzahl vor dem Öffnen des Druckdialogs',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes("document.querySelectorAll('.print-packet > .print-sheet').length"));
- assert.ok(source.includes('auditRenderedPrintSheets(printManifest?.minimumSheets??0,actual)'));
+ assert.ok(source.includes("packet?.querySelectorAll('.print-sheet').length"));
+ assert.ok(source.includes('auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0'));
  assert.ok(source.includes("if(issues.length){window.alert(issues.join("));
  assert.ok(source.includes('window.print();'));
+});
+
+test('Alle Druckseiten werden einer der drei geprüften Blattkategorien zugeordnet',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.equal((source.match(/className="print-sheet print-organizer-sheet"/g)??[]).length,6);
+ assert.equal((source.match(/className="print-sheet print-child-sheet"/g)??[]).length,3);
+ assert.ok(source.includes('className="print-sheet print-label-sheet"'));
+ for(const name of ['print-organizer-sheet','print-child-sheet','print-label-sheet']){
+  assert.ok(source.includes("packet?.querySelectorAll('."+name+"').length"));
+ }
 });
