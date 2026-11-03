@@ -347,6 +347,12 @@ function App() {
                     <h2>Codes und Lösungen</h2>
                     {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                     <h2>Wegrätsel – Lösungen</h2>
+                    {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((station,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
+                      const target=locations.find(l=>l.name===destination);
+                      const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
+                      return <div key={destination}><strong>{destination}</strong><p>{clue.mode==='questions'?clue.rows?.map((row,i)=>(i+1)+'. '+row.solution+' (Buchstabe '+(row.letterIndex+1)+')').join(' | '):'Lösung: '+clue.answer}</p></div>;
+                    })}
+                    <h2>Gruppenwege</h2>
                     {plan.value.teams.map(team=><p key={team.name}><strong>{team.name}:</strong> {team.stations.map((station,i)=>station.name+" → "+(team.stations[i+1]?.name??team.finish)).join(" | ")}</p>)}
                     <h2>Vorbereitung und Sicherheit</h2>
                     <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Die drei Blätter jeder Station gemeinsam ausgeben; die Reihenfolge der Bearbeitung ist frei. Schloss-Code und Wegrätsel müssen beide gelöst werden. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
