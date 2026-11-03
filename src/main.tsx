@@ -27,6 +27,8 @@ function App() {
   const [routeMode, setRouteMode] = useState<RouteMode>('same');
   const [finishMode, setFinishMode] = useState<FinishMode>('meeting');
   const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
+  const [startPoint, setStartPoint] = useState('Zuhause / Treffpunkt');
+  const [sameStartFinish, setSameStartFinish] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
@@ -41,11 +43,11 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -72,6 +74,8 @@ function App() {
     setRouteMode(c.routeMode ?? 'same');
     setFinishMode(c.finishMode ?? 'meeting');
     setMeetingPoint(c.meetingPoint ?? 'Zuhause / Treffpunkt');
+    setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Zuhause / Treffpunkt');
+    setSameStartFinish(c.finishMode === 'origin');
     setNextLocationId(Math.max(5, c.locations.length + 10));
     setStorageMessage('');
   };
@@ -100,7 +104,7 @@ function App() {
       } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint]);
   const newProject = () => {
     const fresh: SavedGame = {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
@@ -203,6 +207,8 @@ function App() {
               <div className="section-line"><span className="step">03</span><h2>{t.locations}</h2></div>
               <p className="helper">{tx('Trage die Orte ein und beschreibe, was dort zu sehen ist. Später erzeugen wir daraus passende Rätsel.','Name each stop and describe what can be seen there. This will later be used to generate puzzles.')}</p>
               <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>{const count=Number(e.target.value);setLocations(old=>count<old.length?old.slice(0,count):[...old,...Array.from({length:count-old.length},(_,i)=>({id:"loc-"+(nextLocationId+i),name:"",description:""}))]);if(count>locations.length)setNextLocationId(n=>n+count-locations.length);}}/></label>
+              <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
+              <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
@@ -210,6 +216,7 @@ function App() {
                   <label>{tx('Beschreibung (optional)','Description (optional)')}<textarea rows={2} maxLength={400} value={location.description} onChange={e=>updateLocation(location.id,'description',e.target.value)} placeholder={tx('Was gibt es hier?','What is there?')}/></label>
                 </div>
               )}</div>
+              {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
             </>}
             {activeStep === 2 && <>
@@ -235,12 +242,13 @@ function App() {
                     </select>
                   </label>
                   <label>{tx('Zielpunkt', 'Finish location')}
-                    <select value={finishMode} onChange={e=>setFinishMode(e.target.value as FinishMode)}>
+                    <select value={finishMode} onChange={e=>{const value=e.target.value as FinishMode;setFinishMode(value);setSameStartFinish(value==='origin');}}>
+                      <option value="origin">{tx("Gemeinsamer Startort", "Shared starting location")}</option>
                       <option value="meeting">{tx('Gemeinsamer Treffpunkt', 'Shared meeting point')}</option>
                       <option value="start">{tx('Zur eigenen Startstation', 'Back to own starting location')}</option>
                     </select>
                   </label>
-                  {finishMode==='meeting' && <label>{tx('Name des Treffpunkts', 'Meeting point name')}
+                  {false && finishMode==='meeting' && <label>{tx('Name des Treffpunkts', 'Meeting point name')}
                     <input value={meetingPoint} maxLength={80} onChange={e=>setMeetingPoint(e.target.value)}/>
                   </label>}
                 </div>
