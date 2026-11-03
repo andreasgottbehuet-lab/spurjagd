@@ -40,7 +40,8 @@ function chooseInt(rng: () => number, low: number, high: number): number {
   return low + Math.floor(rng() * (high - low + 1));
 }
 export function validCode(code: string, digits = 3): boolean {
-  return new RegExp('^[0-9]{' + digits + '}$').test(code);
+  if (digits !== 3 && digits !== 4) return false;
+  return typeof code === 'string' && new RegExp('^[0-9]{' + digits + '}$').test(code);
 }
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
@@ -104,10 +105,10 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   return false;
 }
 export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number): StationChallenge {
-  if (!validCode(code)) throw new Error('Der Schloss-Code muss genau drei Ziffern enthalten, auch 000 ist erlaubt.');
+  if (!validCode(code, code.length)) throw new Error('Der Schloss-Code muss genau drei oder vier Ziffern enthalten, auch 000 und 0000 sind erlaubt.');
   if (!stationId.trim()) throw new Error('Stations-ID fehlt');
   const kinds: PuzzleKind[] = ['arithmetic','symbols','cipher'];
-  const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
+  const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i % kinds.length], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
   return { stationId, code, puzzles };
 }
