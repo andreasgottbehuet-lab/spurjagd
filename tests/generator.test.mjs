@@ -133,3 +133,15 @@ test('Mehr Teams als Stationen führen zu konkreten Andrangwarnungen',()=>{
  assert.ok(plan.cautions.some(w=>w.includes('Mehr Teams als Standorte')));
  assert.ok(plan.cautions.some(w=>w.includes('Möglicher Andrang')&&w.includes('2 Teams')));
 });
+
+test('Gruppenprofile werden beim Erzeugen des Spielplans vom Eingabeobjekt entkoppelt',()=>{
+ const c={...base,teamProfiles:{'0':{age:'6–8',difficulty:'easy'},'1':{age:'11–13',difficulty:'hard'}}};
+ const original=structuredClone(c.teamProfiles);
+ const plan=createPlan(c);
+ assert.deepEqual(plan.teams[0].profile,original['0']);
+ assert.deepEqual(plan.teams[1].profile,original['1']);
+ assert.notStrictEqual(plan.teams[0].profile,c.teamProfiles['0']);
+ plan.teams[0].profile.difficulty='hard';
+ assert.deepEqual(c.teamProfiles,original);
+ assert.deepEqual(createPlan(c).teams[0].profile,original['0']);
+});
