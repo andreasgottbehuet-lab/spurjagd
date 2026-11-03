@@ -297,3 +297,26 @@ test('Only project-list updates trigger cross-tab protection',()=>{
  assert.equal(projectListChanged('spurjagd-active-project-v1'),false);
  assert.equal(projectListChanged('unrelated-key'),false);
 });
+
+test('After deleting the final project a clean replacement can be persisted and activated',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map();
+ globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
+ try{
+  saveGame(sample());
+  assert.deepEqual(deleteGame('test-one'),[]);
+  const fresh={...sample(),id:'new-draft',title:'Meine Schnitzeljagd',config:createDefaultGameConfig()};
+  assert.equal(saveGame(fresh).length,1);
+  assert.equal(activeGameId(),'new-draft');
+  assert.equal(loadGames()[0].config.meetingPoint,'Treffpunkt');
+ }finally{
+  if(old===undefined)delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+test('Deleting final project immediately persists replacement in the UI',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
+ assert.ok(deletion.includes('const saved=saveGame(fresh)'));
+ assert.ok(deletion.includes('setProjects(saved);applyGame(fresh)'));
+});
