@@ -1,4 +1,4 @@
-import type {GameConfig, GamePlan} from './generator.ts';
+import {createPlan, type GameConfig, type GamePlan} from './generator.ts';
 import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue} from './puzzles.ts';
 
 /** Validates the complete printable packet before any sheet is shown or printed. */
@@ -8,6 +8,14 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
  if(!config.startPoint?.trim()) issues.push('Startort fehlt.');
  if(config.finishMode==='meeting'&&!config.meetingPoint?.trim()) issues.push('Gemeinsamer Zielort fehlt.');
  if(new Set(config.locations.map(location=>location.id)).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
+ try {
+  const expected=createPlan(config);
+  if(plan.teams.length!==expected.teams.length || plan.stopsPerTeam!==expected.stopsPerTeam) issues.push('Gruppenplan stimmt nicht mit den Eingaben überein.');
+  else for(let i=0;i<expected.teams.length;i++){
+   const actual=plan.teams[i], correct=expected.teams[i];
+   if(actual.name!==correct.name || actual.memberCount!==correct.memberCount || actual.finish!==correct.finish || actual.stations.map(s=>s.id).join('|')!==correct.stations.map(s=>s.id).join('|')) issues.push('Gruppenroute '+correct.name+' weicht von der Planung ab.');
+  }
+ } catch(error) { issues.push('Gruppenplanung konnte nicht geprüft werden: '+(error instanceof Error?error.message:String(error))); }
  const locations=new Map(config.locations.map(location=>[location.id,location]));
  const codeByStation=new Map<string,string>();
  for(const location of config.locations){
