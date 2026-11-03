@@ -373,7 +373,7 @@ function App() {
                         <p><strong>Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/3</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
                         <p>Löst die Aufgaben. Die Ergebnisse ergeben euren Schloss-Code in der richtigen Reihenfolge.</p>
-                        {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}</div>)}
+                        {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}</div>)}
                       </article>
                       <article className="print-sheet">
                         <h1>Antwortblatt</h1>
