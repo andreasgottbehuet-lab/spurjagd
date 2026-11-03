@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
+import { generateStationChallenge, hashSeed, validCode, type AgeLevel, type StationChallenge } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
 
@@ -30,6 +31,8 @@ function App() {
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
+  const [stationCodes, setStationCodes] = useState<Record<string, string>>({});
+  const [puzzleSeed, setPuzzleSeed] = useState<number>(() => hashSeed(projectId));
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
   const [projects, setProjects] = useState<SavedGame[]>([]);
   const [storageReady, setStorageReady] = useState(false);
@@ -41,11 +44,34 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed };
+  const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
+  const lockPreview = useMemo(() => {
+    const challenges: { location: Location; challenge: StationChallenge }[] = [];
+    const errors: string[] = [];
+    if (goal !== 'locks') return { challenges, errors };
+    for (const location of locations) {
+      const code = stationCodes[location.id] ?? '';
+      if (!validCode(code, code.length)) {
+        errors.push(location.name.trim() || location.id);
+        continue;
+      }
+      try {
+        challenges.push({ location, challenge: generateStationChallenge(location.id, code, ageLevel, puzzleSeed) });
+      } catch {
+        errors.push(location.name.trim() || location.id);
+      }
+    }
+    return { challenges, errors };
+  }, [goal, locations, stationCodes, ageLevel, puzzleSeed]);
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  const updateStationCode = (id: string, value: string) => {
+    const digits = value.replace(/[^0-9]/g, '').slice(0, 4);
+    setStationCodes(old => ({ ...old, [id]: digits }));
+  };
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -65,6 +91,8 @@ function App() {
     setAge(c.age);
     setGoal(c.goal);
     setLocations(c.locations.map(x => ({...x})));
+    setStationCodes({ ...(c.stationCodes ?? {}) });
+    setPuzzleSeed(c.puzzleSeed ?? hashSeed(project.id));
     setPuzzleMinutes(c.puzzleMinutes);
     setWalkingMinutes(c.walkingMinutes);
     setStartFinishMinutes(c.startFinishMinutes);
@@ -100,11 +128,12 @@ function App() {
       } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed]);
   const newProject = () => {
+    const id = newGameId();
     const fresh: SavedGame = {
-      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})) },
+      version:1, id, title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
+      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes: {}, puzzleSeed: hashSeed(id) },
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -115,7 +144,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { setProjectId(newGameId()); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setStorageMessage(''); }
+      else { const id = newGameId(); setProjectId(id); setPuzzleSeed(hashSeed(id)); setStationCodes({}); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setLocations(initialLocations.map(x=>({...x}))); setStorageMessage(''); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
@@ -130,7 +159,7 @@ function App() {
     try {
       if (file.size > 200_000) throw new Error('Datei zu groß.');
       const imported = parseGameBackup(await file.text());
-      const restored: SavedGame = {...imported,id:newGameId(),title:imported.title+' (Import)',updatedAt:new Date().toISOString()};
+      const restored: SavedGame = {...imported,id:newGameId(),title:imported.title+' (Import)',updatedAt:new Date().toISOString(),config:{...imported.config,puzzleSeed: imported.config.puzzleSeed ?? hashSeed(imported.id)}};
       const updated = saveGame(restored);
       setProjects(updated);
       applyGame(restored);
@@ -204,9 +233,13 @@ function App() {
               <p className="helper">{tx('Trage die Orte ein und beschreibe, was dort zu sehen ist. Später erzeugen wir daraus passende Rätsel.','Name each stop and describe what can be seen there. This will later be used to generate puzzles.')}</p>
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
-                  <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
+                  <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>{setLocations(old=>old.filter(p=>p.id !== location.id));setStationCodes(old=>{const updated={...old};delete updated[location.id];return updated;});}}>{tx('Entfernen','Remove')}</button></div>
                   <label>{tx('Name des Ortes','Location name')}<input value={location.name} maxLength={80} placeholder={tx('z. B. Spielplatz','e.g. playground')} onChange={e=>updateLocation(location.id,'name',e.target.value)}/></label>
                   <label>{tx('Beschreibung (optional)','Description (optional)')}<textarea rows={2} maxLength={400} value={location.description} onChange={e=>updateLocation(location.id,'description',e.target.value)} placeholder={tx('Was gibt es hier?','What is there?')}/></label>
+                  {goal === 'locks' && <label>{tx('Vorhandener Schloss-Code (3 oder 4 Ziffern)','Lock code (3 or 4 digits)')}
+                    <input type="text" inputMode="numeric" autoComplete="off" maxLength={4} value={stationCodes[location.id] ?? ''} onChange={e=>updateStationCode(location.id,e.target.value)} placeholder="007 oder 0007" aria-invalid={Boolean(stationCodes[location.id]) && !validCode(stationCodes[location.id],stationCodes[location.id].length)}/>
+                    <small>{tx('Den tatsächlich eingestellten Code eingeben. Führende Nullen bleiben erhalten.','Enter the actual lock code. Leading zeros are preserved.')}</small>
+                  </label>}
                 </div>
               )}</div>
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
@@ -268,7 +301,29 @@ function App() {
                   </article>
                 )}</div>
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" onClick={()=>window.print()}>{t.print} ↗</button>
+                {goal === 'locks' && <section className="challenge-preview" aria-label={tx('Rätsel je Station','Puzzles per station')}>
+                  <h3>{tx('Schloss-Rätsel für die Stationen','Lock puzzles for each station')}</h3>
+                  {lockPreview.errors.length > 0 && <p className="error" role="alert">{tx('Bitte bei folgenden Stationen einen vollständigen drei- oder vierstelligen Code eintragen: ', 'Please enter a complete 3- or 4-digit code for: ')}{lockPreview.errors.join(', ')}</p>}
+                  {lockPreview.errors.length === 0 && <>
+                    <p className="helper">{tx('Die Aufgaben liefern die Codeziffern in der richtigen Reihenfolge. Die Lösungen erscheinen nur für die Spielleitung und werden beim normalen Drucken ausgeblendet.','Each puzzle supplies one lock digit in order. Leader answers are hidden when printing.')}</p>
+                    {lockPreview.challenges.map(({location,challenge})=><article className="station-worksheet" key={location.id}>
+                      <h4>{tx('Station','Station')}: {location.name}</h4>
+                      <p className="worksheet-intro">{tx('Löst die Aufgaben nacheinander. Jede Lösung ergibt eine Ziffer für euer Schloss.','Solve the puzzles in order. Each answer gives a digit for your lock.')}</p>
+                      <div className="worksheet-puzzles">{challenge.puzzles.map((puzzle,i)=><section className="worksheet-puzzle" key={puzzle.id}>
+                        <strong>{tx('Aufgabe','Puzzle')} {i+1}</strong>
+                        <p>{puzzle.instruction}</p>
+                        {puzzle.render ? <div className="worksheet-symbols" aria-label={tx('Zeichen zum Zählen','Countable symbols')}>{Array.from({length:puzzle.render.count},(_,j)=><span key={j}>{puzzle.render?.symbol}</span>)}</div> : null}
+                        <p className="worksheet-question">{puzzle.question}</p>
+                        <p className="worksheet-answer">{tx('Meine Ziffer:','My digit:')} ______</p>
+                      </section>)}</div>
+                      <p className="worksheet-answer">{tx('Schloss-Code:','Lock code:')} {'_ '.repeat(challenge.puzzles.length)}</p>
+                      <div className="leader-only"><strong>{tx('Nur Spielleitung – nicht auf dem Kinderblatt:','Leader only – not on the child worksheet:')}</strong> {challenge.code}
+                        <p>{challenge.puzzles.map((puzzle,i)=>`${i+1}. ${puzzle.explanation}`).join(' | ')}</p>
+                      </div>
+                    </article>)}
+                  </>}
+                </section>}
+                <button type="button" className="print" disabled={goal==='locks' && lockPreview.errors.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
