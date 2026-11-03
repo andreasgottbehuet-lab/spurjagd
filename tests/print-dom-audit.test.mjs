@@ -83,3 +83,17 @@ test('Etiketten müssen genau einmal und in Umschlag-Reihenfolge vorkommen',()=>
  }
  assert.ok(auditRenderedLabels(expected,['0-a','1-b','falsch']).some(issue=>issue.includes('unbekanntem Umschlag')));
 });
+
+test('Unbeschriftete Etiketten und falsch einsortierte Mehrseiten-Wegrätsel werden abgewiesen',()=>{
+ const expected=[{id:'0-a',sheetCount:5}];
+ assert.ok(auditRenderedLabels(expected,['']).some(issue=>issue.includes('unbekanntem Umschlag')));
+ const sheets=[
+  {envelopeId:'0-a',kind:'task'},
+  {envelopeId:'0-a',kind:'route'},
+  {envelopeId:'0-a',kind:'answer'},
+  {envelopeId:'0-a',kind:'route'},
+  {envelopeId:'0-a',kind:'route'}
+ ];
+ assert.equal(sheets.length,5);
+ assert.ok(auditRenderedEnvelopes(expected,sheets).some(issue=>issue.includes('Umschlag-Reihenfolge')));
+});
