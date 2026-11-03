@@ -111,3 +111,10 @@ test('Verteilte Starts ohne Stationsüberschneidung erzeugen keine Andrangwarnun
  const plan=createPlan(config({startMode:'distributed',routeMode:'same'}));
  assert.equal(plan.cautions.some(w=>w.includes('Möglicher Andrang')),false);
 });
+
+test('Teams ab Nummer elf erhalten eindeutige Namen ohne doppeltes Team-Praefix',()=>{
+ const plan=createPlan(config({players:36,groupSize:3}));
+ assert.equal(plan.teams.length,12);
+ assert.deepEqual(plan.teams.slice(10).map(team=>team.name),['11','12']);
+ assert.equal(new Set(plan.teams.map(team=>team.name)).size,12);
+});
