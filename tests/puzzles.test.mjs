@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -87,4 +87,23 @@ test('Wegrätsel für einen Zielort sind unabhängig von der Gruppe',()=>{
 test('Fragenrätsel funktionieren auch bei Ortsnamen mit J, Q, X und Y',()=>{
  const clue=generateCreativeRouteClue('Jux-Quiz','','questions',42);
  assert.equal(clue.rows.map(r=>r.solution[r.letterIndex]).join('').toUpperCase(),'JUXQUIZ');
+});
+
+test('Fragenrätsel normalisieren Umlaute, Leerzeichen und ß',()=>{
+ for(const name of ['Grüne Wiese','Schloßplatz','Äußere Höhle','Feuerwehr']){
+  const clue=generateCreativeRouteClue(name,'','questions',73);
+  assert.equal(verifyRouteQuestions(clue),true);
+  assert.equal(clue.rows.map(r=>r.solution[r.letterIndex]).join('').toUpperCase(),normalizeSolutionWord(name));
+ }
+});
+test('Wiederholte Buchstaben erhalten unterschiedliche geprüfte Fragen',()=>{
+ const clue=generateCreativeRouteClue('AAAA','', 'questions',1);
+ assert.equal(verifyRouteQuestions(clue),true);
+ assert.ok(new Set(clue.rows.map(r=>r.question)).size>1);
+});
+test('Fragenrätsel sind reproduzierbar und variieren zwischen Projekten',()=>{
+ const a=generateCreativeRouteClue('FEUERWEHR','','questions',123);
+ assert.deepEqual(a,generateCreativeRouteClue('FEUERWEHR','','questions',123));
+ assert.equal(verifyRouteQuestions(a),true);
+ assert.equal(verifyRouteQuestions(generateCreativeRouteClue('FEUERWEHR','','questions',124)),true);
 });
