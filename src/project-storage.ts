@@ -67,7 +67,9 @@ export function parseGameBackup(raw: string): SavedGame {
 }
 export function serializeGameBackup(project: SavedGame): string {
   if (!isSavedGame(project)) throw new Error('Das Projekt enthält ungültige Daten.');
-  return JSON.stringify({ format: 'spurjagd-backup-1', project }, null, 2);
+  const serialized=JSON.stringify({ format: 'spurjagd-backup-1', project }, null, 2);
+  if (new TextEncoder().encode(serialized).byteLength > MAX_FILE_BYTES) throw new Error('Die Sicherungsdatei ist zu groß.');
+  return serialized;
 }
 export function loadGames(): SavedGame[] {
   const raw = localStorage.getItem(KEY);
