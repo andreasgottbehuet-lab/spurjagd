@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -189,6 +189,58 @@ test('Bei mehr als vierzig Projekten bleibt der bisherige Datenbestand erhalten'
   assert.throws(()=>saveGame({...sample(),id:'p-40'}),/Maximal 40/);
   assert.equal(loadGames().length,40);
   assert.equal(memory.get('spurjagd-active-project-v1'),undefined);
+ }finally{
+  if(old===undefined) delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
+test('Doppelte Projektkennungen werden beim Laden abgewiesen',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map([['spurjagd-projects-v1',JSON.stringify([sample(),sample()])]]);
+ globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
+ try{
+  assert.throws(()=>loadGames(),/doppelte Projektkennungen/);
+  assert.equal(memory.get('spurjagd-projects-v1'),JSON.stringify([sample(),sample()]));
+ }finally{
+  if(old===undefined) delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
+test('Unbekannte Projekte können nicht als aktiv gespeichert werden',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map();
+ globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
+ try{
+  saveGame(sample());
+  assert.equal(activeGameId(),'test-one');
+  assert.throws(()=>setActiveGameId('unbekannt'),/existiert nicht/);
+  assert.equal(activeGameId(),'test-one');
+  setActiveGameId('test-one');
+  assert.equal(activeGameId(),'test-one');
+ }finally{
+  if(old===undefined) delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
+test('Fehler beim Speichern der Projektliste ändern die aktive Kennung nicht',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map();
+ globalThis.localStorage={
+  getItem:key=>memory.get(key)??null,
+  setItem:(key,value)=>{
+   if(key==='spurjagd-projects-v1' && memory.has(key)) throw new Error('Speicher voll');
+   memory.set(key,String(value));
+  },
+  removeItem:key=>memory.delete(key)
+ };
+ try{
+  saveGame(sample());
+  assert.throws(()=>saveGame({...sample(),id:'zweites-projekt'}),/Speicher voll/);
+  assert.equal(activeGameId(),'test-one');
+  assert.equal(loadGames().length,1);
  }finally{
   if(old===undefined) delete globalThis.localStorage;
   else globalThis.localStorage=old;
