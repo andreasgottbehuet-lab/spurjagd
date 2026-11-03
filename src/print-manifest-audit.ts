@@ -1,14 +1,15 @@
-import type {GamePlan} from './generator.ts';
-import {LABELS_PER_A5_SHEET, organizerSheetCount, type PrintManifest} from './print-manifest.ts';
+import type {GameConfig,GamePlan} from './generator.ts';
+import {LABELS_PER_A5_SHEET, routeSheetCount, organizerSheetCount, type PrintManifest} from './print-manifest.ts';
 
-export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest):string[] {
+export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest,config?:GameConfig):string[] {
  const errors:string[]=[];
  const expected=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
+ const expectedTasks=plan.teams.flatMap(team=>team.stations.map((_,i)=>2+routeSheetCount(team.stations[i+1]?.name??team.finish,config))).reduce((sum,count)=>sum+count,0);
  if(manifest.envelopes.length!==expected) errors.push('Umschlaganzahl ist falsch.');
- if(manifest.taskSheets!==expected*3) errors.push('Anzahl der A5-Aufgabenblätter ist falsch.');
+ if(manifest.taskSheets!==expectedTasks) errors.push('Anzahl der A5-Aufgabenblätter ist falsch.');
  if(manifest.organizerSheets!==ORGANIZER_A5_SHEETS) errors.push('Anzahl der A5-Spielleitungsseiten ist falsch.');
  if(manifest.labelSheets!==Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Anzahl der A5-Etikettenseiten ist falsch.');
- if(manifest.minimumSheets!==expected*3+ORGANIZER_A5_SHEETS+Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Mindestumfang der Druckseiten ist falsch.');
+ if(manifest.minimumSheets!==expectedTasks+ORGANIZER_A5_SHEETS+Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Mindestumfang der Druckseiten ist falsch.');
  if(new Set(manifest.envelopes.map(e=>e.id)).size!==manifest.envelopes.length) errors.push('Umschlagkennungen sind nicht eindeutig.');
  const expectedIds=plan.teams.flatMap((team,teamIndex)=>team.stations.map(station=>teamIndex+'-'+station.id));
  if(manifest.envelopes.some((envelope,index)=>envelope.id!==expectedIds[index])) errors.push('Umschlagreihenfolge weicht vom Gruppenplan ab.');
@@ -20,7 +21,7 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest):string[
   if(e.stationId!==station.id||e.stationName!==station.name) errors.push(team.name+': falsche Station auf dem Umschlag.');
   if(e.id!==teamIndex+'-'+station.id) errors.push(team.name+': Umschlagkennung stimmt nicht mit der Station überein.');
   if(e.destination!==(team.stations[index+1]?.name??team.finish)) errors.push(team.name+': falscher nächster Zielort.');
-  if(e.sheetCount!==3) errors.push(team.name+': Umschlag muss drei A5-Blätter enthalten.');
+  if(e.sheetCount!==2+routeSheetCount(team.stations[index+1]?.name??team.finish,config)) errors.push(team.name+': Umschlag enthält eine falsche Anzahl A5-Blätter.');
   if(e.team!==team.name||e.teamIndex!==teamIndex||e.stationNumber!==index+1||e.stationTotal!==team.stations.length) errors.push(team.name+': Umschlagbeschriftung stimmt nicht.');
  }));
  return [...new Set(errors)];
