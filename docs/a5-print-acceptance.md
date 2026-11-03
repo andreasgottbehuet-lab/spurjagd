@@ -9,7 +9,7 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 
 ## Druckvorschau
 - Papierformat **A5 Hochformat**, Skalierung **100 %**, Browser-Kopf- und Fußzeilen deaktivieren, wenn sie den Inhalt verschieben.
-- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit dynamisch aufgeteilten Spielleitungsseiten insgesamt **mindestens 51 A5-Seiten**; die tatsächliche Zahl kann höher sein.
+- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit dynamisch aufgeteilten Spielleitungsseiten insgesamt **mindestens 52 A5-Seiten**; die tatsächliche Zahl kann höher sein.
 - Jeder Stationsbesuch hat Blatt 1/3 (Aufgaben), Blatt 2/3 (Antworten), Blatt 3/3 (Wegrätsel). Keine Inhalte abgeschnitten; Schrift und Schreibflächen lesbar.
 - Die Kinderblätter verraten den nächsten Zielort nicht direkt. Der Ort muss durch das Rätsel ermittelt werden. Schloss-Code und Lösung dürfen nicht versehentlich im Kindertext stehen.
 - Spielleitungsübersicht enthält die Codes und Lösungen; Etiketten passen zu Team, Station und Umschlag.
@@ -50,3 +50,6 @@ Bei mehr als zwei Gruppen liegen mehrere Gruppenroutenseiten vor. Für jeden Ums
 
 ## Umschlag-Kontrollliste
 Die Spielleitung erhält eine abhakbare Liste mit höchstens vier Umschlägen pro A5-Blatt. Bei zwölf Umschlägen sind drei Kontrollseiten vorgesehen. Für jeden Eintrag Team, Stationsnummer, Stationsname und benötigte Kinderblattzahl mit dem tatsächlich gepackten Umschlag abgleichen.
+
+## Eigenständiges Sicherheitsblatt
+Die Start- und Sicherheitsanweisung der Spielleitung erhält eine eigene A5-Seite. Sie darf nicht zusammen mit einer vollen vierzeiligen Umschlagkontrollliste auf ein Blatt gedrängt werden. Bei der Beispielkonfiguration (12 Umschläge, vier Teams, drei Stationen je Team) sind deshalb **13 Spielleitungsseiten** und **mindestens 52 A5-Seiten insgesamt** vorgesehen. Das Druckbild ist weiterhin manuell zu prüfen.
