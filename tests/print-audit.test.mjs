@@ -158,3 +158,21 @@ test('Eine manipulierte Zeitberechnung lässt sich nicht durch gleiche Gesamtzei
  plan.remainderMinutes-=2;
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Zeitberechnung')));
 });
+
+test('Fehlende Warnungen bei vielen gleichzeitig startenden Gruppen sperren die Druckfreigabe',()=>{
+ const c={...config(),players:60,groupSize:1,startMode:'distributed'};
+ const plan=createPlan(c);
+ assert.ok(plan.cautions.length>4);
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+ plan.cautions=[];
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Planungshinweise')));
+});
+
+test('Gruppenanzahl und Planungshinweise werden unabhängig geprüft',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.teams.pop();
+ plan.cautions.push('Manipulierte Warnung');
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Gruppenplan')));
+ assert.ok(issues.some(issue=>issue.includes('Planungshinweise')));
+});
