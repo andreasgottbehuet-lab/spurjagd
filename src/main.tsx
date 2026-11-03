@@ -327,7 +327,7 @@ function App() {
                   </article>
                 )}</div>
                 {plan.value && <section className="challenge-preview"><h3>Wegrätsel – Vorschau nach Zielort</h3><p className="helper">Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
-                  const target=locations.find(l=>l.name===destination);
+                  const target=locations.find(l=>l.name.trim()===destination.trim());
                   try {
                     const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
                     return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} (Buchstabe {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">Lösung für die Spielleitung: {clue.answer}</p></article>;
@@ -353,7 +353,7 @@ function App() {
                     {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                   </article>)}
                   {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).flatMap(destination=>{
-                    const target=locations.find(l=>l.name===destination);
+                    const target=locations.find(l=>l.name.trim()===destination.trim());
                     const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
                     return Array.from({length:routeSheetCount(destination,config)},(_,page)=><article className="print-sheet" key={'clue-'+destination+'-'+page}>
                       <h1>Spielleitung – Wegrätsel {page+1}/{routeSheetCount(destination,config)}</h1>
@@ -373,7 +373,7 @@ function App() {
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
                     if(!challenge)return null;
                     const destination=team.stations[stationIndex+1]?.name??team.finish;
-                    const target=locations.find(l=>l.name===destination);
+                    const target=locations.find(l=>l.name.trim()===destination.trim());
                     let routePuzzle;
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
                     catch {return null;}
