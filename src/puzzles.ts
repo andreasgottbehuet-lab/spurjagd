@@ -228,3 +228,21 @@ export function generateCreativeRouteClue(destination: string, description: stri
  const p=generateRoutePuzzle(answer,seed);
  return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
 }
+
+/** Independent checks for route puzzle integrity before printing. */
+export function verifyCreativeRouteClue(clue:RouteClue):boolean {
+ const destination=clue.answer.trim();
+ if(!destination || !clue.instruction.trim()) return false;
+ if(clue.mode==='questions') return verifyRouteQuestions(clue);
+ if(clue.mode==='description') {
+  return clue.question.trim().length>=12
+   && !clue.question.toLocaleLowerCase('de').includes(destination.toLocaleLowerCase('de'));
+ }
+ if(clue.mode==='custom') return clue.question.trim().length>0;
+ if(clue.mode==='letters') {
+  const original=[...destination].sort().join('');
+  const scrambled=[...clue.question].sort().join('');
+  return original===scrambled && clue.question!==destination;
+ }
+ return false;
+}
