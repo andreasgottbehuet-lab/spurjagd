@@ -5,6 +5,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
+import { createPrintManifest } from './print-manifest';
 import './style.css';
 
 const initialLocations: Location[] = [
@@ -64,6 +65,7 @@ function App() {
     ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
   ];
   if (plan.value) printIssues.push(...auditPrintPacket(config,plan.value,projectId));
+  const printManifest = plan.value ? createPrintManifest(plan.value) : null;
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks') return [];
