@@ -80,3 +80,11 @@
 }
 
 @media print{.answer-space{margin:13mm 0;break-inside:avoid}.writing-lines{font-size:11pt;line-height:2.5;margin-top:5mm;color:#666}.route-letters{font-size:18pt;font-weight:800;letter-spacing:2pt;overflow-wrap:anywhere;line-height:1.8}.print-sheet .helper{display:block!important;color:#444}}
+
+@media print {
+ .print-sheet { break-before:page; break-after:auto; page-break-after:auto; box-sizing:border-box; }
+ .print-sheet:first-child { break-before:auto; }
+ .print-sheet h1,.print-sheet h2,.print-sheet h3 { break-after:avoid; }
+ .print-task,.answer-space,.print-label { break-inside:avoid; page-break-inside:avoid; }
+ .print-sheet .route-letters,.print-sheet .symbols,.print-sheet .writing-lines { overflow-wrap:anywhere; }
+}
