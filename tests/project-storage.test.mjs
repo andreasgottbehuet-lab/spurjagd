@@ -265,3 +265,12 @@ test('Importtitel bleiben bei maximal 100 Zeichen gültig',()=>{
  }
  assert.equal(importedProjectTitle('Geburtstag'),'Geburtstag (Import)');
 });
+
+test('Cross-tab edits stop autosave and deletion',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes("window.addEventListener('storage',onStorageChange)"));
+ assert.ok(source.includes("event.key==='spurjagd-projects-v1'"));
+ assert.ok(source.includes('storageConflict.current=true'));
+ assert.ok(source.includes('if (!storageReady || storageConflict.current) return;'));
+ assert.ok(source.includes("if(storageConflict.current){setStorageMessage('Löschen gesperrt"));
+});
