@@ -7,6 +7,7 @@ import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGa
 import { auditPrintPacket } from './print-audit';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
+import { auditRenderedPrintSheets } from './print-dom-audit';
 import './style.css';
 
 const initialLocations: Location[] = [
@@ -426,7 +427,7 @@ function App() {
                   ))}
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
+                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const actual=document.querySelectorAll('.print-packet > .print-sheet').length;const issues=auditRenderedPrintSheets(printManifest?.minimumSheets??0,actual);if(issues.length){window.alert(issues.join('\n'));return;}window.print();}}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
