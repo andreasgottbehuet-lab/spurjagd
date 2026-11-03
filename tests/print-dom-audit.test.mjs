@@ -36,7 +36,7 @@ test('Jeder Umschlag benötigt genau ein Aufgaben- und Antwortblatt sowie alle W
  const correct=[
   {envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route',routePage:1},
   {envelopeId:'1-b',kind:'task'},{envelopeId:'1-b',kind:'answer'},
-  ...Array.from({length:3},()=>({envelopeId:'1-b',kind:'route',routePage:1}))
+  ...Array.from({length:3},(_,index)=>({envelopeId:'1-b',kind:'route',routePage:index+1}))
  ];
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
  assert.ok(auditRenderedEnvelopes(expected,correct.filter(sheet=>!(sheet.envelopeId==='1-b'&&sheet.kind==='answer'))).some(issue=>issue.includes('Umschlag 1-b')));
@@ -60,7 +60,7 @@ test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
  const correct=[
   {envelopeId:'0-a',kind:'task'},
   {envelopeId:'0-a',kind:'answer'},
-  {envelopeId:'0-a',kind:'route'},
+  {envelopeId:'0-a',kind:'route',routePage:1},
   {envelopeId:'1-b',kind:'task'},
   {envelopeId:'1-b',kind:'answer'},
   {envelopeId:'1-b',kind:'route',routePage:1},
