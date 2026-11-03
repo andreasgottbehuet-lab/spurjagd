@@ -138,7 +138,7 @@ export function generateRoutePuzzle(destination: string, seed: number): RoutePuz
     const question = answer.replace(/[AEIOUÄÖÜaeiouäöü]/g, '_');
     return {kind:'missing-vowels',instruction:'Ergänzt die fehlenden Selbstlaute (A, E, I, O, U, Ä, Ö, Ü). Welcher Ort ist gemeint?',question,hint:'Die Striche stehen für fehlende Buchstaben.',answer};
   }
-  if(reversed===answer) throw new Error('Für diesen Zielnamen bitte ein anderes Wegrätsel wählen.');
+  if(reversed.toLocaleLowerCase('de')===answer.toLocaleLowerCase('de')) throw new Error('Für diesen Zielnamen bitte ein anderes Wegrätsel wählen.');
   return {kind:'reverse',instruction:'Lest die Zeichenfolge von rechts nach links. Welcher Ort ist gemeint?',question:reversed,hint:'Beginnt mit dem letzten Zeichen.',answer};
 }
 
