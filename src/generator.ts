@@ -86,7 +86,7 @@ export function createPlan(config: GameConfig): GamePlan {
     return {
       name: COLORS[i] ?? String(i + 1),
       memberCount: base + (i < extra ? 1 : 0),
-      ...(config.teamProfiles?.[String(i)] ? {profile:config.teamProfiles[String(i)]} : {}),
+      ...(config.teamProfiles?.[String(i)] ? {profile:{...config.teamProfiles[String(i)]}} : {}),
       stations,
       finish: finishMode === 'start' ? stations[0].name : finishMode === 'origin' ? startPoint : meetingPoint,
     };
