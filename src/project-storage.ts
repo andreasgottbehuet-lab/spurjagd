@@ -25,7 +25,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (p.stationCodes !== undefined) {
     if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
     const codes = Object.entries(p.stationCodes as Record<string, unknown>);
-    if (codes.length > 20 || codes.some(([key, value]) => key.length > 80 || typeof value !== 'string' || !/^[0-9]{3}$/.test(value))) return false;
+    if (codes.length > 20 || codes.some(([key, value]) => key.length > 80 || typeof value !== 'string' || !/^[0-9]{0,3}$/.test(value))) return false;
   }
   if (!Array.isArray(p.locations) || p.locations.length < 1 || p.locations.length > 20) return false;
   const places = p.locations as unknown[];
