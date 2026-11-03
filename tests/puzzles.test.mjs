@@ -107,3 +107,17 @@ test('Fragenrätsel sind reproduzierbar und variieren zwischen Projekten',()=>{
  assert.equal(verifyRouteQuestions(a),true);
  assert.equal(verifyRouteQuestions(generateCreativeRouteClue('FEUERWEHR','','questions',124)),true);
 });
+
+test('Fragenrätsel lehnen Ortsnamen mit Ziffern ab, statt die Ziffer zu verschlucken',()=>{
+ assert.throws(()=>generateCreativeRouteClue('Station 2','','questions',1),/Ziffern/);
+ const clue=generateCreativeRouteClue('Station 2','','letters',1);
+ assert.equal(clue.answer,'Station 2');
+});
+test('Fragenvarianten liefern für verschiedene Seeds stets die richtigen Buchstaben',()=>{
+ for(const name of ['FEUERWEHR','WIESE','SCHULHOF','SCHLOSS','GRUENE WIESE','ZIEL']){
+  for(let seed=0;seed<40;seed++){
+   const clue=generateCreativeRouteClue(name,'','questions',seed);
+   assert.equal(verifyRouteQuestions(clue),true,name+' / '+seed);
+  }
+ }
+});
