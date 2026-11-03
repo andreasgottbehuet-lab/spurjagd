@@ -324,7 +324,7 @@ function App() {
                     <p>{team.stations.map(s => s.name).join(' → ')} → {team.finish}</p>
                   </article>
                 )}</div>
-                {plan.value && <section className="challenge-preview"><h3>Wegrätsel – Vorschau nach Zielort</h3><p className="helper">Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((station,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
+                {plan.value && <section className="challenge-preview"><h3>Wegrätsel – Vorschau nach Zielort</h3><p className="helper">Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
                   const target=locations.find(l=>l.name===destination);
                   try {
                     const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
@@ -347,7 +347,7 @@ function App() {
                     <h2>Codes und Lösungen</h2>
                     {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                     <h2>Wegrätsel – Lösungen</h2>
-                    {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((station,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
+                    {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
                       const target=locations.find(l=>l.name===destination);
                       const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
                       return <div key={destination}><strong>{destination}</strong><p>{clue.mode==='questions'?clue.rows?.map((row,i)=>(i+1)+'. '+row.solution+' (Buchstabe '+(row.letterIndex+1)+')').join(' | '):'Lösung: '+clue.answer}</p></div>;
