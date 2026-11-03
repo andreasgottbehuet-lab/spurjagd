@@ -145,3 +145,14 @@ test('Gruppenprofile werden beim Erzeugen des Spielplans vom Eingabeobjekt entko
  assert.deepEqual(c.teamProfiles,original);
  assert.deepEqual(createPlan(c).teams[0].profile,original['0']);
 });
+
+test('Teams share station IDs but not mutable station objects',()=>{
+ const c=config({players:12,groupSize:3,startMode:'shared'});
+ const plan=createPlan(c);
+ const a=plan.teams[0].stations[0],b=plan.teams[1].stations[0];
+ assert.equal(a.id,b.id);
+ assert.notStrictEqual(a,b);
+ a.name='Changed';
+ assert.notEqual(b.name,'Changed');
+ assert.notEqual(c.locations[0].name,'Changed');
+});
