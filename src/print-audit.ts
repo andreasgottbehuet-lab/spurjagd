@@ -1,5 +1,5 @@
-import type {GameConfig, GamePlan} from './generator';
-import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode} from './puzzles';
+import type {GameConfig, GamePlan} from './generator.ts';
+import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode} from './puzzles.ts';
 
 /** Validates the complete printable packet before any sheet is shown or printed. */
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
