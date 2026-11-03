@@ -62,7 +62,7 @@
 .print-packet{display:none}
 .print:disabled{opacity:.45;cursor:not-allowed}
 @media print{
- @page{size:A4;margin:14mm}
+ @page{size:A5 portrait;margin:10mm}
  body{background:#fff;color:#111}
  .hero,.site-header,.project-bar,.steps,.wizard-actions,.print,.warnings,.disclaimer,footer,.stats,.team-list,.challenge-preview,.wizard-panel>.section-line,.wizard-panel>.helper{display:none!important}
  .app,.wizard,.wizard-panel{max-width:none;margin:0;padding:0;border:0;box-shadow:none}
