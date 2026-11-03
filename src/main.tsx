@@ -364,8 +364,8 @@ function App() {
                   <article className="print-sheet">
                     <h1>Spielleitung – Kontrolle</h1>
                     <h2>Ausgabe und Kontrolle</h2>
-                    <p>Pro Umschlag: je ein A5-Aufgaben- und Antwortblatt sowie ein oder mehrere Wegrätselblätter. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit dem Spielplan auf Blatt 1 abgleichen.</p>
-                    <p>Die Umschläge in der vorgesehenen Gruppenreihenfolge bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
+                    <p>Pro Umschlag: je ein A5-Aufgaben- und Antwortblatt sowie ein oder mehrere Wegrätselblätter. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit der passenden Gruppenroutenseite abgleichen.</p>
+                    <p>Die Umschläge je Team nach Stationsnummer sortieren und vollständig bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
                     <h2>Vorbereitung und Sicherheit</h2>
                     <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p>
                   </article>
