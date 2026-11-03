@@ -57,3 +57,24 @@
 .range-field{display:flex;flex-direction:column;gap:12px;font-weight:700;font-size:14px}.range-field span{display:flex;justify-content:space-between;align-items:center;gap:16px}.range-field strong{font-size:23px;font-variant-numeric:tabular-nums}.range-field input[type=range]{width:100%;accent-color:#2e654f;min-height:34px;cursor:pointer}.location-range{margin:12px 0 20px}
 
 .checkbox-line{display:flex;align-items:center;gap:10px;margin:16px 0 20px;font-size:14px;font-weight:700}.checkbox-line input{width:20px;height:20px;accent-color:#2e654f}
+
+/* Printable scavenger hunt package */
+.print-packet{display:none}
+.print:disabled{opacity:.45;cursor:not-allowed}
+@media print{
+ @page{size:A4;margin:14mm}
+ body{background:#fff;color:#111}
+ .hero,.site-header,.project-bar,.steps,.wizard-actions,.print,.warnings,.disclaimer,footer,.stats,.team-list,.challenge-preview,.wizard-panel>.section-line,.wizard-panel>.helper{display:none!important}
+ .app,.wizard,.wizard-panel{max-width:none;margin:0;padding:0;border:0;box-shadow:none}
+ .print-packet{display:block!important}
+ .print-sheet{break-after:page;page-break-after:always;font-size:11pt;line-height:1.45}
+ .print-sheet:last-child{break-after:auto;page-break-after:auto}
+ .print-sheet h1{font-size:20pt;margin:0 0 12mm}
+ .print-sheet h2{font-size:15pt}
+ .print-task{break-inside:avoid;border:1px solid #888;padding:5mm;margin:7mm 0}
+ .print-task h3{margin:0 0 3mm}
+ .print-question{font-size:15pt;font-weight:bold}
+ .print-label{border:1px dashed #444;padding:7mm;margin:6mm 0;break-inside:avoid}
+ .print-label span{display:block;font-size:9pt}
+ .symbols{font-size:22pt;letter-spacing:5pt}
+}
