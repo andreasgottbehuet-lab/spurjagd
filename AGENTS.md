@@ -76,3 +76,9 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - Asynchrones Einlesen eines Backups darf keine inzwischen bearbeiteten Eingaben verlieren. Importierte Projekte erhalten eine eigene Projekt-ID; Codes, Hinweise und vorhandener Seed bleiben erhalten. Der Importzusatz im Namen muss innerhalb der 100-Zeichen-Grenze bleiben.
 - Neue Stationen erhalten unabhängige UUID-basierte IDs; keine Ableitung aus der Anzahl importierter Stationen.
 - Browser-Regressionsfälle liegen unter tests/browser/project-flow.test.mjs und sind getrennt von den Node-Unit-Tests auszuführen. Sie verwenden ausschließlich künstliche Projektdaten und isolierte Browserkontexte.
+
+## 10. Gemeinsame Zielhinweise (03.11.2026)
+- Optionales `GameConfig.destinationClues` speichert gemeinsame Ortsrätsel nach `station:<Stations-ID>` bzw. `finish:<Finalname>`. Station und Finale bleiben getrennte Ziele, auch bei gleichem Namen. Das Backupformat bleibt `spurjagd-backup-1`.
+- Ohne individuellen Eintrag verwendet jeder Stationsbesuch den gemeinsamen Hinweis für sein tatsächliches nächstes Ziel. Ein vorhandener `routeClues`-Eintrag hat Vorrang und bleibt bei falscher Zielbindung oder leerem Text blockierend; niemals stillschweigend auf den Standard zurückfallen. Alte Projekte behalten ihre individuellen Hinweise.
+- Die Spielleitung kann je Teamweg einen eigenen Hinweis aktivieren und wieder auf den gemeinsamen Hinweis zurückstellen. Veraltete Hinweise müssen bearbeitet, ausdrücklich für das neue Ziel bestätigt oder zurückgestellt werden. Alle Hinweise unterliegen derselben Druckvorprüfung.
+- Gemeinsame Hinweise müssen aus allen Anlaufrichtungen passen; besondere Wegbeschreibungen gehören in individuelle Teamhinweise. Die Anwendung überprüft keine tatsächlichen Ortsgegebenheiten.

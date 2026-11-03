@@ -30,6 +30,13 @@ export function isGameConfig(data: unknown): data is GameConfig {
   })) return false;
   const locations = places as Location[];
   if (p.puzzleSeed !== undefined && !integer(p.puzzleSeed, 0, 0xffffffff)) return false;
+  if (p.destinationClues !== undefined) {
+    if (!p.destinationClues || typeof p.destinationClues !== 'object' || Array.isArray(p.destinationClues)) return false;
+    const entries = Object.entries(p.destinationClues as Record<string, unknown>);
+    if (entries.length > 2000 || !entries.every(([key, value]) =>
+      key.length <= 100 && /^(station|finish):[\s\S]+$/u.test(key) && text(value, 400)
+    )) return false;
+  }
   if (p.routeClues !== undefined) {
     if (!p.routeClues || typeof p.routeClues !== 'object' || Array.isArray(p.routeClues)) return false;
     const entries = Object.entries(p.routeClues as Record<string, unknown>);

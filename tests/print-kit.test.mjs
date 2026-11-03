@@ -99,3 +99,49 @@ test('Wortteile lösen keinen Fehlalarm aus; vollständige Zielnamen bleiben ges
     assert.ok(kitFor(leaked).issues.some(x => x.includes('direkt')), target);
   }
 });
+
+const commonClues = {
+  'station:a':'Sucht die Geräte zum Klettern.',
+  'station:b':'Sucht die große grüne Fläche.',
+  'station:c':'Sucht die roten Einsatzfahrzeuge.',
+  'finish:Treffpunkt':'Eure Begleitung wartet am vereinbarten Ort.',
+};
+test('Gemeinsame Hinweise werden dem tatsächlichen Ziel aller Teams zugeordnet', () => {
+  const plan=createPlan({...config,players:12});
+  const kit=createPrintKit(plan,{a:'007',b:'0007',c:'123'},{},'middle',987,commonClues);
+  assert.deepEqual(kit.issues,[]);
+  assert.equal(kit.leaderRows.length,12);
+  plan.teams.forEach((team,ti)=>team.stations.forEach((_,si)=>{
+    const key=team.stations[si+1]?'station:'+team.stations[si+1].id:'finish:'+team.finish;
+    assert.equal(kit.leaderRows[ti*3+si].clue,commonClues[key]);
+  }));
+  assert.equal(printKitModule.clueDestinations(plan).length,4);
+  assert.equal(printKitModule.clueDestinations(plan).reduce((n,x)=>n+x.visits,0),12);
+});
+test('Individueller Hinweis hat Vorrang; veralteter oder leerer Hinweis blockiert trotz Standard', () => {
+  const plan=createPlan(config);
+  const to=expectedClueTarget(plan.teams[0].stations,0,plan.teams[0].finish);
+  const kitFor=override=>createPrintKit(plan,{a:'007',b:'0007',c:'123'},override,'middle',987,commonClues);
+  const custom=kitFor({'0:0':{to,text:'Nur euer Team erhält diese besondere Spur.'}});
+  assert.deepEqual(custom.issues,[]);
+  assert.equal(custom.leaderRows[0].clue,'Nur euer Team erhält diese besondere Spur.');
+  assert.equal(kitFor({'0:0':{to:'altes-ziel',text:'Alter Hinweis'}}).cards.length,0);
+  assert.equal(kitFor({'0:0':{to,text:''}}).cards.length,0);
+  assert.equal(kitFor({}).leaderRows[0].clue,commonClues['station:b']);
+});
+test('Gemeinsame Hinweise unterliegen derselben Druckvorprüfung', () => {
+  const plan=createPlan(config);
+  for (const text of ['', 'Geht zur Wiese.', 'x'.repeat(241)]) {
+    const kit=createPrintKit(plan,{a:'007',b:'0007',c:'123'},{},'middle',987,{...commonClues,'station:b':text});
+    assert.ok(kit.issues.length>0);
+    assert.equal(kit.cards.length,0);
+  }
+});
+test('Station und Finale haben getrennte Schlüssel; geändertes Finale erbt keinen alten Hinweis', () => {
+  const plan=createPlan({...config,meetingPoint:'Wiese'});
+  const kit=createPrintKit(plan,{a:'007',b:'0007',c:'123'},{},'middle',987,commonClues);
+  assert.equal(kit.cards.length,0);
+  const destinations=printKitModule.clueDestinations(plan);
+  assert.ok(destinations.some(x=>x.key==='station:b'&&!x.isFinal));
+  assert.ok(destinations.some(x=>x.key==='finish:Wiese'&&x.isFinal));
+});

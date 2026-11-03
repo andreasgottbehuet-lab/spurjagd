@@ -23,6 +23,8 @@ export interface GameConfig {
   puzzleSeed?: number;
   /** Team/stop based clues, bound to the expected next station or finish. */
   routeClues?: Record<string, { to: string; text: string }>;
+  /** Shared clues by namespaced destination; individual route clues take precedence. */
+  destinationClues?: Record<string, string>;
 }
 export interface TeamPlan {
   name: string;

@@ -26,6 +26,7 @@ Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Obe
 - Warnhinweise bei gemeinsamen Starts und begrenzten Standorten
 - Drei- und vierstellige Schloss-Codes mit führenden Nullen, deterministischen Rätseln und gespeichertem Seed
 - Getrennte A4-Druckausgaben für Rätselkarten, geheime Hinweise und Spielleitungs-Lösungen; vier Aufgaben im 2×2-Raster
+- Ein gemeinsamer Hinweis pro Zielort bzw. Finale, mit optionalen individuellen Teamhinweisen; bestehende Hinweise bleiben erhalten und Zieländerungen werden geprüft
 - Tests der Berechnungs-, Validierungs- und Routenoptionen; GitHub Actions führt Tests und Build bei Änderungen aus
 - Mehrere lokale Projekte im Browser: unmittelbares Speichern gültiger Änderungen, geschütztes Wechseln und Neuanlegen sowie Löschen nach Bestätigung
 - Validierter Export und Import als versionierte JSON-Sicherungsdatei; importierte Projekte erhalten eine neue ID
@@ -85,7 +86,7 @@ Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
 
 ## Nächste Ausbaustufe
 1. Papierdruck, Druckerränder und echte Schlösser praktisch prüfen.
-2. Standardhinweise je Zielstation und Großdruck ergänzen.
+2. Großdruck ergänzen.
 3. Beteiligung aller Kinder bei unterschiedlichen Gruppengrößen verbessern.
 4. Weitere geprüfte Rätselarten und altersabhängige Hilfen ergänzen.
 

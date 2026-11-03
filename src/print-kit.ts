@@ -7,6 +7,7 @@ export interface RouteClue {
 }
 
 export type RouteClues = Record<string, RouteClue>;
+export type DestinationClues = Record<string, string>;
 export type ChildPuzzle = Pick<Puzzle, 'instruction' | 'question' | 'render'>;
 export type ChildCard =
   | { kind: 'puzzle'; team: string; station: string; order: number; puzzles: ChildPuzzle[] }
@@ -35,6 +36,27 @@ export function expectedClueTarget(stations: Location[], stopIndex: number, fini
   return stations[stopIndex + 1]?.id ?? '@finish:' + finish;
 }
 
+export function destinationClueKey(stations: Location[], stopIndex: number, finish: string): string {
+  const next = stations[stopIndex + 1];
+  return next ? 'station:' + next.id : 'finish:' + finish;
+}
+
+export function clueDestinations(plan: GamePlan) {
+  const destinations = new Map<string, { key: string; name: string; isFinal: boolean; visits: number }>();
+  for (const team of plan.teams) {
+    team.stations.forEach((_, stopIndex) => {
+      const key = destinationClueKey(team.stations, stopIndex, team.finish);
+      const existing = destinations.get(key);
+      if (existing) existing.visits++;
+      else destinations.set(key, {
+        key, name: team.stations[stopIndex + 1]?.name ?? team.finish,
+        isFinal: stopIndex === team.stations.length - 1, visits: 1,
+      });
+    });
+  }
+  return [...destinations.values()].sort((a, b) => Number(a.isFinal) - Number(b.isFinal));
+}
+
 /** Keep secret clues on different physical sheets, including an odd final card. */
 export function createChildSheets(cards: readonly ChildCard[]): ChildCard[][] {
   const sheets: ChildCard[][] = [];
@@ -59,6 +81,7 @@ export function createPrintKit(
   clues: Readonly<RouteClues>,
   age: AgeLevel,
   seed: number,
+  destinationClues: Readonly<DestinationClues> = {},
 ): PrintKit {
   const issues: string[] = [];
   const cards: ChildCard[] = [];
@@ -76,18 +99,25 @@ export function createPrintKit(
       }
       const next = team.stations[stopIndex + 1]?.name ?? team.finish;
       const expectedTarget = expectedClueTarget(team.stations, stopIndex, team.finish);
-      const clue = clues[routeClueKey(teamIndex, stopIndex)];
+      const routeKey = routeClueKey(teamIndex, stopIndex);
+      const hasOverride = Object.hasOwn(clues, routeKey);
+      const clue = hasOverride ? clues[routeKey] : {
+        to: expectedTarget,
+        text: destinationClues[destinationClueKey(team.stations, stopIndex, team.finish)] ?? '',
+      };
+      const clueLabel = hasOverride ? label : 'Gemeinsamer Hinweis ' +
+        (stopIndex === team.stations.length - 1 ? 'zum Finale ' : 'zu ') + next;
       if (!clue || clue.to !== expectedTarget || !clue.text.trim()) {
-        issues.push(label + ': passender Hinweis zum nächsten Ort oder Finale fehlt.');
+        issues.push(clueLabel + ': passender Hinweis zum nächsten Ort oder Finale fehlt.');
         continue;
       }
       const clueText = clue.text.trim();
       if (clueText.length > 240) {
-        issues.push(label + ': Hinweis überschreitet 240 Zeichen.');
+        issues.push(clueLabel + ': Hinweis überschreitet 240 Zeichen.');
         continue;
       }
       if (namesTarget(clueText, next)) {
-        issues.push(label + ': Hinweis nennt den nächsten Ort direkt. Bitte als Rätsel umformulieren.');
+        issues.push(clueLabel + ': Hinweis nennt den nächsten Ort direkt. Bitte als Rätsel umformulieren.');
         continue;
       }
       try {
@@ -108,5 +138,5 @@ export function createPrintKit(
     }
   }
   // Never print an incomplete packet. All cards remain in memory until preflight is clean.
-  return { cards: issues.length === 0 ? cards : [], leaderRows: issues.length === 0 ? leaderRows : [], issues, sheetCount: issues.length === 0 ? createChildSheets(cards).length : 0 };
+  return { cards: issues.length === 0 ? cards : [], leaderRows: issues.length === 0 ? leaderRows : [], issues: [...new Set(issues)], sheetCount: issues.length === 0 ? createChildSheets(cards).length : 0 };
 }

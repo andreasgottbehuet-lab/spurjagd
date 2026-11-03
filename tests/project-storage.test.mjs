@@ -84,3 +84,13 @@ test('Hinweiskarten mit Zielbindung überstehen Export und Import', () => {
   assert.equal(isGameConfig({...sample().config,routeClues:{'0:0':{to:'b',text:42}}}),false);
   assert.equal(isGameConfig({...sample().config,routeClues:{'../':{to:'b',text:'A'}}}),false);
 });
+
+test('Gemeinsame Zielhinweise bleiben optional und überstehen die Backup-Rundreise', () => {
+  const game=sample();
+  game.config.destinationClues={'station:1':'Sucht den Ort zum Schaukeln.','finish:Zuhause':'Eure Begleitung wartet hier.'};
+  assert.deepEqual(parseGameBackup(serializeGameBackup(game)),game);
+  assert.equal(isSavedGame(sample()),true);
+  for(const invalid of [null,[],42,{'station:1':42},{'station:1':'x'.repeat(401)},{'falsch':'Hinweis'},{'station:':'Hinweis'}]){
+    assert.equal(isGameConfig({...sample().config,destinationClues:invalid}),false);
+  }
+});

@@ -17,7 +17,7 @@ const config = {
   routeClues:{'0:0':{to:'loc-2',text:'Sucht die grüne Fläche.'},'0:1':{to:'@finish:Treffpunkt',text:'Eure Begleitung erwartet euch.'}},
 };
 const project = (id,title) => ({version:1,id,title,updatedAt:'2026-11-03T14:00:00Z',config:structuredClone(config)});
-async function fixture(t) {
+async function fixture(t, games=[project('a','Projekt A'),project('b','Projekt B')]) {
   const context=await browser.newContext({acceptDownloads:true});
   t.after(()=>context.close());
   const page=await context.newPage();
@@ -27,7 +27,7 @@ async function fixture(t) {
       localStorage.setItem('spurjagd-active-project-v1','a');
       sessionStorage.setItem('test-initialized','yes');
     }
-  },[project('a','Projekt A'),project('b','Projekt B')]);
+  },games);
   await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5174');
   await page.locator('#projectTitle').filter({visible:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('#projectTitle')?.value==='Projekt A');
@@ -124,9 +124,9 @@ test('Vollständiger Ablauf: neues Spiel, Codes, Hinweise, Druck, Backup und Wie
   const codeInputs=page.locator('.location-card input[inputmode=numeric]');
   for (const [i,code] of ['0007','007','1234','987'].entries()) await codeInputs.nth(i).fill(code);
   await page.getByRole('button',{name:'04 Spielplan'}).click();
-  const hints=page.locator('.clue-row textarea');
-  assert.equal(await hints.count(),8);
-  for(let i=0;i<8;i++)await hints.nth(i).fill('Löst den nächsten Hinweis gemeinsam. Aufgabe '+(i+1));
+  const hints=page.locator('.destination-clues textarea');
+  assert.equal(await hints.count(),4);
+  for(let i=0;i<4;i++)await hints.nth(i).fill('Löst den nächsten Hinweis gemeinsam. Ziel '+(i+1));
   await page.evaluate(()=>{window.printCalls=0;window.print=()=>window.printCalls++;});
   for(const [name,expectedKind] of [
     ['Rätselkarten drucken','puzzle'],['Geheime Hinweiskarten drucken','clue'],['Spielleitung: Lösungen drucken','leader']
@@ -214,4 +214,67 @@ test('Neuanlage und Import lassen einen unvollständigen Entwurf geöffnet',asyn
   assert.equal(await page.locator('#projectTitle').inputValue(),'Projekt A');
   assert.equal(await page.getByLabel('Name des Ortes',{exact:true}).nth(0).inputValue(),'');
   assert.equal((await saved(page)).length,2);
+});
+
+test('Vier Teams nutzen fünf gemeinsame Zielhinweise für 16 Stationsbesuche',async t=>{
+  const game=project('a','Projekt A');
+  game.config={
+    ...game.config,players:12,startMode:'distributed',routeClues:{},
+    locations:[...config.locations,{id:'c',name:'Brunnen',description:''},{id:'d',name:'Turm',description:''}],
+    stationCodes:{...config.stationCodes,c:'123',d:'4567'},
+  };
+  const page=await fixture(t,[game,project('b','Projekt B')]);
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  const shared=page.locator('.destination-clues textarea');
+  assert.equal(await shared.count(),5);
+  assert.equal(await page.locator('.clue-row textarea').count(),0);
+  for(let i=0;i<5;i++)await shared.nth(i).fill('Gemeinsame Spur für Ziel '+(i+1));
+  assert.equal(await page.locator('.print-preflight').count(),0);
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.getByRole('button',{name:'Geheime Hinweiskarten drucken'}).click();
+  await page.waitForFunction(()=>document.querySelector('.print-mode-clues'));
+  const clues=page.locator('.print-next-clue');
+  assert.equal(await clues.count(),16);
+  assert.equal(await clues.filter({hasText:'Gemeinsame Spur für Ziel 1'}).count(),3);
+  await page.locator('.team-clue-options summary').click();
+  const first=page.locator('.clue-row').first();
+  await first.getByRole('checkbox').check();
+  assert.equal(await first.locator('textarea').inputValue(),'Gemeinsame Spur für Ziel 1');
+  await first.locator('textarea').fill('Eigene Spur nur für das rote Team.');
+  await shared.nth(0).fill('Gemeinsame Spur geändert.');
+  assert.equal(await clues.filter({hasText:'Eigene Spur nur für das rote Team.'}).count(),1);
+  assert.equal(await clues.filter({hasText:'Gemeinsame Spur geändert.'}).count(),2);
+  await first.getByRole('checkbox').uncheck();
+  assert.equal(await clues.filter({hasText:'Gemeinsame Spur geändert.'}).count(),3);
+  await page.locator('#savedProjects').selectOption('b');
+  await page.locator('#savedProjects').selectOption('a');
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  assert.equal(await shared.nth(0).inputValue(),'Gemeinsame Spur geändert.');
+  await page.reload();
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  assert.equal(await shared.nth(0).inputValue(),'Gemeinsame Spur geändert.');
+  assert.deepEqual((await saved(page)).find(x=>x.id==='a').config.routeClues,{});
+  await page.getByRole('button',{name:'Neu',exact:true}).click();
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  assert.ok((await shared.evaluateAll(elements=>elements.map(element=>element.value))).every(value=>value===''));
+});
+
+test('Alte Teamhinweise bleiben erhalten; neues Finale verlangt Prüfung des alten Hinweises',async t=>{
+  const page=await fixture(t);
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  assert.equal(await page.locator('.clue-row textarea').count(),2);
+  assert.equal(await page.locator('.clue-row textarea').first().inputValue(),config.routeClues['0:0'].text);
+  await page.getByRole('button',{name:'03 Spielregeln'}).click();
+  await page.getByLabel('Name des Treffpunkts').fill('Neues Finale');
+  await page.getByRole('button',{name:'04 Spielplan'}).click();
+  const shared=page.locator('.destination-clues textarea');
+  for(let i=0;i<2;i++)await shared.nth(i).fill('Gemeinsame Spur '+i);
+  assert.equal(await page.locator('.clue-row .error').count(),1);
+  assert.equal(await page.getByRole('button',{name:'Geheime Hinweiskarten drucken'}).isDisabled(),true);
+  const last=page.locator('.clue-row').last();
+  assert.equal(await last.locator('textarea').inputValue(),config.routeClues['0:1'].text);
+  await last.getByRole('checkbox').uncheck();
+  assert.equal(await page.locator('.print-preflight').count(),0);
+  assert.equal(await page.getByRole('button',{name:'Geheime Hinweiskarten drucken'}).isEnabled(),true);
+  assert.equal((await saved(page)).find(x=>x.id==='a').config.routeClues['0:0'].text,config.routeClues['0:0'].text);
 });

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, hashSeed, validCode, type AgeLevel, type StationChallenge } from './puzzles';
-import { createPrintKit, expectedClueTarget, routeClueKey, type RouteClues } from './print-kit';
+import { createPrintKit, clueDestinations, destinationClueKey, expectedClueTarget, routeClueKey, type DestinationClues, type RouteClues } from './print-kit';
 import { PrintView } from './print-view';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
@@ -34,6 +34,8 @@ function App() {
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [stationCodes, setStationCodes] = useState<Record<string, string>>({});
   const [routeClues, setRouteClues] = useState<RouteClues>({});
+  const [destinationClues, setDestinationClues] = useState<DestinationClues>({});
+  const [showTeamClues, setShowTeamClues] = useState(false);
   const [printMode, setPrintMode] = useState<'children' | 'clues' | 'leader'>('children');
   const [puzzleSeed, setPuzzleSeed] = useState<number>(() => hashSeed(projectId));
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
@@ -48,7 +50,7 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues, ...(Object.keys(destinationClues).length ? { destinationClues } : {}) };
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const lockPreview = useMemo(() => {
     const challenges: { location: Location; challenge: StationChallenge }[] = [];
@@ -72,10 +74,13 @@ function App() {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
-  const printKit = useMemo(() => plan.value && goal === 'locks' ? createPrintKit(plan.value, stationCodes, routeClues, ageLevel, puzzleSeed) : null,
-    [plan.value, goal, stationCodes, routeClues, ageLevel, puzzleSeed]);
+  const printKit = useMemo(() => plan.value && goal === 'locks' ? createPrintKit(plan.value, stationCodes, routeClues, ageLevel, puzzleSeed, destinationClues) : null,
+    [plan.value, goal, stationCodes, routeClues, ageLevel, puzzleSeed, destinationClues]);
   const updateRouteClue = (teamIndex: number, stopIndex: number, target: string, text: string) => {
     setRouteClues(old => ({ ...old, [routeClueKey(teamIndex, stopIndex)]: { to: target, text } }));
+  };
+  const useSharedClue = (key: string) => {
+    setRouteClues(old => { const next = { ...old }; delete next[key]; return next; });
   };
   const printPacket = (mode: 'children' | 'clues' | 'leader') => {
     if (!printKit || printKit.issues.length > 0) return;
@@ -107,6 +112,8 @@ function App() {
     setLocations(c.locations.map(x => ({...x})));
     setStationCodes({ ...(c.stationCodes ?? {}) });
     setRouteClues({ ...(c.routeClues ?? {}) });
+    setDestinationClues({ ...(c.destinationClues ?? {}) });
+    setShowTeamClues(Object.keys(c.routeClues ?? {}).length > 0);
     setPuzzleSeed(c.puzzleSeed ?? hashSeed(project.id));
     setPuzzleMinutes(c.puzzleMinutes);
     setWalkingMinutes(c.walkingMinutes);
@@ -157,7 +164,7 @@ function App() {
     if (!storageReady) return;
     // Synchronous storage before the browser can navigate or reload.
     saveCurrentProject();
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues, destinationClues]);
   useEffect(() => {
     const warnUnsaved = (event: BeforeUnloadEvent) => {
       if (!unsavedChanges.current) return;
@@ -172,7 +179,7 @@ function App() {
     const id = newGameId();
     const fresh: SavedGame = {
       version:1, id, title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes: {}, routeClues: {}, puzzleSeed: hashSeed(id) },
+      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes: {}, routeClues: {}, destinationClues: undefined, puzzleSeed: hashSeed(id) },
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -183,7 +190,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { const id = newGameId(); setProjectId(id); setPuzzleSeed(hashSeed(id)); setStationCodes({}); setRouteClues({}); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setLocations(initialLocations.map(x=>({...x}))); setStorageMessage(''); }
+      else { const id = newGameId(); setProjectId(id); setPuzzleSeed(hashSeed(id)); setStationCodes({}); setRouteClues({}); setDestinationClues({}); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setLocations(initialLocations.map(x=>({...x}))); setStorageMessage(''); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
@@ -368,20 +375,48 @@ function App() {
                 {goal === 'locks' ? <>
                   <section className="clue-editor">
                     <h3>{tx('Rätsel für den nächsten Ort', 'Clues for the next location')}</h3>
-                    <p className="helper">{tx('Der Zielort darf nicht direkt genannt werden. Trage für jede Gruppe und jeden Stationsbesuch einen Hinweis ein. Dieser wird auf einer eigenen Karte gedruckt und erst nach dem Schloss-Rätsel übergeben.', 'Do not name the next location directly. Enter one clue per team and visited station. It prints on a separate card to hand out after the puzzle.')}</p>
-                    {plan.value.teams.map((team, teamIndex) => <div className="clue-team" key={teamIndex}>
+                    <p className="helper">{tx('Schreibe jeden Hinweis einmal für den Zielort. Alle Teams auf dem Weg dorthin verwenden ihn, sofern kein eigener Teamhinweis eingetragen ist. Beschreibe nur, was vor Ort tatsächlich vorhanden ist, und nenne den Zielort nicht direkt.', 'Write each destination clue once. All teams heading there use it unless they have an individual clue. Describe actual surroundings without directly naming the destination.')}</p>
+                    <p className="helper">{tx('Gemeinsame Hinweise müssen aus allen Anlaufrichtungen passen. Für eine besondere Wegbeschreibung verwende einen individuellen Teamhinweis.', 'Shared clues must work from every approach. Use an individual team clue for directions specific to one route.')}</p>
+                    <div className="destination-clues">
+                      <h4>{tx('Gemeinsame Hinweise', 'Shared destination clues')}</h4>
+                      {clueDestinations(plan.value).map(destination => <label className="destination-clue" key={destination.key}>
+                        {destination.isFinal ? tx('Zum Finale: ', 'To the finish: ') : tx('Zum Ort: ', 'To the location: ')}{destination.name}
+                        <textarea rows={2} maxLength={240} value={destinationClues[destination.key] ?? ''}
+                          placeholder={tx('Ortsrätsel für alle Teams eingeben', 'Enter a shared destination riddle')}
+                          onChange={e=>setDestinationClues(old=>({...old,[destination.key]:e.target.value}))}/>
+                        <small>{destination.visits} {tx('Teamwege führen hierher. Eigene Teamhinweise haben Vorrang.', 'team visits lead here. Individual team clues take precedence.')}</small>
+                      </label>)}
+                    </div>
+                    <details className="team-clue-options" open={showTeamClues} onToggle={e=>setShowTeamClues(e.currentTarget.open)}>
+                      <summary>{tx('Individuelle Teamhinweise (optional)', 'Individual team clues (optional)')}</summary>
+                      <p className="helper">{tx('Vorhandene Teamhinweise bleiben erhalten. Entferne das Häkchen, um stattdessen den gemeinsamen Hinweis zu verwenden.', 'Existing team clues are preserved. Uncheck a custom clue to use the shared clue instead.')}</p>
+                      {plan.value.teams.map((team, teamIndex) => <div className="clue-team" key={teamIndex}>
                       <h4>{tx('Team', 'Team')} {team.name}</h4>
                       {team.stations.map((station, stopIndex) => {
                         const key = routeClueKey(teamIndex, stopIndex);
                         const target = expectedClueTarget(team.stations, stopIndex, team.finish);
-                        const text = routeClues[key]?.to === target ? routeClues[key].text : '';
+                        const own = routeClues[key];
+                        const shared = destinationClues[destinationClueKey(team.stations, stopIndex, team.finish)] ?? '';
                         const next = team.stations[stopIndex + 1]?.name ?? team.finish;
-                        return <label className="clue-row" key={key}>
-                          {tx('Nach', 'After')} {station.name} → {tx('Hinweis für', 'Clue for')} {next}
-                          <textarea rows={2} maxLength={240} value={text} placeholder={tx('Hier ein Ortsrätsel eingeben – nicht den Ortsnamen', 'Enter a riddle, not the location name')} onChange={e=>updateRouteClue(teamIndex,stopIndex,target,e.target.value)} />
-                        </label>;
+                        return <div className="clue-row" key={key}>
+                          <p>{tx('Nach', 'After')} {station.name} → {tx('Hinweis für', 'Clue for')} {next}</p>
+                          <label className="override-toggle">
+                            <input type="checkbox" checked={Boolean(own)} onChange={e=>e.target.checked
+                              ? updateRouteClue(teamIndex,stopIndex,target,shared)
+                              : useSharedClue(key)}/>
+                            {tx('Eigenen Hinweis verwenden', 'Use an individual clue')}
+                          </label>
+                          {own ? <>
+                            {own.to !== target && <p className="error" role="alert">{tx('Ziel geändert: Diesen Hinweis prüfen und für das neue Ziel bestätigen oder auf den gemeinsamen Hinweis zurückstellen.', 'Destination changed: review and confirm this clue for the new target, or switch back to the shared clue.')}</p>}
+                            <label>{tx('Eigener Hinweis', 'Individual clue')}
+                              <textarea rows={2} maxLength={240} value={own.text} onChange={e=>updateRouteClue(teamIndex,stopIndex,target,e.target.value)}/>
+                            </label>
+                            {own.to !== target && <button type="button" className="secondary" onClick={()=>updateRouteClue(teamIndex,stopIndex,target,own.text)}>{tx('Für dieses Ziel bestätigen', 'Confirm for this destination')}</button>}
+                          </> : <p className="inherited-clue">{shared || tx('Gemeinsamen Hinweis oben ergänzen.', 'Enter the shared clue above.')}</p>}
+                        </div>;
                       })}
-                    </div>)}
+                      </div>)}
+                    </details>
                   </section>
                   <section className="print-packet-controls">
                     <h3>{tx('Druckpaket', 'Print packet')}</h3>
