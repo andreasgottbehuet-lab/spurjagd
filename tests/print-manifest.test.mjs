@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
-import {createPrintManifest} from '../src/print-manifest.ts';
+import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount} from '../src/print-manifest.ts';
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
 const config={players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Spielplatz',description:''},{id:'b',name:'Wiese',description:''},{id:'c',name:'Feuerwehr',description:''},{id:'d',name:'Sportplatz',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Zuhause'};
 test('Vier Gruppen mit drei Stationen brauchen 12 Umschläge und 36 Aufgabenblätter',()=>{const m=createPrintManifest(createPlan(config));assert.equal(m.envelopes.length,12);assert.equal(m.taskSheets,36);assert.ok(m.envelopes.every(e=>e.sheetCount===3));assert.equal(new Set(m.envelopes.map(e=>e.id)).size,m.envelopes.length);assert.equal(m.labelSheets,3);assert.equal(m.organizerSheets,10);assert.equal(m.minimumSheets,49);});
@@ -52,3 +52,5 @@ test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschla
  broken.envelopes.find(e=>e.sheetCount>3).sheetCount=3;
  assert.ok(auditPrintManifest(plan,broken,c).some(issue=>issue.includes('Anzahl A5-Blätter')));
 });
+
+test('Fragenrätsel werden in Fünferblöcke aufgeteilt',()=>{const c={...config,routeClueModes:{a:'questions'}};assert.equal(ROUTE_QUESTIONS_PER_A5_SHEET,5);assert.equal(routeSheetCount('Spielplatz',c),1);assert.equal(routeSheetCount('ABCDEFGHIJKLMNOPQRSTUVWXYZ',{...c,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''}]}),6);});
