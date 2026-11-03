@@ -62,6 +62,20 @@ function App() {
     ...(!startPoint.trim()?['Startort fehlt.']:[]),
     ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
   ];
+  if (plan.value) {
+    const destinations = new Set(plan.value.teams.flatMap(team => team.stations.map((station,i) => team.stations[i+1]?.name ?? team.finish)));
+    for (const destination of destinations) {
+      const target = locations.find(l => l.name === destination);
+      const mode = routeClueModes[target?.id ?? ''] ?? 'letters';
+      const description = target?.description ?? '';
+      const custom = routeClueTexts[target?.id ?? ''] ?? '';
+      try {
+        generateCreativeRouteClue(destination,description,mode,hashSeed(projectId+':destination:'+(target?.id??destination)),custom);
+      } catch(error) {
+        printIssues.push('Wegrätsel für '+destination+': '+(error instanceof Error?error.message:String(error)));
+      }
+    }
+  }
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks') return [];
@@ -344,7 +358,7 @@ function App() {
                     const target=locations.find(l=>l.name===destination);
                     let routePuzzle;
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
-                    catch {routePuzzle=generateCreativeRouteClue(destination,'','letters',hashSeed(projectId+':destination:'+(target?.id??destination)));}
+                    catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet">
                         <h1>{projectTitle}</h1>
