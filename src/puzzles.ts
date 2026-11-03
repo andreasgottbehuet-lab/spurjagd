@@ -143,7 +143,7 @@ const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:
  H:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:0},
  I:{question:'Wie heißt ein gefrorenes Dessert aus der Waffel?',solution:'Eis',letterIndex:1},
  K:{question:'Welches Tier miaut?',solution:'Katze',letterIndex:0},
- L:{question:'Was leuchtet nachts am Himmel und umkreist die Erde?',solution:'Mond',letterIndex:2},
+ L:{question:'Welches Tier ist der König der Tiere?',solution:'Löwe',letterIndex:0},
  M:{question:'Welcher Himmelskörper leuchtet nachts und umkreist die Erde?',solution:'Mond',letterIndex:0},
  N:{question:'Was ist das Gegenteil von Tag?',solution:'Nacht',letterIndex:0},
  O:{question:'Welche runde Frucht kann orange sein?',solution:'Orange',letterIndex:0},
