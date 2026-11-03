@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
 import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount} from '../src/print-manifest.ts';
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
+import {generateCreativeRouteClue,verifyRouteQuestions,normalizeSolutionWord} from '../src/puzzles.ts';
 const config={players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Spielplatz',description:''},{id:'b',name:'Wiese',description:''},{id:'c',name:'Feuerwehr',description:''},{id:'d',name:'Sportplatz',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Zuhause'};
 test('Vier Gruppen mit drei Stationen brauchen 12 Umschläge und 36 Aufgabenblätter',()=>{const m=createPrintManifest(createPlan(config));assert.equal(m.envelopes.length,12);assert.equal(m.taskSheets,36);assert.ok(m.envelopes.every(e=>e.sheetCount===3));assert.equal(new Set(m.envelopes.map(e=>e.id)).size,m.envelopes.length);assert.equal(m.labelSheets,3);assert.equal(m.organizerSheets,13);assert.equal(m.minimumSheets,52);});
 test('Umschläge zeigen je Gruppe die korrekte Station und das korrekte Ziel',()=>{const plan=createPlan({...config,routeMode:'varied'});const m=createPrintManifest(plan);for(const team of plan.teams){for(let i=0;i<team.stations.length;i++){const e=m.envelopes.find(x=>x.team===team.name&&x.stationNumber===i+1);assert.equal(e.stationId,team.stations[i].id);assert.equal(e.destination,team.stations[i+1]?.name??team.finish);}}});
@@ -96,6 +97,10 @@ test('Maximal langer Zielname mit 80 Buchstaben bleibt innerhalb der Blattzählu
  const c={...config,locations:[{id:'a',name:destination,description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};
  const plan=createPlan(c),manifest=createPrintManifest(plan,c);
  assert.equal(routeSheetCount(destination,c),16);
+ const clue=generateCreativeRouteClue(destination,'','questions',1234);
+ assert.equal(clue.rows.length,80);
+ assert.ok(verifyRouteQuestions(clue));
+ assert.equal(Math.ceil(normalizeSolutionWord(clue.answer).length/ROUTE_QUESTIONS_PER_A5_SHEET),16);
  assert.ok(manifest.envelopes.some(envelope=>envelope.destination===destination && envelope.sheetCount===18));
  assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
 });
