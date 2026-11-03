@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
+import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
 
@@ -29,6 +30,7 @@ function App() {
   const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
   const [startPoint, setStartPoint] = useState('Zuhause / Treffpunkt');
   const [sameStartFinish, setSameStartFinish] = useState(false);
+  const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
@@ -43,11 +45,20 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes]);
+  const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
+  const challenges = useMemo(() => {
+    if (goal !== 'locks') return [];
+    return locations.filter(l=>validCode(stationCodes[l.id] ?? '')).map(l=>{
+      const challenge=generateStationChallenge(l.id,stationCodes[l.id],ageLevel,hashSeed(projectId));
+      if(codeFromPuzzles(challenge)!==stationCodes[l.id]) throw new Error('Codeprüfung fehlgeschlagen');
+      return {location:l,challenge};
+    });
+  },[locations,stationCodes,ageLevel,projectId,goal]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -76,6 +87,7 @@ function App() {
     setMeetingPoint(c.meetingPoint ?? 'Zuhause / Treffpunkt');
     setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Zuhause / Treffpunkt');
     setSameStartFinish(c.finishMode === 'origin');
+    setStationCodes(c.stationCodes ?? {});
     setNextLocationId(Math.max(5, c.locations.length + 10));
     setStorageMessage('');
   };
@@ -214,6 +226,7 @@ function App() {
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
                   <label>{tx('Name des Ortes','Location name')}<input value={location.name} maxLength={80} placeholder={tx('z. B. Spielplatz','e.g. playground')} onChange={e=>updateLocation(location.id,'name',e.target.value)}/></label>
                   <label>{tx('Beschreibung (optional)','Description (optional)')}<textarea rows={2} maxLength={400} value={location.description} onChange={e=>updateLocation(location.id,'description',e.target.value)} placeholder={tx('Was gibt es hier?','What is there?')}/></label>
+                  {goal==='locks' && <label>{tx('Dreistelliger Schloss-Code','Three-digit lock code')}<input inputMode="numeric" pattern="[0-9]{3}" maxLength={3} placeholder="z. B. 007" value={stationCodes[location.id] ?? ''} onChange={e=>setStationCodes(old=>({...old,[location.id]:e.target.value.replace(/[^0-9]/g,'').slice(0,3)}))}/></label>}
                 </div>
               )}</div>
               {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
@@ -276,6 +289,7 @@ function App() {
                     <p>{team.stations.map(s => s.name).join(' → ')} → {team.finish}</p>
                   </article>
                 )}</div>
+                {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
                 <button type="button" className="print" onClick={()=>window.print()}>{t.print} ↗</button>
               </>}
