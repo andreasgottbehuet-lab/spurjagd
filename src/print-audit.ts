@@ -1,5 +1,5 @@
 import {createPlan, type GameConfig, type GamePlan} from './generator.ts';
-import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue} from './puzzles.ts';
+import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue,clueRevealsDestination} from './puzzles.ts';
 
 /** Validates the complete printable packet before any sheet is shown or printed. */
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
@@ -47,7 +47,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    try{
     const clue=generateCreativeRouteClue(destination,target?.description??'',mode,hashSeed(projectId+':destination:'+(target?.id??destination)),config.routeClueTexts?.[target?.id??'']??'');
     if(clue.answer!==destination) throw new Error('Zielort stimmt nicht überein');
-    if(mode==='custom' && clue.question.toLowerCase().includes(destination.toLowerCase())) throw new Error('Das Rätsel nennt bereits den Zielort.');
+    if(mode==='custom' && clueRevealsDestination(clue.question,destination)) throw new Error('Das Rätsel nennt bereits den Zielort.');
     if(!verifyCreativeRouteClue(clue)) throw new Error('Wegrätsel ist nicht eindeutig prüfbar oder verrät den Zielort.');
    }catch(error){
     issues.push(team.name+' / '+station.name+' → '+destination+': '+(error instanceof Error?error.message:String(error)));
