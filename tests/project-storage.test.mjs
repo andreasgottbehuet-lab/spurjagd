@@ -352,3 +352,13 @@ test('Failed final-project replacement leaves original project data untouched',(
   assert.equal(activeGameId(),'test-one');
  }finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });
+
+test('Storage errors block project creation, switching and deletion',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const switcher=source.slice(source.indexOf('const saveCurrentBeforeSwitch ='),source.indexOf('const newProject ='));
+ const deletion=source.slice(source.indexOf('const removeProject ='),source.indexOf('const exportProject ='));
+ assert.ok(switcher.includes('if (!storageReady)'));
+ assert.ok(switcher.includes('return false'));
+ assert.ok(deletion.includes('storageConflict.current || !storageReady'));
+ assert.ok(deletion.includes('return;'));
+});
