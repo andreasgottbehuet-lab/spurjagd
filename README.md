@@ -47,3 +47,6 @@ Der Befehl installiert Abhängigkeiten, führt Tests aus und erstellt den Produk
 Der Stack verwendet Vite, React, TypeScript und Cloudflare Workers mit statischen Assets. `npm run build` erstellt `dist`; `npm run deploy` ruft Wrangler auf. Vor öffentlicher Freigabe Tests, Build, Druckpakete und rechtliche Angaben nachweislich prüfen.
 
 **Produktentscheidung:** Kostenlose Grundversion bleibt vollständig spielbar und werbefrei. Erweiterte Funktionen bzw. Themenpakete können später kostenpflichtig werden; keine verpflichtenden Nutzerkonten und vorerst keine Zahlungsintegration.
+
+## Druckabnahme
+Die praktische A5-Abnahme ist in [docs/a5-print-acceptance.md](./docs/a5-print-acceptance.md) beschrieben. Das Windows-Pruefskript schreibt ein lokales Protokoll `spurjagd-verification.log`.
