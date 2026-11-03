@@ -63,7 +63,7 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
  for(const envelope of expected){
   const pages=actual.filter(sheet=>sheet.envelopeId===envelope.id&&sheet.kind==='route');
   pages.forEach((page,index)=>{
-   if(page.routePage!==undefined && page.routePage!==index+1) issues.push('Umschlag '+envelope.id+': Wegrätsel-Seitenfolge ist fehlerhaft.');
+   if(page.routePage!==index+1) issues.push('Umschlag '+envelope.id+': Wegrätsel-Seitenfolge ist fehlerhaft.');
   });
  }
  // The packet must be packable in manifest order: task, answer, then route pages.
