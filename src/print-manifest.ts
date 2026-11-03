@@ -32,7 +32,7 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
   destination:team.stations[stationIndex+1]?.name??team.finish,
   sheetCount:3 as const
  })));
- const taskSheets=envelopes.length*3;
+ const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  // Labels share pages, but their actual page count depends on printer and text length.
  return {envelopes,organizerSheets:1,labelSheets:1,taskSheets,minimumSheets:taskSheets+2};
 }
