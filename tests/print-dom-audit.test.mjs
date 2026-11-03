@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels} from '../src/print-dom-audit.ts';
+import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditPrintOverflow} from '../src/print-dom-audit.ts';
 
 test('Vollständig gerendertes A5-Paket wird freigegeben',()=>{
  for(const count of [1,3,53,200,1000]) assert.deepEqual(auditRenderedPrintSheets(count,count),[]);
@@ -106,4 +106,12 @@ test('Multi-page route puzzles reject swapped page indices',()=>{
  assert.deepEqual(auditRenderedEnvelopes(expected,sheets),[]);
  const changed=sheets.map(x=>({...x}));changed[3].routePage=3;changed[4].routePage=2;
  assert.ok(auditRenderedEnvelopes(expected,changed).some(x=>x.includes('Wegrätsel-Seitenfolge')));
+});
+
+test('A5 overflow audit identifies height, width and invalid measurements',()=>{
+ const okay={id:'Team 1',contentWidth:480,contentHeight:700,scrollWidth:480,scrollHeight:699};
+ assert.deepEqual(auditPrintOverflow([okay]),[]);
+ assert.ok(auditPrintOverflow([{...okay,scrollHeight:730}]).some(x=>x.includes('Seitenhöhe')));
+ assert.ok(auditPrintOverflow([{...okay,scrollWidth:520}]).some(x=>x.includes('zu breit')));
+ assert.ok(auditPrintOverflow([{...okay,contentHeight:NaN}]).some(x=>x.includes('nicht geprüft')));
 });
