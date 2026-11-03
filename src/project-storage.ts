@@ -30,6 +30,15 @@ export function isGameConfig(data: unknown): data is GameConfig {
   })) return false;
   const locations = places as Location[];
   if (p.puzzleSeed !== undefined && !integer(p.puzzleSeed, 0, 0xffffffff)) return false;
+  if (p.routeClues !== undefined) {
+    if (!p.routeClues || typeof p.routeClues !== 'object' || Array.isArray(p.routeClues)) return false;
+    const entries = Object.entries(p.routeClues as Record<string, unknown>);
+    if (entries.length > 2000 || !entries.every(([key, value]) => {
+      if (!/^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$/.test(key) || !value || typeof value !== 'object' || Array.isArray(value)) return false;
+      const clue = value as Record<string, unknown>;
+      return text(clue.to, 100) && Boolean(clue.to) && text(clue.text, 400);
+    })) return false;
+  }
   if (p.stationCodes !== undefined) {
     if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
     const codes = Object.entries(p.stationCodes as Record<string, unknown>);
