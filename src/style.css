@@ -68,3 +68,78 @@
 .leader-only p{margin:8px 0 0}
 .print:disabled{opacity:.45;cursor:not-allowed}
 @media print{.leader-only{display:none!important}.station-worksheet{break-inside:avoid-page;box-shadow:none;border:1px solid #555}.worksheet-puzzle{break-inside:avoid}.challenge-preview{border:0}.challenge-preview .helper{display:none!important}}
+
+/* Clue authoring and print controls (visible in the planner only). */
+.clue-editor,.print-packet-controls{margin-top:24px;padding:18px;border:1px solid #d9e5dc;border-radius:12px}
+.clue-editor h3,.print-packet-controls h3{margin:0 0 12px}
+.clue-team{padding:12px 0;border-top:1px solid #d9e5dc}
+.clue-team h4{margin:0 0 10px}
+.clue-row{display:block;margin:10px 0;font-size:13px;font-weight:700}
+.clue-row textarea{display:block;width:100%;margin-top:7px;font-weight:400}
+.print-preflight{border-left:3px solid #b34232;padding:12px 16px;background:#fff8f5}
+.print-preflight ul{padding-left:19px;margin:8px 0 0}
+.print-preflight li{margin:5px 0;font-size:13px}
+.print-buttons{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.print-buttons .print{margin:0}
+.print-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.print-document{display:none}
+
+/* A4 landscape, two portrait A5 cards per physical sheet.
+   Keep 8 mm safe inset on each A5 card for ordinary printers. */
+@page{size:A4 landscape;margin:0}
+@media print{
+  .app.print-ready > header,
+  .app.print-ready .hero,
+  .app.print-ready .project-bar,
+  .app.print-ready .wizard,
+  .app.print-ready main > footer{display:none!important}
+  html,body,#root,.app,.app main{margin:0!important;padding:0!important;min-height:0!important;background:#fff!important}
+  .app.print-ready .print-document{display:block!important;margin:0!important;padding:0!important}
+  .print-document,.print-document *{color:#000!important;background:#fff!important;box-shadow:none!important}
+  .print-document{font-family:Arial,Helvetica,sans-serif}
+  .print-document .print-sheet{
+    box-sizing:border-box;
+    width:297mm;height:210mm;
+    margin:0;padding:0;
+    overflow:hidden;
+    break-after:page;page-break-after:always;
+    break-inside:avoid;page-break-inside:avoid;
+  }
+  .print-document .print-sheet:last-child{break-after:auto;page-break-after:auto}
+  .print-document .child-sheet{
+    display:grid;grid-template-columns:148.5mm 148.5mm;grid-template-rows:210mm
+  }
+  .print-document .print-half-card{
+    box-sizing:border-box;
+    width:148.5mm;height:210mm;
+    padding:9mm 8mm;
+    border-right:1px dashed #666;
+    position:relative;overflow:hidden;
+    font-size:10pt;line-height:1.28
+  }
+  .print-document .print-half-card:nth-child(2){border-right:0}
+  .print-document .print-half-card h2{font-size:17pt;margin:7mm 0 2mm}
+  .print-document .print-card-header{display:flex;justify-content:space-between;gap:4mm;border-bottom:1px solid #666;padding-bottom:3mm;font-size:9pt;font-weight:bold}
+  .print-document .print-station-name{font-size:12pt;font-weight:bold;margin:2mm 0 4mm}
+  .print-document .print-intro{font-size:9pt;line-height:1.3}
+  .print-document .print-tasks{margin-top:5mm}
+  .print-document .print-task{padding:3mm 0;border-top:1px solid #bbb;break-inside:avoid}
+  .print-document .print-task strong{font-size:9.5pt}
+  .print-document .print-task p{font-size:10pt;margin:2mm 0}
+  .print-document .print-symbols{display:flex;flex-wrap:wrap;gap:3mm;border:1px solid #888;padding:2mm;min-height:7mm;font-size:18pt}
+  .print-document .print-answer-line{font-size:10pt;margin-top:2mm}
+  .print-document .print-combination{margin-top:5mm;padding:2mm;border:1px solid #999;font-weight:bold;font-size:10pt}
+  .print-document .print-next-clue{border:2px solid #333;padding:10mm 6mm;min-height:65mm;margin-top:20mm;font-size:15pt;line-height:1.5;overflow-wrap:anywhere}
+  .print-document .print-card-foot{position:absolute;bottom:8mm;left:8mm;right:8mm;border-top:1px solid #aaa;padding-top:3mm;font-size:8pt}
+  .print-document .leader-sheet{display:flex;flex-direction:column;padding:11mm 14mm;font-size:10pt}
+  .print-document .leader-header{border-bottom:2px solid #222;padding-bottom:3mm}
+  .print-document .leader-header h1{font-size:18pt;margin:0}
+  .print-document .leader-header p{margin:2mm 0}
+  .print-document .leader-entries{display:grid;grid-template-rows:1fr 1fr;gap:5mm;flex:1;min-height:0;margin-top:5mm}
+  .print-document .leader-entry{border:1px solid #666;padding:4mm 6mm;overflow:hidden;overflow-wrap:anywhere}
+  .print-document .leader-entry h2{font-size:12pt;margin:0 0 3mm}
+  .print-document .leader-entry p{margin:2mm 0;line-height:1.35}
+  .print-document .leader-code{font-size:15pt;font-weight:800;letter-spacing:1mm}
+  .print-document .leader-footer{display:block!important;border-top:1px solid #888;margin-top:5mm;padding:3mm 0 0!important;font-size:8pt}
+  .print-document .leader-footer p{margin:1mm 0}
+}
