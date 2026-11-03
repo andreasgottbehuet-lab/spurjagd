@@ -1,5 +1,7 @@
 import type {GamePlan} from './generator.ts';
 
+export const LABELS_PER_A5_SHEET = 4;
+
 export interface PrintEnvelope {
  id:string;
  team:string;
@@ -34,5 +36,6 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
  })));
  const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  // Labels share pages, but their actual page count depends on printer and text length.
- return {envelopes,organizerSheets:1,labelSheets:1,taskSheets,minimumSheets:taskSheets+2};
+ const labelSheets=Math.ceil(envelopes.length/LABELS_PER_A5_SHEET);
+ return {envelopes,organizerSheets:1,labelSheets,taskSheets,minimumSheets:taskSheets+1+labelSheets};
 }
