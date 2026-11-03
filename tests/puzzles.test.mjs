@@ -128,3 +128,28 @@ test('Ortsbeschreibungen verbergen den Zielnamen unabhängig von Großschreibung
  assert.match(clue.question,/Schaukeln/);
  assert.match(clue.question,/Rutsche/);
 });
+
+test('Altersgerechte Rechenvarianten ergeben bei vielen Seeds die richtige Ziffer',()=>{
+ for(const age of ['young','middle','older']){
+  for(let target=0;target<=9;target++){
+   for(let seed=0;seed<100;seed++){
+    const puzzle=generateDigitPuzzle(target,'arithmetic',age,seed);
+    assert.equal(verifyDigitPuzzle(puzzle),true,age+'/'+target+'/'+seed);
+   }
+  }
+ }
+});
+test('Einfache Buchstabenverschiebung für jüngere Kinder',()=>{
+ for(let target=0;target<=9;target++){
+  const puzzle=generateDigitPuzzle(target,'cipher','young',target+3);
+  assert.match(puzzle.instruction,/um 1 Stellen/);
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+ }
+});
+test('Ortsnamen mit gleichem Vorwärts- und Rückwärtstext verraten nicht die Lösung',()=>{
+ for(const seed of [0,1,2,3,4,5]){
+  const clue=generateRoutePuzzle('Anna',seed);
+  assert.notEqual(clue.question,clue.answer);
+  assert.equal(clue.kind,'missing-vowels');
+ }
+});
