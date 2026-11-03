@@ -142,7 +142,7 @@
 @media print {
  .print-label-sheet .print-label {
   box-sizing:border-box;
-  min-height:42mm;
+  min-height:36mm;
   margin:0;
   padding:3mm;
   font-size:9pt;
