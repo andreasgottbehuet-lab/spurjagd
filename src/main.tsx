@@ -339,30 +339,30 @@ function App() {
                 {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge mit jeweils 3 Blättern = {printManifest.taskSheets} A5-Aufgabenblätter. Spielleitungsübersicht und Etiketten kommen hinzu. Die tatsächliche Seitenzahl hängt von der Textlänge ab.</p></div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
-                  <article className="print-sheet">
-                    <h1>{projectTitle} – Spielleitung (1/4)</h1>
+                  {Array.from({length:Math.ceil(plan.value.teams.length/2)},(_,page)=><article className="print-sheet" key={'routes-'+page}>
+                    <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
                     <p>Individuelle Alters- und Schwierigkeitsprofile sind für eine spätere Bezahlversion vorgesehen. Die derzeitigen Aufgaben verwenden weiterhin die gemeinsame Altersklasse.</p>
-                    {plan.value.teams.map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
-                  </article>
-                  <article className="print-sheet">
-                    <h1>Spielleitung – Codes (2/4)</h1>
+                    {plan.value.teams.slice(page*2,(page+1)*2).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
+                  </article>)}
+                  {Array.from({length:Math.ceil(challenges.length/2)},(_,page)=><article className="print-sheet" key={'codes-'+page}>
+                    <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
-                    {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
-                  </article>
-                  <article className="print-sheet">
-                    <h1>Spielleitung – Wegrätsel (3/4)</h1>
+                    {challenges.slice(page*2,(page+1)*2).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
+                  </article>)}
+                  {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=><article className="print-sheet" key={'clue-'+destination}>
+                    <h1>Spielleitung – Wegrätsel</h1>
                     <h2>Wegrätsel – Lösungen</h2>
-                    {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
+                    {[destination].map(destination=>{
                       const target=locations.find(l=>l.name===destination);
                       const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
                       return <div key={destination}><strong>{destination}</strong><p>{clue.mode==='questions'?clue.rows?.map((row,i)=>(i+1)+'. '+row.solution+' (Buchstabe '+(row.letterIndex+1)+')').join(' | '):'Lösung: '+clue.answer}</p></div>;
                     })}
-                  </article>
+                  </article>)}
                   <article className="print-sheet">
-                    <h1>Spielleitung – Kontrolle (4/4)</h1>
+                    <h1>Spielleitung – Kontrolle</h1>
                     <h2>Ausgabe und Kontrolle</h2>
                     <p>Pro Umschlag: drei A5-Blätter – Aufgaben, Antworten und Wegrätsel. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit dem Spielplan auf Blatt 1 abgleichen.</p>
                     <p>Die Umschläge in der vorgesehenen Gruppenreihenfolge bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
