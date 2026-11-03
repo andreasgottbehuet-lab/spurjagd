@@ -157,3 +157,15 @@ test('Ortsnamen mit gleichem Vorwärts- und Rückwärtstext verraten nicht die L
 test('Eigene Ortsrätsel nennen den Zielort nicht ausdrücklich',()=>{const a=generateCreativeRouteClue('Wiese','','custom',1,'Geht zur WIESE.');assert.equal(verifyCreativeRouteClue(a),false);const b=generateCreativeRouteClue('Wiese','','custom',1,'Wo wachsen hohe Gräser?');assert.equal(verifyCreativeRouteClue(b),true);});
 
 test('Kinder erhalten altersgerechte Rechenhilfen',()=>{const a=generateDigitPuzzle(7,'arithmetic','young',3);const b=generateDigitPuzzle(7,'arithmetic','older',3);assert.match(a.hint,/Fingern/);assert.match(b.hint,/Multiplikation/);assert.notEqual(a.hint,b.hint);});
+
+test('Fragenrätsel akzeptieren ausschließlich geprüfte Fragen und Antworten',()=>{
+ const clue=generateCreativeRouteClue('Spielplatz','', 'questions',hashSeed('approved-questions'));
+ assert.equal(verifyRouteQuestions(clue),true);
+ const changed={...clue,rows:clue.rows.map(row=>({...row}))};
+ changed.rows[0].question='Eine andere Frage mit derselben Lösung?';
+ assert.equal(verifyRouteQuestions(changed),false);
+ assert.equal(verifyCreativeRouteClue(changed),false);
+ const wrong={...clue,rows:clue.rows.map(row=>({...row}))};
+ wrong.rows[0].solution='Sonne';
+ assert.equal(verifyRouteQuestions(wrong),false);
+});
