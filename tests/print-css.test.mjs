@@ -55,3 +55,5 @@ test('Mehrseitige Wegrätsel teilen Fragen in A5-Blöcke und nummerieren weiter'
 test('Fragen und Antwortzeilen bleiben beim A5-Druck zusammen',()=>{const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.match(css,/\.print-route-question\s*\{[^}]*break-inside:avoid;/);assert.ok(source.includes('className="print-route-question"'));});
 
 test('Lösungsschlüssel teilt lange Fragenrätsel in dieselben A5-Blöcke',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET'));assert.ok(source.includes("key={'clue-'+destination+'-'+page}"));});
+
+test('Druck und Prüfcode lösen Stationsnamen mit Leerzeichen konsistent auf',()=>{const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const audit=readFileSync(new URL('../src/print-audit.ts',import.meta.url),'utf8');assert.ok(main.includes('l.name.trim()===destination.trim()'));assert.ok(audit.includes('location.name.trim()===destination.trim()'));});
