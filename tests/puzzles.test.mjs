@@ -194,3 +194,13 @@ test('Wegrätsel dürfen den Zielort nicht durch zusätzliche Leerzeichen oder S
 });
 
 test('Zielortprüfung unterscheidet vollständige Wörter von Teilwörtern',()=>{assert.equal(clueRevealsDestination('Am Motor steht ein Hinweis','Tor'),false);assert.equal(clueRevealsDestination('Geht zum Tor!','Tor'),true);assert.equal(clueRevealsDestination('Zum Feuerwehr-Platz gehen','Feuerwehr Platz'),true);assert.equal(clueRevealsDestination('Zur Feuerwehrplatz-Rutsche','Feuerwehrplatz'),true);assert.equal(clueRevealsDestination('Zum Sportplatz laufen','Ort'),false);});
+
+test('Wegrätsel erkennen Zielort auch mit Umlautumschreibung und unsichtbaren Zeichen',()=>{
+ const destination='Wiese über der Sabine';
+ assert.equal(clueRevealsDestination('Geht zur Wiese ueber der Sabine.',destination),true);
+ assert.equal(clueRevealsDestination('Geht zur Wiese über der Sabine.',destination),true);
+ assert.equal(clueRevealsDestination('Geht zur Wiese über der Sa\u200Bbine.',destination),true);
+ assert.equal(clueRevealsDestination('Geht zur Wiese am Waldrand.',destination),false);
+ const clue=generateCreativeRouteClue(destination,'','custom',1,'Geht zur Wiese ueber der Sabine.');
+ assert.equal(verifyCreativeRouteClue(clue),false);
+});
