@@ -336,7 +336,7 @@ function App() {
                   }
                 })}</section>}
                 {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
-                {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge × 3 Blätter = {printManifest.taskSheets} Aufgabenblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Insgesamt mindestens {printManifest.minimumSheets} A5-Seiten. Bei langen Texten kann der tatsächliche Druckumfang größer sein.</p></div>}
+                {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge mit mindestens 3 Blättern = {printManifest.taskSheets} Aufgabenblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Insgesamt mindestens {printManifest.minimumSheets} A5-Seiten. Bei langen Texten kann der tatsächliche Druckumfang größer sein.</p></div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
                   {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'routes-'+page}>
@@ -364,7 +364,7 @@ function App() {
                   <article className="print-sheet">
                     <h1>Spielleitung – Kontrolle</h1>
                     <h2>Ausgabe und Kontrolle</h2>
-                    <p>Pro Umschlag: drei A5-Blätter – Aufgaben, Antworten und Wegrätsel. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit dem Spielplan auf Blatt 1 abgleichen.</p>
+                    <p>Pro Umschlag: je ein A5-Aufgaben- und Antwortblatt sowie ein oder mehrere Wegrätselblätter. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit dem Spielplan auf Blatt 1 abgleichen.</p>
                     <p>Die Umschläge in der vorgesehenen Gruppenreihenfolge bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
                     <h2>Vorbereitung und Sicherheit</h2>
                     <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p>
