@@ -341,7 +341,7 @@ function App() {
                 {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge mit je mindestens 3 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Insgesamt mindestens {printManifest.minimumSheets} A5-Seiten. Bei langen Texten kann der tatsächliche Druckumfang größer sein.</p></div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
-                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'routes-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
@@ -349,7 +349,7 @@ function App() {
                     <p>Individuelle Alters- und Schwierigkeitsprofile sind für eine spätere Bezahlversion vorgesehen. Die derzeitigen Aufgaben verwenden weiterhin die gemeinsame Altersklasse.</p>
                     {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
-                  {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'codes-'+page}>
+                  {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
                     {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
@@ -357,13 +357,13 @@ function App() {
                   {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).flatMap(destination=>{
                     const target=locations.find(l=>l.name.trim()===destination.trim());
                     const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
-                    return Array.from({length:routeSheetCount(destination,config)},(_,page)=><article className="print-sheet" key={'clue-'+destination+'-'+page}>
+                    return Array.from({length:routeSheetCount(destination,config)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'clue-'+destination+'-'+page}>
                       <h1>Spielleitung – Wegrätsel {page+1}/{routeSheetCount(destination,config)}</h1>
                       <h2>Lösung: {destination}</h2>
                       {clue.mode==='questions'?clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET,(page+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((row,i)=><p key={i}>{page*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {row.solution} (Buchstabe {row.letterIndex+1})</p>):<p>Lösung: {clue.answer}</p>}
                     </article>);
                   })}
-                  <article className="print-sheet" key="safety-check">
+                  <article className="print-sheet print-organizer-sheet" key="safety-check">
                     <h1>Spielleitung – Start und Sicherheit</h1>
                     <h2>Vor der Ausgabe</h2>
                     <p>Pro Umschlag: ein A5-Aufgabenblatt, ein Antwortblatt und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
@@ -375,12 +375,12 @@ function App() {
                     <h2>Zum Spielende</h2>
                     <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
                   </article>
-                  {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'cautions-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'cautions-'+page}>
                     <h1>Spielleitung – Planungshinweise {page+1}</h1>
                     <p>Diese Hinweise sind Annahmen aus der Routenplanung und müssen vor Ort überprüft werden.</p>
                     {plan.value.cautions.slice(page*ORGANIZER_CAUTIONS_PER_A5_SHEET,(page+1)*ORGANIZER_CAUTIONS_PER_A5_SHEET).map((warning,i)=><p className="print-caution" key={i}>{page*ORGANIZER_CAUTIONS_PER_A5_SHEET+i+1}. {warning}</p>)}
                   </article>)}
-                  {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet" key={'control-'+page}>
+                  {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet print-organizer-sheet" key={'control-'+page}>
                     <h1>Spielleitung – Umschlagkontrolle {page+1}</h1>
                     <p>Umschläge je Team nach Stationsnummer sortieren und jeweils nach dem Packen abhaken.</p>
                     {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p className="print-checklist-row" key={envelope.id}>□ <strong>Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName}</strong><span>{envelope.sheetCount} Kinderblätter (1 Aufgabe, 1 Antwort, {envelope.sheetCount-2} Wegrätsel) · Schloss-Code: <strong>{stationCodes[envelope.stationId]}</strong> · Danach: <strong>{envelope.destination}</strong></span></p>)}
@@ -394,21 +394,21 @@ function App() {
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
-                      <article className="print-sheet">
+                      <article className="print-sheet print-child-sheet">
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{2+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
                         <p>Löst die Aufgaben. Die Ergebnisse ergeben euren Schloss-Code in der richtigen Reihenfolge.</p>
                         {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}</div>)}
                       </article>
-                      <article className="print-sheet">
+                      <article className="print-sheet print-child-sheet">
                         <h1>Antwortblatt</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt 2/{2+routeSheetCount(destination,config)}</p>
                         <p>Hier könnt ihr rechnen, schreiben und eure Lösungen eintragen.</p>
                         {[1,2,3].map(n=><div className="answer-space" key={n}><strong>Aufgabe {n}: Ziffer ______</strong><div className="writing-lines">________________________________________________<br/>________________________________________________<br/>________________________________________________</div></div>)}
                         <p className="print-question">Unser Schloss-Code: __ __ __</p>
                       </article>
-                      {Array.from({length:routeSheetCount(destination,config)},(_,routePage)=><article className="print-sheet" key={'route-'+routePage}>
+                      {Array.from({length:routeSheetCount(destination,config)},(_,routePage)=><article className="print-sheet print-child-sheet" key={'route-'+routePage}>
                         <h1>Wegrätsel {routeSheetCount(destination,config)>1?'– Teil '+(routePage+1):''}</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt {3+routePage}/{2+routeSheetCount(destination,config)}</p>
                         <p>Löst das Wegrätsel, um euren nächsten Ort herauszufinden. Ihr dürft die Blätter gleichzeitig bearbeiten.</p>
