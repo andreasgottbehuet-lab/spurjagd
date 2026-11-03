@@ -228,11 +228,16 @@ export function generateCreativeRouteClue(destination: string, description: stri
    const letters=[...normalizeSolutionWord(answer)];
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
    const used=new Map<string,number>();
+   const usedQuestions=new Set<string>();
    const rows=letters.map(ch=>{
      const variants=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])];
      const count=used.get(ch)??0;
      used.set(ch,count+1);
-     return {...variants[(hashSeed(seed+':'+ch)%variants.length+count)%variants.length]};
+     const start=(hashSeed(seed+':'+ch)%variants.length+count)%variants.length;
+     const selected=variants.find((_,offset)=>!usedQuestions.has(variants[(start+offset)%variants.length].question));
+     const row=selected??variants[start];
+     usedQuestions.add(row.question);
+     return {...row};
    });
    if(rows.some((r,i)=>r.solution[r.letterIndex]?.toUpperCase()!==letters[i])) throw new Error('Fragenrätsel ist nicht konsistent.');
    return {mode,instruction:'Beantwortet die Fragen. Nehmt jeweils den angegebenen Buchstaben der Antwort. Die Buchstaben ergeben den nächsten Ort (ohne Leerzeichen).',question:'',hint:'Schreibt die Lösungsbuchstaben nacheinander auf.',answer,rows};
