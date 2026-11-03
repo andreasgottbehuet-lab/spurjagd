@@ -3,6 +3,8 @@ export type StartMode = 'shared' | 'distributed';
 export type RouteMode = 'same' | 'varied';
 export type FinishMode = 'meeting' | 'start' | 'origin';
 export type Location = { id: string; name: string; description: string };
+export type TeamDifficulty = 'easy' | 'normal' | 'hard';
+export interface TeamProfile { age: string; difficulty: TeamDifficulty }
 export interface GameConfig {
   players: number;
   groupSize: number;
@@ -21,10 +23,13 @@ export interface GameConfig {
   stationCodes?: Record<string, string>;
   routeClueModes?: Record<string, 'description' | 'questions' | 'letters' | 'custom'>;
   routeClueTexts?: Record<string, string>;
+  /** Future paid option: per-team age and difficulty. Not enabled by default. */
+  teamProfiles?: Record<string, TeamProfile>;
 }
 export interface TeamPlan {
   name: string;
   memberCount: number;
+  profile?: TeamProfile;
   stations: Location[];
   finish: string;
 }
@@ -80,6 +85,7 @@ export function createPlan(config: GameConfig): GamePlan {
     return {
       name: COLORS[i] ?? 'Team ' + (i + 1),
       memberCount: base + (i < extra ? 1 : 0),
+      ...(config.teamProfiles?.[String(i)] ? {profile:config.teamProfiles[String(i)]} : {}),
       stations,
       finish: finishMode === 'start' ? stations[0].name : finishMode === 'origin' ? startPoint : meetingPoint,
     };
