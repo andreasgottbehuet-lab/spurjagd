@@ -104,3 +104,16 @@ test('Maximal langer Zielname mit 80 Buchstaben bleibt innerhalb der Blattzählu
  assert.ok(manifest.envelopes.some(envelope=>envelope.destination===destination && envelope.sheetCount===18));
  assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
 });
+
+test('Gemeinsame Station kann je Team zu unterschiedlichen Folgezielen führen',()=>{
+ const c={...config,startMode:'distributed',routeMode:'varied'};
+ const plan=createPlan(c),manifest=createPrintManifest(plan,c);
+ const byStation=new Map();
+ for(const envelope of manifest.envelopes){
+  const destinations=byStation.get(envelope.stationId)??new Set();
+  destinations.add(envelope.destination);
+  byStation.set(envelope.stationId,destinations);
+ }
+ assert.ok([...byStation.values()].some(destinations=>destinations.size>1));
+ assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
+});
