@@ -71,3 +71,6 @@ Die Zielortprüfung muss Schreibvarianten mit Bindestrichen, Leerzeichen, zusamm
 
 ## Zusätzliche Datenintegrität
 Eine fehlende lokale Projektliste ist ein Erststart. Ein vorhandener, aber leerer Speicherwert ist dagegen ein beschädigter Datensatz und darf nicht durch die automatische Speicherung überschrieben werden. Doppelte Projektkennungen sind ungültig. Neue Entwürfe müssen vollständig neutrale Standardwerte erhalten, einschließlich Teilnehmerzahl, Altersangabe, Start- und Treffpunkt sowie leerer Rätsel- und Code-Einstellungen. Für diese Fälle sind automatisierte Regressionstests vorgesehen; eine erfolgreiche Ausführung ist gesondert nachzuweisen.
+
+## Mehrere Tabs und Verlassen der Seite
+Wird die lokale Projektliste in einem anderen Browser-Tab geändert, muss der geöffnete Editor einen Konflikthinweis anzeigen und das automatische Speichern sowie Lösch- und Projektwechselaktionen sperren. Damit wird vermieden, dass eine ältere Ansicht den neueren Stand überschreibt. Der Anwender muss den aktuellen Stand in einem Tab sichern und die zweite Ansicht neu laden. Beim Schließen oder Wechseln in den Hintergrund versucht der Editor, offene Eingaben unmittelbar zu speichern, sofern kein Tab-Konflikt oder Speicherfehler vorliegt. Ein Browserabsturz oder blockierter Speicher kann nicht vollständig abgefangen werden; JSON-Backups bleiben notwendig.
