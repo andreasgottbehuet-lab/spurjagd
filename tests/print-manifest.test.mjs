@@ -67,3 +67,21 @@ test('Leerzeichen am Stationsnamen verändern die Fragenrätsel-Seitenzahl nicht
 test('Fehlende Spielleitungs-Fortsetzungsseite blockiert Druckfreigabe',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const m=createPrintManifest(plan,c);m.organizerSheets--;assert.ok(auditPrintManifest(plan,m,c).some(issue=>issue.includes('Spielleitungsseiten')));});
 
 test('Kontrollliste erhält pro vier Umschläge ein eigenes A5-Blatt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan,config);assert.equal(m.envelopes.length,12);assert.equal(m.organizerSheets,13);assert.deepEqual(auditPrintManifest(plan,m,config),[]);});
+
+test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und Routen konsistent',()=>{
+ for(const players of [1,2,7,12,25,100]){
+  for(const groupSize of [1,3,10]){
+   for(const locationCount of [1,2,4,8,20]){
+    for(const routeMode of ['same','varied']){
+     const locations=Array.from({length:locationCount},(_,i)=>({id:'ort-'+i,name:'Ort '+i,description:''}));
+     const c={...config,players,groupSize,locations,routeMode,durationMinutes:180};
+     const plan=createPlan(c),manifest=createPrintManifest(plan,c);
+     assert.deepEqual(auditPrintManifest(plan,manifest,c),[],players+' / '+groupSize+' / '+locationCount+' / '+routeMode);
+     assert.equal(manifest.envelopes.length,plan.teams.reduce((n,team)=>n+team.stations.length,0));
+     assert.equal(manifest.minimumSheets,manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets);
+     assert.ok(manifest.envelopes.every(envelope=>envelope.sheetCount>=3));
+    }
+   }
+  }
+ }
+});
