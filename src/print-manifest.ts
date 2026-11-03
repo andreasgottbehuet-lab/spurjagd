@@ -10,7 +10,7 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
 export const ORGANIZER_ITEMS_PER_A5_SHEET = 2;
-export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 6;
+export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 4;
 export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
  const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
