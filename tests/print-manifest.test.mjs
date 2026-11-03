@@ -79,6 +79,10 @@ test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und
      assert.deepEqual(auditPrintManifest(plan,manifest,c),[],players+' / '+groupSize+' / '+locationCount+' / '+routeMode);
      assert.equal(manifest.envelopes.length,plan.teams.reduce((n,team)=>n+team.stations.length,0));
      assert.equal(manifest.minimumSheets,manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets);
+     const visited=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
+     const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish))).size;
+     const expectedOrganizer=Math.ceil(plan.teams.length/2)+Math.ceil(visited/2)+destinations+Math.ceil(manifest.envelopes.length/4)+1;
+     assert.equal(manifest.organizerSheets,expectedOrganizer);
      assert.ok(manifest.envelopes.every(envelope=>envelope.sheetCount>=3));
     }
    }
