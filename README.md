@@ -10,7 +10,7 @@ Kostenloser, werbefreier Schnitzeljagd-Generator für Kinder und Jugendliche, El
 - Wegrätsel zum nächsten Ort: Ortsbeschreibung, Buchstabenfragen, Buchstabenverdrehung oder eigene Hinweise. Die Zielorte werden auf den Kinderblättern nicht als Lösung ausgewiesen. Bei Buchstabenfragen vermeidet der Generator identische Fragen, soweit geprüfte Alternativen für den jeweiligen Buchstaben vorhanden sind.
 - **DIN A5 Hochformat als Druckstandard.** Pro Team und Stationsbesuch drei getrennte Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel. Zusätzlich Spielleitungsübersicht und Stationsetiketten. Der gesamte Drucklauf verwendet derzeit A5.
 - Druckprüfung kontrolliert Codes, Routen, Zielorte, Umschlagkennungen und Blattanzahlen. Fehler sperren die Druckfunktion.
-- Lokale Projektverwaltung ohne Konto: Entwürfe im Browser speichern, Projekte wechseln, JSON-Backups exportieren/importieren. Keine serverseitige Speicherung der Projektinhalte.
+- Lokale Projektverwaltung ohne Konto: Entwürfe im Browser speichern, Projekte wechseln, JSON-Backups exportieren/importieren. Beim Import werden Pflichtfelder, Stationskennungen und die Dateigröße in UTF-8-Bytes geprüft. Keine serverseitige Speicherung der Projektinhalte.
 - Tests für Planung, Codes, Wegrätsel, Speicherung, Druckpakete und einen vollständigen Mehrgruppen-Spielablauf sind im Repository vorhanden.
 
 ## Lokal entwickeln und prüfen
