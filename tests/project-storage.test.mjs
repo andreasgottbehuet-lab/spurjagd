@@ -26,7 +26,7 @@ test('Ungültige und falsche Backups werden abgewiesen',()=>{
 });
 test('Routendaten und Standorte werden überprüft',()=>{
   assert.equal(isGameConfig({...sample().config,routeMode:'random'}),false);
-  assert.equal(isGameConfig({...sample().config,locations:[{id:'1',name:'',description:''}]}),false);
+  assert.equal(isGameConfig({...sample().config,locations:[{id:'1',name:'',description:''}]}),true);
   assert.equal(isGameConfig({...sample().config,locations:[{id:'1',name:'Wiese',description:''},{id:'1',name:'Wald',description:''}]}),false);
   assert.equal(isGameConfig(sample().config),true);
 });
@@ -51,4 +51,19 @@ test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=
     if (old === undefined) delete globalThis.localStorage;
     else globalThis.localStorage=old;
   }
+});
+
+test('Unvollständige Codes und unbenannte Stationen bleiben als Entwurf speicherbar',()=>{
+  const draft=sample();
+  draft.config.locations=[{id:'1',name:'',description:''},{id:'2',name:'',description:''}];
+  draft.config.stationCodes={'1':'00','2':''};
+  assert.equal(isGameConfig(draft.config),true);
+  assert.deepEqual(parseGameBackup(serializeGameBackup(draft)),draft);
+  draft.config.stationCodes={'1':'1234'};
+  assert.equal(isGameConfig(draft.config),false);
+});
+test('Vorhandene Backups ohne neue Felder bleiben gültig',()=>{
+  const previous=sample();
+  assert.equal(isGameConfig(previous.config),true);
+  assert.deepEqual(parseGameBackup(serializeGameBackup(previous)),previous);
 });
