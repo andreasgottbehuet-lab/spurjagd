@@ -82,3 +82,10 @@ test('Druckprüfung erkennt manipulierten Zielort und Teilnehmerzahl',()=>{
  const issues=auditPrintPacket(c,plan,'projekt-1');
  assert.ok(issues.some(issue=>issue.includes('Gruppenroute')));
 });
+
+test('Druckprüfung erkennt manipulierte Stationsnamen und Beschreibungen',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.teams[0].stations[0].name='Falscher Name';
+ plan.teams[0].stations[1].description='Veränderte Ortsangabe';
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Gruppenroute')));
+});
