@@ -27,7 +27,7 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - Bestehender Stack: React, TypeScript, Vite, GitHub, Cloudflare Workers Static Assets; möglichst Local First, keine kostenpflichtige Live-KI pro Website-Nutzung.
 - Klare Trennung von Domain-Modell, reinen Rätsel- und Routenfunktionen, Validierung und React-UI/Drucklayout; keine unnötige Framework-Überarchitektur.
 - Prüffähige/seedbasierte Generatoren. Codes, Hinweise, Stationen und Druckseiten vor Ausgabe in einem **Preflight-Check** auf Vollständigkeit und Konsistenz prüfen.
-- PDF zunächst über browserseitige HTML/SVG-DIN-A4-Druckansicht. Schwarz-Weiß-/Tintensparmodus vorsehen; **Druckpaket** inklusive Erwachsenenlösungen und Kinderblättern, logisch getrennt.
+- PDF zunächst über browserseitige HTML/SVG-DIN-A5-Hochformat-Druckansicht. Schwarz-Weiß-/Tintensparmodus vorsehen; **Druckpaket** inklusive Erwachsenenlösungen und Kinderblättern, logisch getrennt.
 - Keine automatischen externen KI- oder Netzwerkdienste zur Erzeugung erforderlich; lokale KI nur als Entwicklungshilfe.
 - Speicherung zunächst im Browser mit validiertem JSON-Export/Import. Projektwechsel vor unbeabsichtigtem Überschreiben schützen. Versionierte Migrationen vor neuen Pflichtfeldern implementieren. IndexedDB erst bei echtem Mehrwert (z. B. Bilder).
 - Kinder-/Ortsdaten datensparsam behandeln: keine notwendige Registrierung, keine externen Tracker/Fonts, Standortangaben nicht ohne Zustimmung übertragen.
@@ -44,7 +44,7 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 
 ## 5. Entwicklungsreihenfolge
 - **v0.5:** aktuellen Build/Tests verifizieren, Speichern/Projektwechsel sichern, Seed-PRNG und mindestens drei inverse, unabhängig testbare Rätselmechaniken.
-- **v0.6:** dreistellige frei vorgebbare Schloss-Codes, 1 Station = 1 kompletter Code, druckfertige DIN-A4-Kinderblätter, Master-Spickzettel, Stationsetiketten, Start- und Sicherheitsblatt.
+- **v0.6:** dreistellige frei vorgebbare Schloss-Codes, 1 Station = 1 kompletter Code, druckfertige DIN-A5-Kinderblätter, Master-Spickzettel, Stationsetiketten, Start- und Sicherheitsblatt.
 - **v0.7:** kinderleichte Schnellstart-Vorlagen, altersgerechte Gestaltung, storybasierte Themen, mehr geprüfte Rätsel, gründliche Praxistests.
 - Später: optionale **Piraten-, Detektiv-/Gangster-, Feuerwehr- und andere Kinder-/Jugendthemenpakete**, ohne Werbung.
 - Vorerst **keine** GPS-Komplexität, Erwachsenenplattform, Payment-Integration oder Live-KI im Produktivbetrieb.
@@ -68,3 +68,9 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - Spielleitungsübersicht und Etiketten dürfen künftig bei getrenntem Drucklauf auf A4 ausgegeben werden; bis dahin gilt A5 für den gesamten Drucklauf. Mindestseitenzahlen sind Untergrenzen, keine bestätigten physischen Druckseiten.
 - Größere zusammenhängende Entwicklungsblöcke einschließlich Fehlerkorrekturen, Tests und Dokumentation bearbeiten. Bei kurzen Nutzeranweisungen wie „Weiter“ nicht nachfragen. Windows-Laptop als mögliche lokale Testumgebung nutzen; keinen lokalen Zugriff behaupten, solange er nicht besteht.
 - Bestehende README-Angaben zu A4 und fehlenden Rätseln sind überholt und müssen an den Code angeglichen werden.
+
+## Entscheidung 2026-11-03 – Datenintegrität beim Projektwechsel
+- Beim Wechseln, Neuanlegen und Importieren müssen noch nicht automatisch gespeicherte Änderungen am aktuellen Projekt zuerst synchron gespeichert werden. Schlägt dies fehl, wird der Wechsel abgebrochen und ein Hinweis angezeigt.
+- Beschädigte lokale Projektlisten dürfen beim Initialisieren nicht durch einen leeren Entwurf überschrieben werden. Automatisches Speichern bleibt bei Ladefehlern deaktiviert.
+- Neue Projekte und Ersatzentwürfe nach Löschung erhalten neutrale Start-/Treffpunkte, keine alten Stationscodes, Wegrätsel oder Gruppenprofile.
+- Teamprofile und Stationsobjekte im erzeugten Spielplan dürfen keine veränderbaren Referenzen auf die Originalkonfiguration oder auf andere Teams behalten.
