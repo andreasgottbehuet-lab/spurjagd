@@ -2,7 +2,7 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -121,6 +121,7 @@ test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen V
  assert.ok(creation.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('deleteGame(projectId)'));
+ assert.ok(deletion.includes('replaceLastGame(projectId,fresh)'));
  assert.ok(deletion.includes('applyGame(fresh)'));
 });
 
@@ -317,6 +318,37 @@ test('After deleting the final project a clean replacement can be persisted and 
 test('Deleting final project immediately persists replacement in the UI',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
- assert.ok(deletion.includes('const saved=saveGame(fresh)'));
+ assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh)'));
  assert.ok(deletion.includes('setProjects(saved);applyGame(fresh)'));
+});
+
+test('Replacing the last saved project is atomic and validates the old ID',()=>{
+ const old=globalThis.localStorage;
+ const data=new Map();
+ globalThis.localStorage={getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value)),removeItem:key=>data.delete(key)};
+ try{
+  saveGame(sample());
+  const fresh={...sample(),id:'fresh-project',title:'Neue Schnitzeljagd',config:createDefaultGameConfig()};
+  assert.throws(()=>replaceLastGame('missing',fresh),/nicht das letzte/);
+  assert.equal(loadGames()[0].id,'test-one');
+  assert.deepEqual(replaceLastGame('test-one',fresh),[fresh]);
+  assert.equal(activeGameId(),'fresh-project');
+  assert.equal(loadGames().length,1);
+  assert.equal(loadGames()[0].config.players,12);
+ }finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
+});
+
+test('Failed final-project replacement leaves original project data untouched',()=>{
+ const old=globalThis.localStorage;
+ const data=new Map();
+ let fail=false;
+ globalThis.localStorage={getItem:key=>data.get(key)??null,setItem:(key,value)=>{if(fail&&key==='spurjagd-projects-v1')throw new Error('quota');data.set(key,String(value));},removeItem:key=>data.delete(key)};
+ try{
+  saveGame(sample());
+  fail=true;
+  const fresh={...sample(),id:'fresh-project',config:createDefaultGameConfig()};
+  assert.throws(()=>replaceLastGame('test-one',fresh),/quota/);
+  assert.equal(loadGames()[0].id,'test-one');
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });
