@@ -40,7 +40,7 @@ export function isSavedGame(raw: unknown): raw is SavedGame {
     && typeof p.updatedAt === 'string' && !Number.isNaN(Date.parse(p.updatedAt)) && isGameConfig(p.config);
 }
 export function parseGameBackup(raw: string): SavedGame {
-  if (raw.length > MAX_FILE_BYTES) throw new Error('Die Sicherungsdatei ist zu groß.');
+  if (new TextEncoder().encode(raw).byteLength > MAX_FILE_BYTES) throw new Error('Die Sicherungsdatei ist zu groß.');
   const value: unknown = JSON.parse(raw);
   if (!value || typeof value !== 'object' || (value as Record<string, unknown>).format !== 'spurjagd-backup-1') throw new Error('Kein Spurjagd-Backup.');
   const game = (value as { project?: unknown }).project;
