@@ -33,3 +33,5 @@ test('Spielleitungsseiten sind separat gezählt und geprüft',()=>{
  m.organizerSheets=1;
  assert.ok(auditPrintManifest(plan,m).some(issue=>issue.includes('Spielleitungsseiten')));
 });
+
+test('Gesamtumfang wird unabhängig berechnet',()=>{const plan=createPlan(config),m=createPrintManifest(plan);m.taskSheets+=3;m.minimumSheets+=3;assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Mindestumfang')));});
