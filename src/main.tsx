@@ -394,21 +394,21 @@ function App() {
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
-                      <article className="print-sheet print-child-sheet">
+                      <article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{2+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
                         <p>Löst die Aufgaben. Die Ergebnisse ergeben euren Schloss-Code in der richtigen Reihenfolge.</p>
                         {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}</div>)}
                       </article>
-                      <article className="print-sheet print-child-sheet">
+                      <article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="answer">
                         <h1>Antwortblatt</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt 2/{2+routeSheetCount(destination,config)}</p>
                         <p>Hier könnt ihr rechnen, schreiben und eure Lösungen eintragen.</p>
                         {[1,2,3].map(n=><div className="answer-space" key={n}><strong>Aufgabe {n}: Ziffer ______</strong><div className="writing-lines">________________________________________________<br/>________________________________________________<br/>________________________________________________</div></div>)}
                         <p className="print-question">Unser Schloss-Code: __ __ __</p>
                       </article>
-                      {Array.from({length:routeSheetCount(destination,config)},(_,routePage)=><article className="print-sheet print-child-sheet" key={'route-'+routePage}>
+                      {Array.from({length:routeSheetCount(destination,config)},(_,routePage)=><article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="route" key={'route-'+routePage}>
                         <h1>Wegrätsel {routeSheetCount(destination,config)>1?'– Teil '+(routePage+1):''}</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt {3+routePage}/{2+routeSheetCount(destination,config)}</p>
                         <p>Löst das Wegrätsel, um euren nächsten Ort herauszufinden. Ihr dürft die Blätter gleichzeitig bearbeiten.</p>
