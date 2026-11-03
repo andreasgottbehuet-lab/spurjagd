@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
-import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
@@ -211,14 +211,25 @@ function App() {
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
   };
   const removeProject = () => {
-    if(storageConflict.current){setStorageMessage('Löschen gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return;}
+    if(storageConflict.current || !storageReady){
+      setStorageMessage('Löschen gesperrt: Die lokale Projektliste ist nicht sicher verfügbar.');
+      return;
+    }
     if (!window.confirm(tx('Dieses Projekt wirklich löschen?', 'Delete this project?'))) return;
     try {
-      const remaining = deleteGame(projectId);
-      setProjects(remaining);
-      if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};const saved=saveGame(fresh);setProjects(saved);applyGame(fresh);setActiveStep(1); }
-    } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
+      const stored=loadGames();
+      if(stored.length===1 && stored[0].id===projectId){
+        const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};
+        const saved=replaceLastGame(projectId,fresh);
+        setProjects(saved);
+        applyGame(fresh);
+        setActiveStep(1);
+      }else{
+        const remaining=deleteGame(projectId);
+        setProjects(remaining);
+        if(remaining[0]){setActiveGameId(remaining[0].id);applyGame(remaining[0]);}
+      }
+    }catch(e){setStorageMessage('Löschen fehlgeschlagen: '+String(e));}
   };
   const exportProject = () => {
     try {
