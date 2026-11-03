@@ -65,3 +65,8 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - `src/print-kit.ts` baut Drucksätze aus dem gültigen Teamplan, bestehenden 3-/4-stelligen Schloss-Codes und manuellen Hinweisen. Bei fehlenden, unpassenden oder direkt verratenden Ortsrätseln sowie ungültigen Codes wird das vollständige Paket gesperrt. Alle Karten eines Durchlaufs werden unverändert vom gespeicherten Projekt-Seed erzeugt.
 - Kinder erhalten getrennte Rätsel- und Folgehintkarten je Besuch, je zwei A5-Hochformatkarten auf DIN A4 quer mit Mittelschnittlinie; Schloss-Codes und Erläuterungen nur auf separat druckbaren Spielleiterseiten. Hinweiskarten dürfen erst nach gelöstem Stationsrätsel ausgehändigt werden.
 - Die Druckfunktion ist derzeit ausschließlich ein GitHub-Entwurfsstand. Automatische Tests/Build ersetzen keinen kontrollierten Browser- und Papierdruck (A4 quer, 100 %), echte Schlossprüfung, Kontrolle der Kartenzuordnung und Erkennbarkeit geheimer Zielorte.
+
+### Korrektur der Drucktrennung (03.11.2026)
+- Rätselkarten und geheime Folgehintkarten werden nach Kartentyp auf getrennte Bögen verteilt und über getrennte Druckaktionen ausgegeben; Spielleitungsseiten bleiben eine dritte Ausgabe. Bei ungerader Anzahl bleibt die letzte Hälfte je Kartentyp leer. Die angezeigte Blattzahl umfasst beide Kartensätze, ohne Spielleitungsseiten.
+- Zielnamenprüfung verwendet Unicode-Wortgrenzen statt Teilworttreffern: „Waldweg“ blockiert nicht wegen „Wald“. Direkt genannte vollständige Zielnamen bleiben blockierend. Dies ist weiterhin keine semantische Geheimhaltungsprüfung.
+- Ungeprüft bleiben insbesondere Drucküberläufe bei langen Texten/vier Rätseln, physische Druckerränder und echte Schlösser. Keine allgemeine Druckfreigabe aus Unit-Tests ableiten.

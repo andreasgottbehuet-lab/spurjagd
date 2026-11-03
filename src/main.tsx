@@ -35,7 +35,7 @@ function App() {
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [stationCodes, setStationCodes] = useState<Record<string, string>>({});
   const [routeClues, setRouteClues] = useState<RouteClues>({});
-  const [printMode, setPrintMode] = useState<'children' | 'leader'>('children');
+  const [printMode, setPrintMode] = useState<'children' | 'clues' | 'leader'>('children');
   const [puzzleSeed, setPuzzleSeed] = useState<number>(() => hashSeed(projectId));
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
   const [projects, setProjects] = useState<SavedGame[]>([]);
@@ -77,7 +77,7 @@ function App() {
   const updateRouteClue = (teamIndex: number, stopIndex: number, target: string, text: string) => {
     setRouteClues(old => ({ ...old, [routeClueKey(teamIndex, stopIndex)]: { to: target, text } }));
   };
-  const printPacket = (mode: 'children' | 'leader') => {
+  const printPacket = (mode: 'children' | 'clues' | 'leader') => {
     if (!printKit || printKit.issues.length > 0) return;
     setPrintMode(mode);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.print()));
@@ -364,10 +364,11 @@ function App() {
                     </div>}
                     {printKit && printKit.issues.length === 0 && <p className="helper">{tx('Fertig:','Ready:')} {printKit.cards.length} {tx('Kinderkarten auf','child cards on')} {printKit.sheetCount} {tx('A4-Blättern. Die Spielleitung bekommt ein getrenntes Lösungsblatt.', 'A4 sheets. The leader receives a separate answer sheet.')}</p>}
                     <div className="print-buttons">
-                      <button type="button" className="print" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('children')}>{tx('Kinderkarten drucken (2 × A5 auf A4)', 'Print child cards (2 × A5 on A4)')}</button>
+                      <button type="button" className="print" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('children')}>{tx('Rätselkarten drucken (2 × A5 auf A4)', 'Print puzzle cards (2 × A5 on A4)')}</button>
+                      <button type="button" className="secondary" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('clues')}>{tx('Geheime Hinweiskarten drucken', 'Print secret clue cards')}</button>
                       <button type="button" className="secondary" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('leader')}>{tx('Spielleitung: Lösungen drucken', 'Print leader answers')}</button>
                     </div>
-                    <p className="helper">{tx('Für den Ausdruck Papierformat A4, Querformat und Skalierung 100 % wählen. Prüfe die Druckvorschau und teste die Schlösser vor Ort.', 'Use A4 landscape at 100% scale. Check the preview and test all physical locks.')}</p>
+                    <p className="helper">{tx('Rätselkarten und geheime Hinweiskarten getrennt ausdrucken und ausschneiden. Hinweise vor Spielbeginn am angegebenen Ort hinter dem Schloss oder in einem Umschlag bereitlegen und erst nach gelöstem Rätsel freigeben. Papierformat A4, Querformat und Skalierung 100 % wählen. Druckvorschau und echte Schlösser prüfen.', 'Print and cut puzzle cards and secret clue cards separately. Place clues at their labelled stop behind the lock or in an envelope; release only after the puzzle is solved. Use A4 landscape at 100% scale. Check the preview and physical locks.')}</p>
                   </section>
                 </> : <button type="button" className="print" onClick={()=>window.print()}>{t.print} ↗</button>}
               </>}

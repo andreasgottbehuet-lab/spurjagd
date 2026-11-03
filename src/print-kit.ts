@@ -35,6 +35,24 @@ export function expectedClueTarget(stations: Location[], stopIndex: number, fini
   return stations[stopIndex + 1]?.id ?? '@finish:' + finish;
 }
 
+/** Keep secret clues on different physical sheets, including an odd final card. */
+export function createChildSheets(cards: readonly ChildCard[]): ChildCard[][] {
+  const sheets: ChildCard[][] = [];
+  for (const kind of ['puzzle', 'clue'] as const) {
+    const section = cards.filter(card => card.kind === kind);
+    for (let i = 0; i < section.length; i += 2) sheets.push(section.slice(i, i + 2));
+  }
+  return sheets;
+}
+
+function namesTarget(text: string, target: string): boolean {
+  const name = target.trim().normalize('NFC');
+  if (name.length <= 2) return false;
+  const escaped = name.replace(/[.*+?^$(){}|[\]\\]/g, '\\$&');
+  return new RegExp('(^|[^\\p{L}\\p{N}\\p{M}])' + escaped + '($|[^\\p{L}\\p{N}\\p{M}])', 'iu')
+    .test(text.normalize('NFC'));
+}
+
 export function createPrintKit(
   plan: GamePlan,
   codes: Readonly<Record<string, string>>,
@@ -68,7 +86,7 @@ export function createPrintKit(
         issues.push(label + ': Hinweis überschreitet 240 Zeichen.');
         continue;
       }
-      if (next.trim().length > 2 && clueText.toLocaleLowerCase('de').includes(next.trim().toLocaleLowerCase('de'))) {
+      if (namesTarget(clueText, next)) {
         issues.push(label + ': Hinweis nennt den nächsten Ort direkt. Bitte als Rätsel umformulieren.');
         continue;
       }
@@ -90,5 +108,5 @@ export function createPrintKit(
     }
   }
   // Never print an incomplete packet. All cards remain in memory until preflight is clean.
-  return { cards: issues.length === 0 ? cards : [], leaderRows: issues.length === 0 ? leaderRows : [], issues, sheetCount: issues.length === 0 ? Math.ceil(cards.length / 2) : 0 };
+  return { cards: issues.length === 0 ? cards : [], leaderRows: issues.length === 0 ? leaderRows : [], issues, sheetCount: issues.length === 0 ? createChildSheets(cards).length : 0 };
 }

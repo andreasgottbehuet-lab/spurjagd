@@ -1,9 +1,9 @@
-import type { PrintKit, ChildCard } from './print-kit';
+import { createChildSheets, type PrintKit, type ChildCard } from './print-kit';
 
 interface PrintViewProps {
   projectTitle: string;
   kit: PrintKit;
-  mode: 'children' | 'leader';
+  mode: 'children' | 'clues' | 'leader';
 }
 
 function ChildCardView({ card }: { card: ChildCard }) {
@@ -28,7 +28,7 @@ function ChildCardView({ card }: { card: ChildCard }) {
       <p className="print-combination">Unser Schloss-Code: {'____ '.repeat(card.puzzles.length)}</p>
     </> : <>
       <h2>{card.isFinal ? 'Der letzte Hinweis' : 'Geheimnisvoller Wegweiser'}</h2>
-      <p className="print-station-name">Erst nach dem Schloss-Rätsel an Station {card.order} öffnen!</p>
+      <p className="print-station-name">An {card.station} bereitlegen. Erst nach dem Schloss-Rätsel an Station {card.order} öffnen!</p>
       <div className="print-next-clue">{card.text}</div>
       <p className="print-intro">Löst den Hinweis gemeinsam. Er zeigt euch den nächsten Weg.</p>
     </>}
@@ -38,10 +38,10 @@ function ChildCardView({ card }: { card: ChildCard }) {
 
 export function PrintView({ projectTitle, kit, mode }: PrintViewProps) {
   if (kit.issues.length > 0) return null;
-  const sheets = Array.from({ length: Math.ceil(kit.cards.length / 2) }, (_, i) => kit.cards.slice(i * 2, i * 2 + 2));
+  const sheets = createChildSheets(kit.cards).filter(pair => pair[0].kind === (mode === 'clues' ? 'clue' : 'puzzle'));
   const leaderPages = Array.from({ length: Math.ceil(kit.leaderRows.length / 2) }, (_, i) => kit.leaderRows.slice(i * 2, i * 2 + 2));
   return <div className={'print-document print-mode-' + mode} aria-label="SPURJAGD Druckpaket">
-    {mode === 'children' ? sheets.map((pair, i) => <section className="print-sheet child-sheet" key={i}>
+    {mode !== 'leader' ? sheets.map((pair, i) => <section className="print-sheet child-sheet" key={i}>
       {pair.map((card, j) => <ChildCardView key={j} card={card}/>)}
       {pair.length === 1 && <div className="print-half-card"/>}
     </section>) : leaderPages.map((rows, i) => <section className="print-sheet leader-sheet" key={i}>

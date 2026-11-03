@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPlan } from '../src/generator.ts';
 import { createPrintKit, routeClueKey, expectedClueTarget } from '../src/print-kit.ts';
+import * as printKitModule from '../src/print-kit.ts';
 
 const locations = [
   {id:'a', name:'Spielplatz', description:''},
@@ -70,4 +71,31 @@ test('Einzelstation, getrennte Starts und vierstellige Codes bleiben determinist
   assert.deepEqual(first,second);
   assert.equal(first.leaderRows.length,4);
   assert.equal(first.cards.filter(c=>c.kind==='puzzle').every(c=>c.puzzles.length===4),true);
+});
+
+test('Ungerade Besuchszahl: getrennte Rätsel- und Hinweisbögen mit je einer leeren Hälfte', () => {
+  const plan = createPlan({...config, players:3});
+  const kit = createPrintKit(plan, {a:'007',b:'0007',c:'123'}, validClues(plan), 'middle', 987);
+  assert.equal(kit.sheetCount, 4);
+  const sheets = printKitModule.createChildSheets(kit.cards);
+  assert.deepEqual(sheets.map(s => s.map(c => c.kind)), [['puzzle','puzzle'],['puzzle'],['clue','clue'],['clue']]);
+  assert.deepEqual(sheets.flat().filter(c => c.kind === 'puzzle'), kit.cards.filter(c => c.kind === 'puzzle'));
+  assert.deepEqual(sheets.flat().filter(c => c.kind === 'clue'), kit.cards.filter(c => c.kind === 'clue'));
+  assert.deepEqual(printKitModule.createChildSheets([]), []);
+});
+
+test('Wortteile lösen keinen Fehlalarm aus; vollständige Zielnamen bleiben gesperrt', () => {
+  for (const [target, harmless, leaked] of [
+    ['Wald', 'Folgt dem Waldweg.', 'Geht in den WALD!'],
+    ['Bank', 'Sucht die Sandbank.', 'Sucht die Bank.'],
+    ['Ähre', 'Zählt die Ähren.', 'Sucht die ÄHRE.'],
+    ['Tor (alt)', 'Sucht den nächsten Hinweis.', 'Sucht Tor (alt)!'],
+  ]) {
+    const plan = createPlan({...config, players:3, meetingPoint:target});
+    const clues = validClues(plan);
+    const key = routeClueKey(0, plan.teams[0].stations.length - 1);
+    const kitFor = text => createPrintKit(plan, {a:'007',b:'0007',c:'123'}, {...clues,[key]:{...clues[key],text}}, 'middle',987);
+    assert.deepEqual(kitFor(harmless).issues, [], target);
+    assert.ok(kitFor(leaked).issues.some(x => x.includes('direkt')), target);
+  }
 });
