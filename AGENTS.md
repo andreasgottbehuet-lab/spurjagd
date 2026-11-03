@@ -78,3 +78,8 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 ## Entscheidung 2026-11-03 – Neuanlage und lokale Projektkennungen
 - Neue Projekte und nach dem Löschen des letzten Projekts erzeugte Entwürfe verwenden eine zentrale, vollständig neue Standardkonfiguration. Auch Teilnehmerzahl, Alter, Zeitansätze und Gruppeneinstellungen werden zurückgesetzt; private Treffpunkte und Codes werden niemals übernommen.
 - Die lokale Projektliste darf keine doppelten Projektkennungen enthalten. Unbekannte Kennungen dürfen nicht als aktives Projekt gesetzt werden. Bei inkonsistenten Daten ist ein Fehler anzuzeigen, statt die gespeicherten Projekte stillschweigend zu überschreiben.
+
+## Entscheidung 2026-11-03 – Stationskennungen und letzter Entwurf
+- Stationen behalten ihre IDs beim Verkleinern und Wiedervergrößern der Stationszahl. Temporär ausgeblendete Stationen reservieren ihre IDs weiterhin. Neue Stationen müssen IDs erhalten, die weder sichtbare noch ausgeblendete Stationen verwenden; importierte Projekte dürfen beliebige gültige IDs enthalten.
+- Beim Löschen des letzten Projekts muss ein vollständig neutraler Ersatzentwurf sofort in der lokalen Projektliste gespeichert und als aktiv gesetzt werden. Ein bloß angezeigter, ungespeicherter Ersatzentwurf genügt nicht.
+- Die A5-Druckfreigabe prüft Umschlag- und Blattreihenfolge einschließlich Teilseitennummern mehrseitiger Wegrätsel. Ein vorhandener, aber noch nicht mit dem Browser verbundener Überlaufprüfbaustein gilt ausdrücklich nicht als bestandene Druckprüfung.
