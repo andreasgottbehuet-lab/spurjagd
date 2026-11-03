@@ -77,3 +77,8 @@ Wird die lokale Projektliste in einem anderen Browser-Tab geändert, muss der ge
 
 ## Sicheres Löschen des letzten Projekts
 Der letzte gespeicherte Entwurf wird durch einen neutralen Ersatzentwurf in einem einzigen Schreibvorgang auf der Projektliste ersetzt. Schlägt dieser Schreibvorgang fehl, bleibt die bisherige Projektliste unverändert. Ein Projektwechsel, eine Neuanlage und das Löschen sind bei beschädigtem oder nicht verfügbarem Browser-Speicher gesperrt; der JSON-Export des aktuellen Entwurfs bleibt als Rettungsweg vorgesehen. Die zugehörigen Tests decken den erfolgreichen Ersatz, ungültige Kennungen und einen simulierten Schreibfehler ab. Erfolgreiche Testausführung und Browserprüfung sind weiterhin gesondert nachzuweisen.
+
+## Weitere Prüffälle zur Freigabe
+- Die Browser-Speicherung muss auch dann einen Fehler anzeigen und den bisherigen Projektstand schützen, wenn nach dem Schreiben der Ersatz-Projektliste das Speichern der aktiven Projektkennung fehlschlägt. Der Wiederherstellungsversuch ist im Code vorgesehen, aber bei einem generell defekten Speicher nicht garantiert.
+- Jedes Wegrätselblatt muss eine fortlaufende Teilseitennummer besitzen; fehlende Kennungen sind nicht als gültiger Druck zu behandeln. Bestehende Testdaten müssen dieselbe Vorgabe erfüllen.
+- Ein nicht sichtbares Druckpaket kann geometrische Nullmaße liefern. Solche Messwerte dürfen nicht als erfolgreicher A5-Überlauftest gewertet werden. Ein echter Browser-Drucktest mit sichtbarer Druckdarstellung bleibt vor Veröffentlichung erforderlich.
