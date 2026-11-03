@@ -78,3 +78,5 @@ Deutsch ist führend, Englisch als technische Oberfläche vorbereitet. Rätselte
 - Erster DIN-A4-Druckentwurf: Spielleitungsblatt, Stationsaufgaben und Etiketten. Druck nur bei vollständigen Codes aktiv.
 - Entwürfe mit noch leeren Stationsnamen und unvollständigen Codes können gespeichert werden. Beim vorübergehenden Verkleinern des Stationsreglers werden Eingaben während der laufenden Sitzung zwischengespeichert; sie sind noch nicht über Projektwechsel hinweg gesichert.
 - Offen: vollständige nächste-Stations-Hinweise pro Team, Druck-Preflight, altersgerechte Aufgabenprüfung, End-to-End- und Browserprüfungen, Build-/CI-/Deployment-Nachweis. Kein öffentlicher Release aus diesem Stand ableiten.
+
+- Stand 2026-11-03 (weiterer Entwurf): Teambezogene Stationsblätter, separate Hinweise zum nächsten Ort, Umschlagetiketten und Vorabprüfung vor Druck. Der nächste Ort wird auf dem separaten Hinweis derzeit ausdrücklich genannt, noch nicht als eigenes Ortsrätsel verschlüsselt. Der Ausdruck muss physisch geprüft werden. Build, Tests und Deployment wurden in diesem Arbeitsgang nicht ausgeführt.
