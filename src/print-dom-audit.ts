@@ -37,6 +37,7 @@ export function auditRenderedPrintCategories(expected:ExpectedSheetCounts,actual
 export interface RenderedEnvelopeSheet {
  envelopeId:string;
  kind:string;
+ routePage?:number;
 }
 export interface ExpectedEnvelope {
  id:string;
