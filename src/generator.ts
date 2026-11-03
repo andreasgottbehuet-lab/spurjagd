@@ -19,6 +19,8 @@ export interface GameConfig {
   meetingPoint?: string;
   startPoint?: string;
   stationCodes?: Record<string, string>;
+  routeClueModes?: Record<string, 'description' | 'questions' | 'letters' | 'custom'>;
+  routeClueTexts?: Record<string, string>;
 }
 export interface TeamPlan {
   name: string;
