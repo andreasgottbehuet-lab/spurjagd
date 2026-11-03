@@ -60,6 +60,12 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
    issues.push('Umschlag '+envelope.id+': '+tasks+' Aufgaben-, '+answers+' Antwort- und '+routes+' Wegrätselblätter statt 1/1/'+(envelope.sheetCount-2)+'.');
   }
  }
+ for(const envelope of expected){
+  const pages=actual.filter(sheet=>sheet.envelopeId===envelope.id&&sheet.kind==='route');
+  pages.forEach((page,index)=>{
+   if(page.routePage!==undefined && page.routePage!==index+1) issues.push('Umschlag '+envelope.id+': Wegrätsel-Seitenfolge ist fehlerhaft.');
+  });
+ }
  // The packet must be packable in manifest order: task, answer, then route pages.
  const expectedSequence=expected.flatMap(envelope=>[
   {envelopeId:envelope.id,kind:'task'},
