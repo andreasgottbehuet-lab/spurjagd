@@ -191,7 +191,7 @@ function App() {
   // Flush the currently edited draft before changing projects; debounce alone can lose edits.
   const saveCurrentBeforeSwitch = (): boolean => {
     if(storageConflict.current){setStorageMessage('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return false;}
-    if (!storageReady) return true;
+    if (!storageReady){setStorageMessage('Projektwechsel gesperrt: Lokale Speicherung ist nicht verfügbar. Bitte zuerst eine JSON-Sicherung exportieren.');return false;}
     try {
       const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
       setProjects(saveGame(current));
