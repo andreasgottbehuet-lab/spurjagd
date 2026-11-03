@@ -9,7 +9,7 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 
 ## Druckvorschau
 - Papierformat **A5 Hochformat**, Skalierung **100 %**, Browser-Kopf- und Fußzeilen deaktivieren, wenn sie den Inhalt verschieben.
-- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit vier getrennten Spielleitungsseiten insgesamt **mindestens 43 A5-Seiten**; die tatsächliche Zahl kann höher sein.
+- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit dynamisch aufgeteilten Spielleitungsseiten insgesamt **mindestens 49 A5-Seiten**; die tatsächliche Zahl kann höher sein.
 - Jeder Stationsbesuch hat Blatt 1/3 (Aufgaben), Blatt 2/3 (Antworten), Blatt 3/3 (Wegrätsel). Keine Inhalte abgeschnitten; Schrift und Schreibflächen lesbar.
 - Die Kinderblätter verraten den nächsten Zielort nicht direkt. Der Ort muss durch das Rätsel ermittelt werden. Schloss-Code und Lösung dürfen nicht versehentlich im Kindertext stehen.
 - Spielleitungsübersicht enthält die Codes und Lösungen; Etiketten passen zu Team, Station und Umschlag.
@@ -38,3 +38,6 @@ Erst nach dokumentiertem Prüfergebnis kann dieser Punkt als abgeschlossen gelte
 
 ## Spielleitungsübersicht
 Die vier A5-Abschnitte sind Gruppen und Routen, Codes und Lösungen, Wegrätsel-Lösungen sowie Ausgabe- und Sicherheitskontrolle. Die Gruppenwege werden auf Blatt 1 geführt und nicht erneut abgedruckt. Bei vielen Teams oder langen Texten auf zusätzliche physische Druckseiten achten; der Manifestwert ist weiterhin ein rechnerischer Mindestumfang.
+
+## Dynamische Spielleitungsseiten
+Gruppenrouten und Code-Lösungen werden in Zweiergruppen auf A5 verteilt. Jedes unterschiedliche Zielrätsel erhält eine eigene Lösungsseite. Dazu kommt eine Kontroll- und Sicherheitsseite. Die rechnerische Mindestseitenzahl ist vor dem Druck mit der Browser-Druckvorschau abzugleichen; sehr lange Texte können weitere physische Seiten erzeugen.
