@@ -76,7 +76,7 @@ function App() {
       if(codeFromPuzzles(challenge)!==stationCodes[l.id]) throw new Error('Codeprüfung fehlgeschlagen');
       return {location:l,challenge};
     });
-  },[locations,stationCodes,ageLevel,projectId,goal]);
+  },[locations,stationCodes,ageLevel,projectId,goal,printIssues.length]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
