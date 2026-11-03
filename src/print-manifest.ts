@@ -2,7 +2,7 @@ import type {GameConfig,GamePlan} from './generator.ts';
 import {normalizeSolutionWord} from './puzzles.ts';
 
 export const LABELS_PER_A5_SHEET = 4;
-export const ROUTE_QUESTIONS_PER_A5_SHEET = 8;
+export const ROUTE_QUESTIONS_PER_A5_SHEET = 5;
 export function routeSheetCount(destination:string,config?:GameConfig):number {
  const target=config?.locations.find(location=>location.name===destination);
  return target && config?.routeClueModes?.[target.id]==='questions' ? Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET)) : 1;
