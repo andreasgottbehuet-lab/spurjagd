@@ -73,3 +73,13 @@ test('Gemeinsamer Start mit wechselnden Richtungen und eigenem Ziel',()=>{
   assert.deepEqual(plan.teams[1].stations.map(x=>x.name),['Spielplatz','Sportplatz','Feuerwehr']);
   assert.ok(plan.teams.every(t=>t.finish==='Spielplatz'));
 });
+
+test('Expliziter gemeinsamer Start kann zugleich Ziel sein', () => {
+  const result=createPlan(config({startMode:'shared',finishMode:'origin',startPoint:'Parkplatz',meetingPoint:'Anderer Ort'}));
+  assert.ok(result.teams.every(t=>t.finish==='Parkplatz'));
+  assert.equal(result.stopsPerTeam,3);
+});
+test('Separater Zielort bleibt unabhängig vom Startort', () => {
+  const result=createPlan(config({startMode:'shared',finishMode:'meeting',startPoint:'Parkplatz',meetingPoint:'Sporthalle'}));
+  assert.ok(result.teams.every(t=>t.finish==='Sporthalle'));
+});
