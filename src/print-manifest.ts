@@ -3,6 +3,7 @@ import type {GamePlan} from './generator.ts';
 export interface PrintEnvelope {
  id:string;
  team:string;
+ teamIndex:number;
  stationId:string;
  stationName:string;
  stationNumber:number;
@@ -23,6 +24,7 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
  const envelopes=plan.teams.flatMap((team,teamIndex)=>team.stations.map((station,stationIndex)=>({
   id:teamIndex+'-'+station.id,
   team:team.name,
+  teamIndex,
   stationId:station.id,
   stationName:station.name,
   stationNumber:stationIndex+1,
