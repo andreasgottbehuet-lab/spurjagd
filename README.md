@@ -1,82 +1,49 @@
 # SPURJAGD
 
-> **Verbindliche Projektentscheidungen für alle Entwicklungsagenten:** [AGENTS.md](./AGENTS.md) lesen. Zielgruppe ausschließlich Kinder und Jugendliche. Voll spielbare kostenlose Grundversion ohne Werbung. Optionale spätere Kinder-Themenpakete (Piraten, Detektive/Gangster etc.).
+Kostenloser, werbefreier Schnitzeljagd-Generator für Kinder und Jugendliche, Eltern, Lehrkräfte und betreuende Erwachsene. **Entwicklungsstand – kein geprüfter Release.** Die verbindlichen Regeln stehen in [AGENTS.md](./AGENTS.md).
 
+## Implementiert (Code-Stand 2026-11-03)
 
-Mehrsprachiger Generator für Schnitzeljagden, Rätseltouren und Gruppenabenteuer.
+- Vierstufige React-/TypeScript-Anwendung: Teilnehmer, Gruppen, Zeitbudget, Start-/Zielregeln, Stationen und Spielplan.
+- Gemeinsamer oder verteilter Start; gleiche oder wechselnde Routenrichtung. Nicht jede Gruppe muss alle Stationen besuchen. Gehzeiten sind Nutzereingaben, keine realen Entfernungsberechnungen.
+- Dreistellige Schloss-Codes je Station einschließlich führender Nullen (z. B. `007`). Drei deterministisch erzeugte und überprüfte Einzelrätsel pro Code: Rechnen, Symbole zählen, Buchstabenverschiebung.
+- Wegrätsel zum nächsten Ort: Ortsbeschreibung, Buchstabenfragen, Buchstabenverdrehung oder eigene Hinweise. Die Zielorte werden auf den Kinderblättern nicht als Lösung ausgewiesen.
+- **DIN A5 Hochformat als Druckstandard.** Pro Team und Stationsbesuch drei getrennte Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel. Zusätzlich Spielleitungsübersicht und Stationsetiketten. Der gesamte Drucklauf verwendet derzeit A5.
+- Druckprüfung kontrolliert Codes, Routen, Zielorte, Umschlagkennungen und Blattanzahlen. Fehler sperren die Druckfunktion.
+- Lokale Projektverwaltung ohne Konto: Entwürfe im Browser speichern, Projekte wechseln, JSON-Backups exportieren/importieren. Keine serverseitige Speicherung der Projektinhalte.
+- Tests für Planung, Codes, Wegrätsel, Speicherung, Druckpakete und einen vollständigen Mehrgruppen-Spielablauf sind im Repository vorhanden.
 
-## Projektstand: Entwicklungszweig 0.5 (noch nicht als Release verifiziert)
+## Lokal entwickeln und prüfen
 
-Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Oberfläche ist auf Deutsch und Englisch vorbereitet.
-
-### Im Repository vorhanden
-- Deterministischer Rätsel-Prototyp in `src/puzzles.ts`: rückwärts erzeugte Aufgaben aus 3-stelligen Codes (Mathematik, Symbolzählung, Caesar-Verschlüsselung).
-- Algorithmische Selbstprüfung, inklusive Tests für 000 bis 999 in `tests/puzzles.test.mjs`.
-- Noch **keine Integration** dieser Rätsel in UI, Projektformat oder A4-Spielpakete; Qualitäts- und Build-Prüfungen stehen aus.
-
-### Bereits umgesetzt
-- Vierstufiger Assistent für Teilnehmer, Standorte, Zeitansätze und Spielplan
-- Teilnehmerzahl und Gruppengröße mit möglichst gleichmäßiger Teamverteilung
-- Standortnamen und individuelle Standortbeschreibungen; Stationen hinzufügen und entfernen
-- Zeitberechnung anhand der **vom Nutzer festgelegten** durchschnittlichen Rätsel- und Gehzeit sowie Zeit für Start/Finale
-- Automatische Begrenzung der Stationen je Team auf das verfügbare Zeitbudget
-- Wählbarer Start: alle Teams am selben Ort oder auf Stationen verteilt
-- Routenführung: gleiche Umlaufrichtung oder wechselnde Umlaufrichtung
-- Ziel: gemeinsamer Treffpunkt oder Rückkehr zur eigenen Startstation
-- Warnhinweise bei gemeinsamen Starts und begrenzten Standorten
-- Vorläufige Druckansicht des Spielplans
-- Tests der Berechnungs-, Validierungs- und Routenoptionen; GitHub Actions führt Tests und Build bei Änderungen aus
-- Mehrere lokale Projekte im Browser: automatisches Speichern, Wechseln, Neuanlegen und Löschen
-- Validierter Export und Import als versionierte JSON-Sicherungsdatei; importierte Projekte erhalten eine neue ID
-- Kein Login, keine Datenbank, keine serverseitige Speicherung der Eingaben
-
-### Grenzen dieser Version
-- Der Browser speichert Projekte nur auf diesem Gerät und in diesem Browserprofil (localStorage). Löschen von Browserdaten kann Projekte entfernen. Regelmäßig JSON-Backups exportieren.
-- Kein Synchronisieren zwischen Geräten; JSON-Backups enthalten alle Standortbeschreibungen im Klartext.
-- Die öffentliche Anwendung benötigt vor dem Produktivstart passende Rechtstexte und eine Datenschutzprüfung.
-- Die Gehzeit gilt pauschal **pro Wegabschnitt**, nicht als Entfernungs- oder Routingberechnung. Start- und Rückweg werden mitgezählt.
-- Routen entsprechen einem einfachen Stationsrundkurs: gleiche Richtung oder wechselnde Richtung. Unterschiedliche, frei optimierte oder manuell zugewiesene Routen und konfliktfreie Zeitfenster fehlen noch.
-- Bei gleichem Start können mehrere Teams gleichzeitig an derselben Station ankommen. Eine automatische Wartezeitplanung fehlt.
-- Standortbeschreibungen führen noch nicht automatisch zu Rätseln.
-- Spielziele sind Auswahloptionen; Codes, Lösungswörter, Rätselbibliothek und vollständige PDF-Pakete fehlen noch.
-- Zeitansätze sind keine Sicherheitsprüfung; Zugänge, Querungen, Aufsicht und Wetter müssen Erwachsene prüfen.
-- Vorschau ist noch nicht für den öffentlichen Regelbetrieb geeignet; Impressum und Datenschutz stehen aus.
-
-## Lokal ausführen
-Node.js 22 oder höher installieren:
+Voraussetzung: Node.js 22 oder neuer und npm.
 
 ```bash
-npm install
+npm install --no-audit --no-fund
 npm test
 npm run build
 npm run dev
 ```
 
-## Cloudflare Workers
-Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
-- Build-Befehl: `npm run build`
-- Bereitstellungsbefehl: `npx wrangler deploy`
-- Projektname: `spurjagd`
+Unter Windows kann im Projektverzeichnis stattdessen der zusammenhängende Prüfablauf ausgeführt werden:
 
-`wrangler.jsonc` stellt die statischen Assets aus `dist` bereit. Domain `spurjagd.de` wird nach Aktivierung bei netcup über Cloudflare-DNS angebunden.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-windows.ps1
+```
 
-## Nächste Ausbaustufe
-1. Standorttyp (Feuerwehr, Spielplatz, Sportplatz, Wiese, frei).
-2. Geprüfte Rätselbibliothek mit altersabhängigen Hilfen.
-3. Pro Station vollständiger Schloss-Code oder Wort-/Bildbaustein.
-4. Eindeutige Lösungsprüfung, Hilfekarten, Spielleiterunterlagen.
-5. PDF-Erstellung direkt im Browser, ohne fortlaufende Serverkosten.
+Der Befehl installiert Abhängigkeiten, führt Tests aus und erstellt den Produktions-Build. **Die erfolgreiche Ausführung ist noch nicht nachgewiesen.** Danach im Browser über `npm run dev` die Druckvorschau kontrollieren: A5 Hochformat, drei Kinderblätter je Umschlag, lesbare Rätsel und keine abgeschnittenen Inhalte. Druckdialoge und Seitenzahlen können je Browser und Drucker abweichen.
 
-## Mehrsprachigkeit
-Deutsch ist führend, Englisch als technische Oberfläche vorbereitet. Rätseltexte und Wortlösungen sind pro Sprache eigenständig zu prüfen.
+## Grenzen und offene Aufgaben
 
+- Browser- und Druckertests, vollständiger Build, CI-Status und produktives Deployment sind noch nicht verifiziert.
+- Die Spielleitungsübersicht und die Etiketten werden derzeit ebenfalls auf A5 gedruckt. Bei längeren Inhalten können zusätzliche Seiten entstehen; die berechnete Seitenzahl ist eine **Untergrenze**.
+- Unterschiedliche Alters- und Schwierigkeitsgrade **je Team** sind im Datenmodell vorbereitet, aber noch nicht als Premiumfunktion aktiviert.
+- Die Aufgabenbibliothek ist noch begrenzt; Ortsbeschreibungen dienen bisher vor allem als Grundlage für Wegrätsel, nicht als frei erfundene stationsbezogene Codeaufgaben.
+- Routen sind keine Karten-/Wegeoptimierung. Querungen, Gewässer, Baustellen, Privatflächen, Wetter und Aufsicht müssen Erwachsene vor Ort prüfen.
+- Projekte liegen im Browserprofil. Löschen der Browserdaten kann sie entfernen; JSON-Sicherungen regelmäßig exportieren. Es gibt keine Gerätesynchronisation.
+- Datenschutz-/Impressumsprüfung, reale Nutzertests und Veröffentlichung fehlen. Es gibt derzeit keine Bezahlfunktion.
 
-## Entwicklungsstand 2026-11-03 – nicht freigegeben
-- Planer: Schritte Gruppe/Zeit, Regeln, Standorte, Spielplan. Schieberegler für Teilnehmer, Gruppengröße und Rätselstationen.
-- Eigene Start- und Zielangaben, Rückkehr zum gemeinsamen Startort möglich. Frühere Zielmodi bleiben für gespeicherte Projekte erhalten.
-- Bei Schloss-Spielziel: freie dreistellige Codes je Station, auch führende Nullen. Deterministische Aufgaben mit Rechen-, Symbol- und Buchstabenrätsel; Vorschau mit Lösungen.
-- Erster DIN-A4-Druckentwurf: Spielleitungsblatt, Stationsaufgaben und Etiketten. Druck nur bei vollständigen Codes aktiv.
-- Entwürfe mit noch leeren Stationsnamen und unvollständigen Codes können gespeichert werden. Beim vorübergehenden Verkleinern des Stationsreglers werden Eingaben während der laufenden Sitzung zwischengespeichert; sie sind noch nicht über Projektwechsel hinweg gesichert.
-- Offen: vollständige nächste-Stations-Hinweise pro Team, Druck-Preflight, altersgerechte Aufgabenprüfung, End-to-End- und Browserprüfungen, Build-/CI-/Deployment-Nachweis. Kein öffentlicher Release aus diesem Stand ableiten.
+## Bereitstellung (noch nicht freigegeben)
 
-- Stand 2026-11-03 (weiterer Entwurf): Teambezogene Stationsblätter, separate Hinweise zum nächsten Ort, Umschlagetiketten und Vorabprüfung vor Druck. Der nächste Ort wird auf dem separaten Hinweis derzeit ausdrücklich genannt, noch nicht als eigenes Ortsrätsel verschlüsselt. Der Ausdruck muss physisch geprüft werden. Build, Tests und Deployment wurden in diesem Arbeitsgang nicht ausgeführt.
+Der Stack verwendet Vite, React, TypeScript und Cloudflare Workers mit statischen Assets. `npm run build` erstellt `dist`; `npm run deploy` ruft Wrangler auf. Vor öffentlicher Freigabe Tests, Build, Druckpakete und rechtliche Angaben nachweislich prüfen.
+
+**Produktentscheidung:** Kostenlose Grundversion bleibt vollständig spielbar und werbefrei. Erweiterte Funktionen bzw. Themenpakete können später kostenpflichtig werden; keine verpflichtenden Nutzerkonten und vorerst keine Zahlungsintegration.
