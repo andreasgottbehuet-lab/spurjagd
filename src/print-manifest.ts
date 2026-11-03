@@ -45,5 +45,6 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
  const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  // Four labels are assigned to each A5 sheet; physical overflow remains subject to browser print review.
  const labelSheets=Math.ceil(envelopes.length/LABELS_PER_A5_SHEET);
- return {envelopes,organizerSheets:organizerSheetCount(plan),labelSheets,taskSheets,minimumSheets:taskSheets+organizerSheetCount(plan)+labelSheets};
+ const organizerSheets=organizerSheetCount(plan);
+ return {envelopes,organizerSheets,labelSheets,taskSheets,minimumSheets:taskSheets+organizerSheets+labelSheets};
 }
