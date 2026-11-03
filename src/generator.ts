@@ -82,7 +82,7 @@ export function createPlan(config: GameConfig): GamePlan {
     // Varied route = alternate travel direction; routes are not distance-optimized.
     const direction = routeMode === 'varied' && i % 2 === 1 ? -1 : 1;
     const stations = Array.from({ length: stopsPerTeam }, (_, j) =>
-      places[(startIndex + direction * j + places.length * j) % places.length]);
+      ({...places[(startIndex + direction * j + places.length * j) % places.length]}));
     return {
       name: COLORS[i] ?? String(i + 1),
       memberCount: base + (i < extra ? 1 : 0),
