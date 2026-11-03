@@ -21,6 +21,8 @@ export interface GameConfig {
   stationCodes?: Record<string, string>;
   /** Stable deterministic seed, preserved across project imports. */
   puzzleSeed?: number;
+  /** Team/stop based clues, bound to the expected next station or finish. */
+  routeClues?: Record<string, { to: string; text: string }>;
 }
 export interface TeamPlan {
   name: string;
