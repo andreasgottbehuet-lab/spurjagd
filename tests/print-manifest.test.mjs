@@ -89,3 +89,13 @@ test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und
   }
  }
 });
+
+test('Maximal langer Zielname mit 80 Buchstaben bleibt innerhalb der Blattzählung',()=>{
+ const destination='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.repeat(3)+'AB';
+ assert.equal(destination.length,80);
+ const c={...config,locations:[{id:'a',name:destination,description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};
+ const plan=createPlan(c),manifest=createPrintManifest(plan,c);
+ assert.equal(routeSheetCount(destination,c),16);
+ assert.ok(manifest.envelopes.some(envelope=>envelope.destination===destination && envelope.sheetCount===18));
+ assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
+});
