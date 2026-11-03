@@ -7,7 +7,7 @@ import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importe
 import { auditPrintPacket } from './print-audit';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
-import { auditRenderedPrintCategories, auditRenderedEnvelopes } from './print-dom-audit';
+import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabels } from './print-dom-audit';
 import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
 import './style.css';
 
@@ -470,12 +470,12 @@ function App() {
                   {printManifest && Array.from({length:printManifest.labelSheets},(_,page)=>(
                     <article className="print-sheet print-label-sheet" key={'labels-'+page}>
                       <h1>Stationsetiketten – Blatt {page+1}/{printManifest.labelSheets}</h1>
-                      <div className="print-label-grid">{printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · {envelope.sheetCount} Blätter: Aufgaben, Antworten, Wegrätsel</span></p>)}</div>
+                      <div className="print-label-grid">{printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" data-envelope-id={envelope.id} key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · {envelope.sheetCount} Blätter: Aufgaben, Antworten, Wegrätsel</span></p>)}</div>
                     </article>
                   ))}
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const packet=document.querySelector('.print-packet');const actual={total:packet?.querySelectorAll('.print-sheet').length??0,organizer:packet?.querySelectorAll('.print-organizer-sheet').length??0,children:packet?.querySelectorAll('.print-child-sheet').length??0,labels:packet?.querySelectorAll('.print-label-sheet').length??0};const issues=auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0,organizerSheets:printManifest?.organizerSheets??0,taskSheets:printManifest?.taskSheets??0,labelSheets:printManifest?.labelSheets??0},actual);const renderedEnvelopes=Array.from(packet?.querySelectorAll<HTMLElement>('.print-child-sheet')??[]).map(sheet=>({envelopeId:sheet.dataset.envelopeId??'',kind:sheet.dataset.sheetKind??''}));issues.push(...auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes));if(issues.length){window.alert(issues.join('\n'));return;}window.print();}}>{t.print} ↗</button>
+                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const packet=document.querySelector('.print-packet');const actual={total:packet?.querySelectorAll('.print-sheet').length??0,organizer:packet?.querySelectorAll('.print-organizer-sheet').length??0,children:packet?.querySelectorAll('.print-child-sheet').length??0,labels:packet?.querySelectorAll('.print-label-sheet').length??0};const issues=auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0,organizerSheets:printManifest?.organizerSheets??0,taskSheets:printManifest?.taskSheets??0,labelSheets:printManifest?.labelSheets??0},actual);const renderedEnvelopes=Array.from(packet?.querySelectorAll<HTMLElement>('.print-child-sheet')??[]).map(sheet=>({envelopeId:sheet.dataset.envelopeId??'',kind:sheet.dataset.sheetKind??''}));issues.push(...auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes));const labelIds=Array.from(packet?.querySelectorAll<HTMLElement>('.print-label[data-envelope-id]')??[]).map(label=>label.dataset.envelopeId??'');issues.push(...auditRenderedLabels(printManifest?.envelopes??[],labelIds));if(issues.length){window.alert(issues.join('\n'));return;}window.print();}}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
