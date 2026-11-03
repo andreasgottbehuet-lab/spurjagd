@@ -47,3 +47,19 @@ test('Druckprüfung berücksichtigt verschiedene Schloss-Codes einschließlich 0
   assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
  }
 });
+
+test('Druckfreigabe verlangt einen benannten Start und bei gemeinsamem Finale ein benanntes Ziel',()=>{
+ const c=config();
+ const plan=createPlan(c);
+ c.startPoint=' ';
+ c.meetingPoint=' ';
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Startort fehlt')));
+ assert.ok(issues.some(issue=>issue.includes('Zielort fehlt')));
+});
+test('Druckfreigabe weist doppelte Stations-IDs zurück',()=>{
+ const c=config();
+ c.locations[1].id=c.locations[0].id;
+ const issues=auditPrintPacket(c,createPlan({...c,locations:config().locations}),'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Stations-IDs')));
+});
