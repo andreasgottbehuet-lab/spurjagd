@@ -35,7 +35,7 @@ export interface PrintManifest {
  minimumSheets:number;
 }
 
-/** Three task sheets per team visit; organizer and labels are separate. */
+/** Two fixed child sheets plus one or more route-clue sheets per visit. */
 export function createPrintManifest(plan:GamePlan,config?:GameConfig):PrintManifest {
  const envelopes=plan.teams.flatMap((team,teamIndex)=>team.stations.map((station,stationIndex)=>({
   id:teamIndex+'-'+station.id,
