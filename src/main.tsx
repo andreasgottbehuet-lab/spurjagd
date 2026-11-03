@@ -31,6 +31,7 @@ function App() {
   const [startPoint, setStartPoint] = useState('Zuhause / Treffpunkt');
   const [sameStartFinish, setSameStartFinish] = useState(false);
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
+  const [hiddenLocations, setHiddenLocations] = useState<Location[]>([]);
   const [activeStep, setActiveStep] = useState(1);
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
@@ -50,6 +51,7 @@ function App() {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes]);
+  const completeCodes = locations.every(l=>validCode(stationCodes[l.id]??''));
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks') return [];
@@ -61,6 +63,19 @@ function App() {
   },[locations,stationCodes,ageLevel,projectId,goal]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
+  };
+  const changeStationCount = (count: number) => {
+    if (count < locations.length) {
+      setHiddenLocations(old => [...locations.slice(count), ...old]);
+      setLocations(old => old.slice(0, count));
+    } else if (count > locations.length) {
+      const needed = count - locations.length;
+      const reused = hiddenLocations.slice(0, needed);
+      const additional = Array.from({length:needed-reused.length},(_,i)=>({id:'loc-'+(nextLocationId+i),name:'',description:''}));
+      setLocations(old => [...old,...reused,...additional]);
+      setHiddenLocations(old => old.slice(needed));
+      setNextLocationId(n=>n+additional.length);
+    }
   };
   const addLocation = () => {
     setLocations(old => [...old, { id: 'loc-' + nextLocationId, name: '', description: '' }]);
@@ -78,6 +93,7 @@ function App() {
     setAge(c.age);
     setGoal(c.goal);
     setLocations(c.locations.map(x => ({...x})));
+    setHiddenLocations([]);
     setPuzzleMinutes(c.puzzleMinutes);
     setWalkingMinutes(c.walkingMinutes);
     setStartFinishMinutes(c.startFinishMinutes);
@@ -218,7 +234,7 @@ function App() {
             {activeStep === 3 && <>
               <div className="section-line"><span className="step">03</span><h2>{t.locations}</h2></div>
               <p className="helper">{tx('Trage die Orte ein und beschreibe, was dort zu sehen ist. Später erzeugen wir daraus passende Rätsel.','Name each stop and describe what can be seen there. This will later be used to generate puzzles.')}</p>
-              <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>{const count=Number(e.target.value);setLocations(old=>count<old.length?old.slice(0,count):[...old,...Array.from({length:count-old.length},(_,i)=>({id:"loc-"+(nextLocationId+i),name:"",description:""}))]);if(count>locations.length)setNextLocationId(n=>n+count-locations.length);}}/></label>
+              <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>changeStationCount(Number(e.target.value))}/></label>
               <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
               <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
               <div className="location-list">{locations.map((location, index) =>
@@ -290,8 +306,28 @@ function App() {
                   </article>
                 )}</div>
                 {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
+                {goal==='locks' && completeCodes && <section className="print-packet" aria-label="Druckpaket">
+                  <article className="print-sheet">
+                    <h1>{projectTitle} – Spielleitung</h1>
+                    <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
+                    <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
+                    <h2>Gruppen und Routen</h2>
+                    {plan.value.teams.map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
+                    <h2>Codes und Lösungen</h2>
+                    {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
+                    <h2>Vorbereitung und Sicherheit</h2>
+                    <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Nächste Station jeder Gruppe vor Spielbeginn festlegen. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
+                  </article>
+                  {challenges.map(({location,challenge})=><article className="print-sheet" key={location.id}>
+                    <h1>{projectTitle}</h1><h2>Station: {location.name}</h2>
+                    <p>Bearbeitet die drei Aufgaben der Reihe nach. Jede Lösung ergibt eine Ziffer. Tragt die Ziffern von links nach rechts in euer Schloss ein.</p>
+                    {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}<p>Meine Ziffer: ______</p></div>)}
+                    <p><strong>Unser Code: __ __ __</strong></p>
+                  </article>)}
+                  <article className="print-sheet"><h1>Stationsetiketten</h1>{challenges.map(({location,challenge})=><p className="print-label" key={location.id}><strong>{location.name}</strong><span>SPURJAGD · Rätselstation · Material nach Spielende einsammeln</span></p>)}</article>
+                </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" onClick={()=>window.print()}>{t.print} ↗</button>
+                <button type="button" className="print" disabled={goal!=='locks' || !completeCodes} onClick={()=>window.print()}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
