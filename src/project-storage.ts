@@ -32,11 +32,11 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!places.every((row: unknown) => {
     if (!row || typeof row !== 'object') return false;
     const r = row as Record<string, unknown>;
-    return text(r.id, 80) && Boolean(r.id) && text(r.name, 80) && Boolean(String(r.name).trim()) && text(r.description, 400);
+    return text(r.id, 80) && Boolean(r.id) && text(r.name, 80) && text(r.description, 400);
   })) return false;
   const locations = places as Location[];
   return new Set(locations.map(x => x.id)).size === locations.length
-    && new Set(locations.map(x => x.name.trim().toLowerCase())).size === locations.length;
+    && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLowerCase())).size === locations.filter(x=>x.name.trim()).length;
 }
 export function isSavedGame(raw: unknown): raw is SavedGame {
   if (!raw || typeof raw !== 'object') return false;
