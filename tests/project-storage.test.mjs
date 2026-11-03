@@ -88,3 +88,9 @@ test('Backup-Import lehnt leere Altersangaben und reine Leerzeichen-IDs ab',()=>
  assert.equal(isGameConfig({...base,locations:[{id:'a',name:'Wiese',description:''},{id:'b',name:'wiese',description:''}]}),false);
  assert.equal(isGameConfig({...base,locations:[{id:'a',name:'Wiese',description:''},{id:'b',name:'Wald',description:''}]}),true);
 });
+
+test('Größenlimit für Backups gilt für UTF-8-Bytes, nicht Zeichen',()=>{
+ const payload='ä'.repeat(100_001);
+ assert.ok(payload.length<200_000);
+ assert.throws(()=>parseGameBackup(payload),/zu groß/);
+});
