@@ -25,7 +25,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (p.teamProfiles !== undefined) {
     if (!p.teamProfiles || typeof p.teamProfiles !== 'object' || Array.isArray(p.teamProfiles)) return false;
     const profiles=Object.entries(p.teamProfiles as Record<string,unknown>);
-    if (profiles.length>100 || profiles.some(([key,value])=>!/^\\d{1,2}$/.test(key) || Number(key)>99 || !value || typeof value!=='object' || Array.isArray(value) || !text((value as Record<string,unknown>).age,24) || !['easy','normal','hard'].includes(String((value as Record<string,unknown>).difficulty)))) return false;
+    if (profiles.length>100 || profiles.some(([key,value])=>!/^[0-9]{1,2}$/.test(key) || Number(key)>99 || !value || typeof value!=='object' || Array.isArray(value) || !text((value as Record<string,unknown>).age,24) || !['easy','normal','hard'].includes(String((value as Record<string,unknown>).difficulty)))) return false;
   }
   if (p.stationCodes !== undefined) {
     if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
