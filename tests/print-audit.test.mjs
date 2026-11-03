@@ -129,3 +129,16 @@ test('Nach Verlängerung der Spieldauer wird ein zuvor optionaler Code wieder Pf
  assert.equal(plan.stopsPerTeam,3);
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Code')&&issue.includes('Wiese')));
 });
+
+test('Manipulierte Zeitangaben der Routenplanung werden vor Druck erkannt',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.estimatedMinutes+=5;
+ plan.remainderMinutes-=5;
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Zeitberechnung')));
+});
+
+test('Abweichende verbleibende Minuten blockieren trotz unveränderter Routen die Freigabe',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.remainderMinutes=999;
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Zeitberechnung')));
+});
