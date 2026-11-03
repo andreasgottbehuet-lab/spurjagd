@@ -370,7 +370,7 @@ function App() {
                     <h2>Vor Ort kontrollieren</h2>
                     <p>Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Den Kindern den nächsten Zielort nicht vor dem Rätsel verraten.</p>
                     <h2>Hinweise aus der Routenplanung</h2>
-                    {plan.value.cautions.length===0?<p>Keine zusätzlichen Planungshinweise ermittelt. Örtliche Gefahren trotzdem prüfen.</p>:<p>Die vollständigen Planungshinweise vor dem Start in der Anwendung kontrollieren; bei vielen Gruppen können zusätzliche Seiten nötig sein.</p>}
+                    {plan.value.cautions.length===0?<p>Keine zusätzlichen Planungshinweise ermittelt. Örtliche Gefahren trotzdem prüfen.</p>:<p>Die vollständigen Planungshinweise auf den nachfolgenden A5-Blättern vor dem Start durchgehen und die örtlichen Bedingungen kontrollieren.</p>}
                     <h2>Zum Spielende</h2>
                     <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
                   </article>
