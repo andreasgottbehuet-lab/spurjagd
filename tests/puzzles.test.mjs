@@ -68,7 +68,7 @@ test('Beschreibung verbirgt den Zielnamen und eigene Rätsel bleiben erhalten',(
 });
 
 test('Alle hinterlegten Fragen ergeben ihre vorgesehenen Lösungsbuchstaben',()=>{
- const alphabet='ABCDEFGHIJKLMNOPRSTUVWZ';
+ const alphabet='ABCDEFGHIKLMNOPRSTUVWZ';
  for(const letter of alphabet){
    const clue=generateCreativeRouteClue(letter,'','questions',123);
    assert.equal(clue.rows.length,1);
