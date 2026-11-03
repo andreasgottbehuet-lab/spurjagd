@@ -41,3 +41,6 @@ Gruppenrouten und Code-Lösungen werden in Zweiergruppen auf A5 verteilt. Jedes 
 
 ## Mehrseitige Kinder-Wegrätsel
 Bei Fragenrätseln werden höchstens fünf Fragen auf einem A5-Blatt dargestellt. Weitere Fragen folgen auf nummerierten Fortsetzungsblättern; das Antwortfeld für den nächsten Ort steht auf dem letzten Blatt. Der Umschlag enthält zwei feste Blätter (Aufgaben und Antworten) sowie die erforderlichen Wegrätselblätter. Druckvorschau und Etikettenzahl auf Übereinstimmung prüfen. Bei besonders langen Fragen und Ortsnamen ist ein realer A5-Probedruck weiterhin erforderlich.
+
+## Spielleitungs-Lösungsblätter bei langen Ortsnamen
+Fragenrätsel mit mehr als fünf Lösungsbuchstaben erhalten auch in der Spielleitungsübersicht Fortsetzungsblätter. Die Nummerierung und die Seitenzahl müssen mit den Kinder-Wegrätselblättern übereinstimmen. Bei der Druckabnahme für einen langen Zielort sowohl die Kinderseiten als auch die Lösungsseiten kontrollieren.
