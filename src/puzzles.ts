@@ -86,7 +86,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   const encoded = [...word].map(char => ALPHABET[(ALPHABET.indexOf(char) + shift) % ALPHABET.length]).join('');
   return {
     id, kind,
-    instruction: 'Entschlüssele das Wort. Es verrät dir eine Ziffer. Verschiebe jeden Buchstaben im Alphabet um ' + shift + ' Stellen zurück. Beim Rückwärtszählen kommt vor A der Buchstabe Z.',
+    instruction: 'Entschlüssele das Wort. Es verrät dir eine Ziffer. Verschiebe jeden Buchstaben im Alphabet um ' + shift + (shift===1?' Stelle':' Stellen') + ' zurück. Beim Rückwärtszählen kommt vor A der Buchstabe Z.',
     question: encoded,
     hint: 'Der erste Buchstabe lautet ' + word[0] + '.',
     explanation: encoded + ' bedeutet ' + word + ', also ' + target + '.',
@@ -138,6 +138,7 @@ export function generateRoutePuzzle(destination: string, seed: number): RoutePuz
     const question = answer.replace(/[AEIOUÄÖÜaeiouäöü]/g, '_');
     return {kind:'missing-vowels',instruction:'Ergänzt die fehlenden Selbstlaute (A, E, I, O, U, Ä, Ö, Ü). Welcher Ort ist gemeint?',question,hint:'Die Striche stehen für fehlende Buchstaben.',answer};
   }
+  if(reversed===answer) throw new Error('Für diesen Zielnamen bitte ein anderes Wegrätsel wählen.');
   return {kind:'reverse',instruction:'Lest die Zeichenfolge von rechts nach links. Welcher Ort ist gemeint?',question:reversed,hint:'Beginnt mit dem letzten Zeichen.',answer};
 }
 
