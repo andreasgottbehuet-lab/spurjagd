@@ -367,7 +367,7 @@ function App() {
                     <p>Pro Umschlag: drei A5-Blätter – Aufgaben, Antworten und Wegrätsel. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit dem Spielplan auf Blatt 1 abgleichen.</p>
                     <p>Die Umschläge in der vorgesehenen Gruppenreihenfolge bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
                     <h2>Vorbereitung und Sicherheit</h2>
-                    <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Die drei Blätter jeder Station gemeinsam ausgeben; die Reihenfolge der Bearbeitung ist frei. Schloss-Code und Wegrätsel müssen beide gelöst werden. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
+                    <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p>
                   </article>
                   {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
