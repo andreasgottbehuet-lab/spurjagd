@@ -1,3 +1,4 @@
+import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -113,26 +114,14 @@ test('Import lehnt leere Altersangaben in Teamprofilen ab',()=>{
  }
 });
 
-test('Nach Löschen des letzten Projekts darf kein alter Inhalt in das neue Projekt übernommen werden',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
- assert.ok(deletion.includes('deleteGame(projectId)'));
- assert.ok(deletion.includes('applyGame(fresh)'));
- assert.ok(deletion.includes('locations:initialLocations.map'));
- assert.ok(deletion.includes("meetingPoint:'Treffpunkt'"));
- assert.ok(deletion.includes("startPoint:'Treffpunkt'"));
- assert.ok(deletion.includes('stationCodes:{}'));
- assert.ok(deletion.includes('routeClueTexts:{}'));
- assert.ok(deletion.includes('teamProfiles:{}'));
-});
-
-test('Neue Projekte übernehmen keine privaten Treffpunkte aus der vorherigen Schnitzeljagd',()=>{
+test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen Vorgaben',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const creation=source.slice(source.indexOf('const newProject = () =>'),source.indexOf('const removeProject = () =>'));
- assert.ok(creation.includes("meetingPoint:'Treffpunkt'"));
- assert.ok(creation.includes("startPoint:'Treffpunkt'"));
- assert.ok(creation.includes('stationCodes:{}'));
- assert.ok(creation.includes('routeClueTexts:{}'));
+ const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
+ assert.ok(creation.includes('config:createDefaultGameConfig()'));
+ assert.ok(deletion.includes('config:createDefaultGameConfig()'));
+ assert.ok(deletion.includes('deleteGame(projectId)'));
+ assert.ok(deletion.includes('applyGame(fresh)'));
 });
 
 test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwurfs',()=>{
@@ -245,4 +234,24 @@ test('Fehler beim Speichern der Projektliste ändern die aktive Kennung nicht',(
   if(old===undefined) delete globalThis.localStorage;
   else globalThis.localStorage=old;
  }
+});
+
+test('Frische Entwürfe sind vollständig unabhängig und enthalten keine vorherigen Teilnehmer- oder Ortsdaten',()=>{
+ const a=createDefaultGameConfig(),b=createDefaultGameConfig();
+ assert.equal(isGameConfig(a),true);
+ a.players=99;
+ a.age='14+';
+ a.meetingPoint='Privates Zuhause';
+ a.startPoint='Privater Start';
+ a.locations[0].name='Geheime Station';
+ a.stationCodes['loc-1']='007';
+ a.teamProfiles['0']={age:'14+',difficulty:'hard'};
+ assert.equal(b.players,12);
+ assert.equal(b.age,'8–10');
+ assert.equal(b.meetingPoint,'Treffpunkt');
+ assert.equal(b.startPoint,'Treffpunkt');
+ assert.equal(b.locations[0].name,'Spielplatz');
+ assert.deepEqual(b.stationCodes,{});
+ assert.deepEqual(b.teamProfiles,{});
+ assert.notStrictEqual(a.locations[0],b.locations[0]);
 });
