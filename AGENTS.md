@@ -74,3 +74,7 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - Beschädigte lokale Projektlisten dürfen beim Initialisieren nicht durch einen leeren Entwurf überschrieben werden. Automatisches Speichern bleibt bei Ladefehlern deaktiviert.
 - Neue Projekte und Ersatzentwürfe nach Löschung erhalten neutrale Start-/Treffpunkte, keine alten Stationscodes, Wegrätsel oder Gruppenprofile.
 - Teamprofile und Stationsobjekte im erzeugten Spielplan dürfen keine veränderbaren Referenzen auf die Originalkonfiguration oder auf andere Teams behalten.
+
+## Entscheidung 2026-11-03 – Neuanlage und lokale Projektkennungen
+- Neue Projekte und nach dem Löschen des letzten Projekts erzeugte Entwürfe verwenden eine zentrale, vollständig neue Standardkonfiguration. Auch Teilnehmerzahl, Alter, Zeitansätze und Gruppeneinstellungen werden zurückgesetzt; private Treffpunkte und Codes werden niemals übernommen.
+- Die lokale Projektliste darf keine doppelten Projektkennungen enthalten. Unbekannte Kennungen dürfen nicht als aktives Projekt gesetzt werden. Bei inkonsistenten Daten ist ein Fehler anzuzeigen, statt die gespeicherten Projekte stillschweigend zu überschreiben.
