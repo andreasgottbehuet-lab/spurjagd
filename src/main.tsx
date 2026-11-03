@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, hashSeed, validCode, type AgeLevel, type StationChallenge } from './puzzles';
+import { createPrintKit, expectedClueTarget, routeClueKey, type RouteClues } from './print-kit';
+import { PrintView } from './print-view';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import './style.css';
 
@@ -32,6 +34,8 @@ function App() {
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [stationCodes, setStationCodes] = useState<Record<string, string>>({});
+  const [routeClues, setRouteClues] = useState<RouteClues>({});
+  const [printMode, setPrintMode] = useState<'children' | 'leader'>('children');
   const [puzzleSeed, setPuzzleSeed] = useState<number>(() => hashSeed(projectId));
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
   const [projects, setProjects] = useState<SavedGame[]>([]);
@@ -44,7 +48,7 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues };
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const lockPreview = useMemo(() => {
     const challenges: { location: Location; challenge: StationChallenge }[] = [];
@@ -68,6 +72,16 @@ function App() {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint]);
+  const printKit = useMemo(() => plan.value && goal === 'locks' ? createPrintKit(plan.value, stationCodes, routeClues, ageLevel, puzzleSeed) : null,
+    [plan.value, goal, stationCodes, routeClues, ageLevel, puzzleSeed]);
+  const updateRouteClue = (teamIndex: number, stopIndex: number, target: string, text: string) => {
+    setRouteClues(old => ({ ...old, [routeClueKey(teamIndex, stopIndex)]: { to: target, text } }));
+  };
+  const printPacket = (mode: 'children' | 'leader') => {
+    if (!printKit || printKit.issues.length > 0) return;
+    setPrintMode(mode);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.print()));
+  };
   const updateStationCode = (id: string, value: string) => {
     const digits = value.replace(/[^0-9]/g, '').slice(0, 4);
     setStationCodes(old => ({ ...old, [id]: digits }));
@@ -92,6 +106,7 @@ function App() {
     setGoal(c.goal);
     setLocations(c.locations.map(x => ({...x})));
     setStationCodes({ ...(c.stationCodes ?? {}) });
+    setRouteClues({ ...(c.routeClues ?? {}) });
     setPuzzleSeed(c.puzzleSeed ?? hashSeed(project.id));
     setPuzzleMinutes(c.puzzleMinutes);
     setWalkingMinutes(c.walkingMinutes);
@@ -128,12 +143,12 @@ function App() {
       } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues]);
   const newProject = () => {
     const id = newGameId();
     const fresh: SavedGame = {
       version:1, id, title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes: {}, puzzleSeed: hashSeed(id) },
+      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes: {}, routeClues: {}, puzzleSeed: hashSeed(id) },
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -144,7 +159,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { const id = newGameId(); setProjectId(id); setPuzzleSeed(hashSeed(id)); setStationCodes({}); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setLocations(initialLocations.map(x=>({...x}))); setStorageMessage(''); }
+      else { const id = newGameId(); setProjectId(id); setPuzzleSeed(hashSeed(id)); setStationCodes({}); setRouteClues({}); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setLocations(initialLocations.map(x=>({...x}))); setStorageMessage(''); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
@@ -168,7 +183,7 @@ function App() {
     finally { if (importRef.current) importRef.current.value=''; }
   };
   return (
-    <div className="app">
+    <div className={goal === 'locks' && printKit && printKit.issues.length === 0 ? 'app print-ready' : 'app'}>
       <header className="site-header">
         <a className="brand" href="/" aria-label="Spurjagd Startseite"><span className="mark">↗</span> SPURJAGD</a>
         <div className="header-actions"><span className="prototype">PROTOTYP 0.3</span>
@@ -323,7 +338,38 @@ function App() {
                     </article>)}
                   </>}
                 </section>}
-                <button type="button" className="print" disabled={goal==='locks' && lockPreview.errors.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
+                {goal === 'locks' ? <>
+                  <section className="clue-editor">
+                    <h3>{tx('Rätsel für den nächsten Ort', 'Clues for the next location')}</h3>
+                    <p className="helper">{tx('Der Zielort darf nicht direkt genannt werden. Trage für jede Gruppe und jeden Stationsbesuch einen Hinweis ein. Dieser wird auf einer eigenen Karte gedruckt und erst nach dem Schloss-Rätsel übergeben.', 'Do not name the next location directly. Enter one clue per team and visited station. It prints on a separate card to hand out after the puzzle.')}</p>
+                    {plan.value.teams.map((team, teamIndex) => <div className="clue-team" key={teamIndex}>
+                      <h4>{tx('Team', 'Team')} {team.name}</h4>
+                      {team.stations.map((station, stopIndex) => {
+                        const key = routeClueKey(teamIndex, stopIndex);
+                        const target = expectedClueTarget(team.stations, stopIndex, team.finish);
+                        const text = routeClues[key]?.to === target ? routeClues[key].text : '';
+                        const next = team.stations[stopIndex + 1]?.name ?? team.finish;
+                        return <label className="clue-row" key={key}>
+                          {tx('Nach', 'After')} {station.name} → {tx('Hinweis für', 'Clue for')} {next}
+                          <textarea rows={2} maxLength={240} value={text} placeholder={tx('Hier ein Ortsrätsel eingeben – nicht den Ortsnamen', 'Enter a riddle, not the location name')} onChange={e=>updateRouteClue(teamIndex,stopIndex,target,e.target.value)} />
+                        </label>;
+                      })}
+                    </div>)}
+                  </section>
+                  <section className="print-packet-controls">
+                    <h3>{tx('Druckpaket', 'Print packet')}</h3>
+                    {printKit && printKit.issues.length > 0 && <div className="print-preflight" role="alert">
+                      <strong>{tx('Vor dem Druck noch erledigen:', 'Before printing:')}</strong>
+                      <ul>{printKit.issues.map((issue,i)=><li key={i}>{issue}</li>)}</ul>
+                    </div>}
+                    {printKit && printKit.issues.length === 0 && <p className="helper">{tx('Fertig:','Ready:')} {printKit.cards.length} {tx('Kinderkarten auf','child cards on')} {printKit.sheetCount} {tx('A4-Blättern. Die Spielleitung bekommt ein getrenntes Lösungsblatt.', 'A4 sheets. The leader receives a separate answer sheet.')}</p>}
+                    <div className="print-buttons">
+                      <button type="button" className="print" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('children')}>{tx('Kinderkarten drucken (2 × A5 auf A4)', 'Print child cards (2 × A5 on A4)')}</button>
+                      <button type="button" className="secondary" disabled={!printKit || printKit.issues.length>0} onClick={()=>printPacket('leader')}>{tx('Spielleitung: Lösungen drucken', 'Print leader answers')}</button>
+                    </div>
+                    <p className="helper">{tx('Für den Ausdruck Papierformat A4, Querformat und Skalierung 100 % wählen. Prüfe die Druckvorschau und teste die Schlösser vor Ort.', 'Use A4 landscape at 100% scale. Check the preview and test all physical locks.')}</p>
+                  </section>
+                </> : <button type="button" className="print" onClick={()=>window.print()}>{t.print} ↗</button>}
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
@@ -333,6 +379,7 @@ function App() {
             </div>
           </div>
         </section>
+        {goal === 'locks' && printKit && printKit.issues.length === 0 && <PrintView projectTitle={projectTitle} kit={printKit} mode={printMode}/>}
         <footer><span>SPURJAGD · 2026</span><span>{t.privacy}</span></footer>
       </main>
     </div>
