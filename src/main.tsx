@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
-import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
@@ -142,7 +142,7 @@ function App() {
   useEffect(() => {
     const onStorageChange=(event:StorageEvent)=>{
       if(event.storageArea!==window.localStorage) return;
-      if(event.key==='spurjagd-projects-v1'||event.key===null){
+      if(projectListChanged(event.key)){
         storageConflict.current=true;
         setStorageReady(false);
         setStorageMessage('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte dort eine JSON-Sicherung erstellen und die Seite neu laden.');
