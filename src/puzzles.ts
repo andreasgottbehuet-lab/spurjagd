@@ -246,6 +246,13 @@ export function generateCreativeRouteClue(destination: string, description: stri
  return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
 }
 
+/** Normalize punctuation and repeated spaces before checking whether a clue reveals its answer. */
+export function clueRevealsDestination(clueText:string,destination:string):boolean {
+ const fold=(value:string)=>value.normalize('NFKC').toLocaleLowerCase('de').replace(/ß/g,'ss').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+ const target=fold(destination);
+ return target.length>0 && fold(clueText).includes(target);
+}
+
 /** Independent checks for route puzzle integrity before printing. */
 export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  const destination=clue.answer.trim();
@@ -253,7 +260,7 @@ export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  if(clue.mode==='questions') return verifyRouteQuestions(clue) && clue.rows!.every(row=>row.question.trim().length>0 && row.solution.trim().length>0);
  if(clue.mode==='description') {
   return clue.question.trim().length>=12
-   && !clue.question.toLocaleLowerCase('de').includes(destination.toLocaleLowerCase('de'));
+   && !clueRevealsDestination(clue.question,destination);
  }
  if(clue.mode==='custom') return clue.question.trim().length>0 && !clue.question.toLocaleLowerCase('de').includes(destination.toLocaleLowerCase('de'));
  if(clue.mode==='letters') {
