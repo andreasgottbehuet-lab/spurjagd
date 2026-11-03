@@ -120,3 +120,9 @@ test('A5 overflow audit identifies height, width and invalid measurements',()=>{
  assert.ok(auditPrintOverflow([{...okay,scrollWidth:520}]).some(x=>x.includes('zu breit')));
  assert.ok(auditPrintOverflow([{...okay,contentHeight:NaN}]).some(x=>x.includes('nicht geprüft')));
 });
+
+test('Hidden print packets with zero geometry cannot pass overflow checks',()=>{
+ const sheet={id:'hidden A5',contentWidth:0,contentHeight:0,scrollWidth:0,scrollHeight:0};
+ assert.ok(auditPrintOverflow([sheet]).some(issue=>issue.includes('nicht geprüft')));
+ assert.ok(auditPrintOverflow([{...sheet,contentWidth:480,contentHeight:700,scrollWidth:480,scrollHeight:700}],-1).some(issue=>issue.includes('Messtoleranz')));
+});
