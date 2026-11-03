@@ -168,7 +168,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { setProjectId(newGameId()); setSelectedProject(''); setProjectTitle('Meine Schnitzeljagd'); setStorageMessage(''); }
+      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:{...config,locations:initialLocations.map(x=>({...x})),stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{}}};applyGame(fresh);setSelectedProject('');setStorageMessage('');setActiveStep(1); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
