@@ -63,6 +63,7 @@ export function createPlan(config: GameConfig): GamePlan {
   const places = locations.map(place => ({ ...place, name: place.name.trim(), description: place.description.trim() }));
   if (places.some(place => !place.name)) throw new Error('Jeder Standort benötigt einen Namen');
   if (new Set(places.map(place => place.name.toLocaleLowerCase('de'))).size !== places.length) throw new Error('Standortnamen müssen eindeutig sein');
+  if (new Set(places.map(place => place.id)).size !== places.length || places.some(place=>!place.id.trim())) throw new Error('Stations-IDs müssen eindeutig und ausgefüllt sein');
   const teamCount = Math.ceil(players / groupSize);
   const base = Math.floor(players / teamCount);
   const extra = players % teamCount;
