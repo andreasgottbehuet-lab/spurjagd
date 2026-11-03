@@ -5,7 +5,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
-import { createPrintManifest } from './print-manifest';
+import { createPrintManifest, LABELS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import './style.css';
 
@@ -393,7 +393,12 @@ function App() {
                       </article>
                     </React.Fragment>;
                   }))}
-                  <article className="print-sheet"><h1>Stationsetiketten</h1>{printManifest?.envelopes.map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · 3 Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel · Alle gleichzeitig ausgeben</span></p>)}</article>
+                  {printManifest && Array.from({length:printManifest.labelSheets},(_,page)=>(
+                    <article className="print-sheet" key={'labels-'+page}>
+                      <h1>Stationsetiketten – Blatt {page+1}/{printManifest.labelSheets}</h1>
+                      {printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · 3 Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel · Alle gleichzeitig ausgeben</span></p>)}
+                    </article>
+                  ))}
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
                 <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
