@@ -340,8 +340,8 @@ function App() {
                     const destination=team.stations[stationIndex+1]?.name??team.finish;
                     const target=locations.find(l=>l.name===destination);
                     let routePuzzle;
-                    try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':route:'+teamIndex+':'+stationIndex),routeClueTexts[target?.id??'']??'');}
-                    catch {routePuzzle=generateCreativeRouteClue(destination,'','letters',hashSeed(projectId+':route:'+teamIndex+':'+stationIndex));}
+                    try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
+                    catch {routePuzzle=generateCreativeRouteClue(destination,'','letters',hashSeed(projectId+':destination:'+(target?.id??destination)));}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet">
                         <h1>{projectTitle}</h1>
