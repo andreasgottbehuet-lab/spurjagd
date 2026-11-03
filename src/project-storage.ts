@@ -76,13 +76,16 @@ export function loadGames(): SavedGame[] {
   if (!raw) return [];
   const items: unknown = JSON.parse(raw);
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
-  return (items as SavedGame[]).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const projects=items as SavedGame[];
+  if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
+  return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 export function saveGame(project: SavedGame): SavedGame[] {
   if (!isSavedGame(project)) throw new Error('Projekt ungültig.');
   const existing = loadGames();
   const next = [project, ...existing.filter(p => p.id !== project.id)];
   if (next.length > MAX_PROJECTS) throw new Error('Maximal 40 Projekte. Bitte alte Projekte löschen.');
+  // Persist the project list first: failure must not point ACTIVE to an unsaved project.
   localStorage.setItem(KEY, JSON.stringify(next));
   localStorage.setItem(ACTIVE, project.id);
   return next;
@@ -94,7 +97,10 @@ export function deleteGame(id: string): SavedGame[] {
   return remaining;
 }
 export function activeGameId(): string | null { return localStorage.getItem(ACTIVE); }
-export function setActiveGameId(id: string): void { localStorage.setItem(ACTIVE, id); }
+export function setActiveGameId(id: string): void {
+  if(!loadGames().some(project=>project.id===id)) throw new Error('Aktives Projekt existiert nicht.');
+  localStorage.setItem(ACTIVE, id);
+}
 export function newGameId(): string { return crypto.randomUUID(); }
 export function downloadBackup(project: SavedGame): void {
   const blob = new Blob([serializeGameBackup(project)], { type: 'application/json' });
