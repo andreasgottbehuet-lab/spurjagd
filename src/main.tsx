@@ -165,6 +165,27 @@ function App() {
     }, 650);
     return () => window.clearTimeout(timeout);
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
+  useEffect(() => {
+    if(!storageReady || storageConflict.current) return;
+    const flushOnExit=()=>{
+      if(storageConflict.current) return;
+      try{
+        const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+        saveGame(current);
+      }catch(error){
+        // Browsers may discard UI updates during pagehide; preserve data where possible.
+        setStorageMessage('Speichern beim Verlassen fehlgeschlagen: '+String(error));
+      }
+    };
+    const onVisibilityChange=()=>{if(document.visibilityState==='hidden')flushOnExit();};
+    window.addEventListener('pagehide',flushOnExit);
+    document.addEventListener('visibilitychange',onVisibilityChange);
+    return ()=>{
+      window.removeEventListener('pagehide',flushOnExit);
+      document.removeEventListener('visibilitychange',onVisibilityChange);
+    };
+  },[storageReady,projectId,projectTitle,config]);
   // Flush the currently edited draft before changing projects; debounce alone can lose edits.
   const saveCurrentBeforeSwitch = (): boolean => {
     if(storageConflict.current){setStorageMessage('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return false;}
