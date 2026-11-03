@@ -361,15 +361,20 @@ function App() {
                       {clue.mode==='questions'?clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET,(page+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((row,i)=><p key={i}>{page*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {row.solution} (Buchstabe {row.letterIndex+1})</p>):<p>Lösung: {clue.answer}</p>}
                     </article>);
                   })}
+                  <article className="print-sheet" key="safety-check">
+                    <h1>Spielleitung – Start und Sicherheit</h1>
+                    <h2>Vor der Ausgabe</h2>
+                    <p>Pro Umschlag: ein A5-Aufgabenblatt, ein Antwortblatt und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
+                    <p>Schlösser auf die Codes einstellen und an den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden.</p>
+                    <h2>Vor Ort kontrollieren</h2>
+                    <p>Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Den Kindern den nächsten Zielort nicht vor dem Rätsel verraten.</p>
+                    <h2>Zum Spielende</h2>
+                    <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
+                  </article>
                   {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet" key={'control-'+page}>
-                    <h1>Spielleitung – Kontrolle {page+1}</h1>
-                    <h2>Ausgabe und Kontrolle</h2>
-                    <p>Pro Umschlag: je ein A5-Aufgaben- und Antwortblatt sowie ein oder mehrere Wegrätselblätter. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit der passenden Gruppenroutenseite abgleichen.</p>
-                    <p>Die Umschläge je Team nach Stationsnummer sortieren und vollständig bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
-                    <h2>Umschläge prüfen und abhaken</h2>
-                    {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p key={envelope.id}>□ Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName} · {envelope.sheetCount} Blätter</p>)}
-                    {page===0 && <><h2>Vorbereitung und Sicherheit</h2>
-                    <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p></>}
+                    <h1>Spielleitung – Umschlagkontrolle {page+1}</h1>
+                    <p>Umschläge je Team nach Stationsnummer sortieren und jeweils nach dem Packen abhaken.</p>
+                    {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p className="print-checklist-row" key={envelope.id}>□ Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName} · {envelope.sheetCount} Blätter</p>)}
                   </article>)}
                   {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
