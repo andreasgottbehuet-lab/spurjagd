@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes} from '../src/print-dom-audit.ts';
+import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels} from '../src/print-dom-audit.ts';
 
 test('Vollständig gerendertes A5-Paket wird freigegeben',()=>{
  for(const count of [1,3,53,200,1000]) assert.deepEqual(auditRenderedPrintSheets(count,count),[]);
@@ -53,4 +53,33 @@ test('Falsche Zuordnung bleibt gesperrt, auch wenn die Gesamtblattzahl unveränd
  assert.equal(sheets.length,6);
  assert.ok(auditRenderedEnvelopes(expected,sheets).length>0);
  assert.ok(auditRenderedEnvelopes(expected,[...sheets,{envelopeId:'unbekannt',kind:'route'}]).some(issue=>issue.includes('ohne gültige Umschlagzuordnung')));
+});
+
+test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
+ const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:4}];
+ const correct=[
+  {envelopeId:'0-a',kind:'task'},
+  {envelopeId:'0-a',kind:'answer'},
+  {envelopeId:'0-a',kind:'route'},
+  {envelopeId:'1-b',kind:'task'},
+  {envelopeId:'1-b',kind:'answer'},
+  {envelopeId:'1-b',kind:'route'},
+  {envelopeId:'1-b',kind:'route'}
+ ];
+ assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
+ const wrongOrder=[...correct];
+ [wrongOrder[0],wrongOrder[1]]=[wrongOrder[1],wrongOrder[0]];
+ assert.ok(auditRenderedEnvelopes(expected,wrongOrder).some(issue=>issue.includes('Umschlag-Reihenfolge')));
+ const mixed=[...correct];
+ [mixed[2],mixed[5]]=[mixed[5],mixed[2]];
+ assert.ok(auditRenderedEnvelopes(expected,mixed).some(issue=>issue.includes('Umschlag-Reihenfolge')));
+});
+
+test('Etiketten müssen genau einmal und in Umschlag-Reihenfolge vorkommen',()=>{
+ const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:4},{id:'2-c',sheetCount:3}];
+ assert.deepEqual(auditRenderedLabels(expected,['0-a','1-b','2-c']),[]);
+ for(const labels of [['1-b','0-a','2-c'],['0-a','1-b'],['0-a','1-b','1-b'],['0-a','1-b','falsch']]){
+  assert.ok(auditRenderedLabels(expected,labels).length>0);
+ }
+ assert.ok(auditRenderedLabels(expected,['0-a','1-b','falsch']).some(issue=>issue.includes('unbekanntem Umschlag')));
 });
