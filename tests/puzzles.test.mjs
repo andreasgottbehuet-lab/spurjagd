@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -52,4 +52,17 @@ test('Wegrätsel bleiben je Seed gleich und verraten das festgelegte Ziel nicht 
     }
   }
   assert.throws(()=>generateRoutePuzzle('  ',1),/Zielort/);
+});
+
+test('Fragenrätsel Feuerwehr ergibt exakt das Lösungswort',()=>{
+ const clue=generateCreativeRouteClue('Feuerwehr','Platz neben der Feuerwehr','questions',1);
+ assert.equal(clue.rows.map(r=>r.solution[r.letterIndex]).join('').toUpperCase(),'FEUERWEHR');
+});
+test('Beschreibung verbirgt den Zielnamen und eigene Rätsel bleiben erhalten',()=>{
+ const clue=generateCreativeRouteClue('Spielplatz','Spielplatz mit großer Rutsche und Schaukeln','description',1);
+ assert.equal(clue.question.toLowerCase().includes('spielplatz'),false);
+ assert.match(clue.question,/Rutsche/);
+ const custom=generateCreativeRouteClue('Wiese','','custom',1,'Wo wächst das Gras?');
+ assert.equal(custom.question,'Wo wächst das Gras?');
+ assert.throws(()=>generateCreativeRouteClue('Wiese','','description',1),/Ortsbeschreibung/);
 });
