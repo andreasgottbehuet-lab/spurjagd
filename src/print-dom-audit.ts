@@ -33,3 +33,31 @@ export function auditRenderedPrintCategories(expected:ExpectedSheetCounts,actual
  if(actual.organizer+actual.children+actual.labels!==actual.total) issues.push('Druckpaket enthält nicht zugeordnete A5-Blätter.');
  return [...new Set(issues)];
 }
+
+export interface RenderedEnvelopeSheet {
+ envelopeId:string;
+ kind:string;
+}
+export interface ExpectedEnvelope {
+ id:string;
+ sheetCount:number;
+}
+/** Checks actual child-page assignment, not only aggregate page counts. */
+export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:RenderedEnvelopeSheet[]):string[] {
+ const issues:string[]=[];
+ const expectedIds=new Set(expected.map(envelope=>envelope.id));
+ for(const sheet of actual){
+  if(!expectedIds.has(sheet.envelopeId)) issues.push('Druckblatt ohne gültige Umschlagzuordnung: '+(sheet.envelopeId||'(leer)'));
+  if(!['task','answer','route'].includes(sheet.kind)) issues.push('Druckblatt mit ungültiger Blattart: '+(sheet.kind||'(leer)'));
+ }
+ for(const envelope of expected){
+  const sheets=actual.filter(sheet=>sheet.envelopeId===envelope.id);
+  const tasks=sheets.filter(sheet=>sheet.kind==='task').length;
+  const answers=sheets.filter(sheet=>sheet.kind==='answer').length;
+  const routes=sheets.filter(sheet=>sheet.kind==='route').length;
+  if(tasks!==1||answers!==1||routes!==envelope.sheetCount-2){
+   issues.push('Umschlag '+envelope.id+': '+tasks+' Aufgaben-, '+answers+' Antwort- und '+routes+' Wegrätselblätter statt 1/1/'+(envelope.sheetCount-2)+'.');
+  }
+ }
+ return [...new Set(issues)];
+}
