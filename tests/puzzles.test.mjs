@@ -155,3 +155,5 @@ test('Ortsnamen mit gleichem Vorwärts- und Rückwärtstext verraten nicht die L
 });
 
 test('Eigene Ortsrätsel nennen den Zielort nicht ausdrücklich',()=>{const a=generateCreativeRouteClue('Wiese','','custom',1,'Geht zur WIESE.');assert.equal(verifyCreativeRouteClue(a),false);const b=generateCreativeRouteClue('Wiese','','custom',1,'Wo wachsen hohe Gräser?');assert.equal(verifyCreativeRouteClue(b),true);});
+
+test('Kinder erhalten altersgerechte Rechenhilfen',()=>{const a=generateDigitPuzzle(7,'arithmetic','young',3);const b=generateDigitPuzzle(7,'arithmetic','older',3);assert.match(a.hint,/Fingern/);assert.match(b.hint,/Multiplikation/);assert.notEqual(a.hint,b.hint);});
