@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame } from '../src/project-storage.ts';
 
 const sample = () => ({
@@ -101,4 +102,24 @@ test('Exportierte Sicherungen dürfen das Importlimit nicht überschreiten',()=>
  for(let i=0;i<25;i++)project.config.routeClueTexts['station-'+i]=String.fromCharCode(0).repeat(1500);
  assert.equal(isSavedGame(project),true);
  assert.throws(()=>serializeGameBackup(project),/zu groß/);
+});
+
+test('Import lehnt leere Altersangaben in Teamprofilen ab',()=>{
+ const game=sample();
+ for(const age of ['', ' ', '   ']){
+  const invalid={...game.config,teamProfiles:{'0':{age,difficulty:'normal'}}};
+  assert.equal(isGameConfig(invalid),false);
+  assert.equal(isSavedGame({...game,config:invalid}),false);
+ }
+});
+
+test('Nach Löschen des letzten Projekts darf kein alter Inhalt in das neue Projekt übernommen werden',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
+ assert.ok(deletion.includes('deleteGame(projectId)'));
+ assert.ok(deletion.includes('applyGame(fresh)'));
+ assert.ok(deletion.includes('locations:initialLocations.map'));
+ assert.ok(deletion.includes('stationCodes:{}'));
+ assert.ok(deletion.includes('routeClueTexts:{}'));
+ assert.ok(deletion.includes('teamProfiles:{}'));
 });
