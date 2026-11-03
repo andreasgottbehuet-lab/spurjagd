@@ -240,9 +240,9 @@ export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  }
  if(clue.mode==='custom') return clue.question.trim().length>0;
  if(clue.mode==='letters') {
-  const original=[...destination].sort().join('');
-  const scrambled=[...clue.question].sort().join('');
-  return original===scrambled && clue.question!==destination;
+  const reverse=[...destination].reverse().join('');
+  const vowels=destination.replace(/[AEIOUÄÖÜaeiouäöü]/g,'_');
+  return clue.question!==destination && (clue.question===reverse || clue.question===vowels);
  }
  return false;
 }
