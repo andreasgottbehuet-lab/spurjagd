@@ -11,6 +11,12 @@ try {
   $major = [int]((node --version).TrimStart('v').Split('.')[0])
   if ($major -lt 22) { throw 'Mindestens Node.js 22 erforderlich.' }
   Write-Host ('Node: ' + (node --version))
+  Write-Host ('npm: ' + (npm --version))
+  if (Get-Command git -ErrorAction SilentlyContinue) {
+    Write-Host ('Git-Commit: ' + (git rev-parse HEAD))
+  } else {
+    Write-Host 'Git nicht gefunden: Commit-Stand bitte manuell im Abnahmeprotokoll eintragen.'
+  }
   Write-Host '1/3 Abhaengigkeiten installieren'
   npm install --no-audit --no-fund
   if ($LASTEXITCODE -ne 0) { throw 'npm install fehlgeschlagen.' }
@@ -21,6 +27,7 @@ try {
   npm run build
   if ($LASTEXITCODE -ne 0) { throw 'Build fehlgeschlagen.' }
   Write-Host 'OK: Tests und Build erfolgreich.'
+  Write-Host 'Die automatische Prüfung ist keine Bestätigung für einen korrekten A5-Ausdruck.'
   Write-Host 'A5-Druckvorschau anschliessend manuell im Browser pruefen.'
 }
 catch {
