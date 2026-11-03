@@ -245,7 +245,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
 export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  const destination=clue.answer.trim();
  if(!destination || !clue.instruction.trim()) return false;
- if(clue.mode==='questions') return verifyRouteQuestions(clue);
+ if(clue.mode==='questions') return verifyRouteQuestions(clue) && clue.rows!.every(row=>row.question.trim().length>0 && row.solution.trim().length>0);
  if(clue.mode==='description') {
   return clue.question.trim().length>=12
    && !clue.question.toLocaleLowerCase('de').includes(destination.toLocaleLowerCase('de'));
