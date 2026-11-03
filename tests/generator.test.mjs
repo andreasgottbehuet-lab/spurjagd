@@ -102,3 +102,12 @@ test('Alle Varianten der Routenplanung enthalten ausschließlich eindeutige Stat
   }
  }
 });
+
+test('Gleichzeitiger Stationsbesuch mehrerer Teams wird gemeldet',()=>{
+ const plan=createPlan(config({startMode:'shared',routeMode:'same'}));
+ assert.ok(plan.cautions.some(w=>w.includes('Möglicher Andrang')&&w.includes('Spielplatz')));
+});
+test('Verteilte Starts ohne Stationsüberschneidung erzeugen keine Andrangwarnung',()=>{
+ const plan=createPlan(config({startMode:'distributed',routeMode:'same'}));
+ assert.equal(plan.cautions.some(w=>w.includes('Möglicher Andrang')),false);
+});
