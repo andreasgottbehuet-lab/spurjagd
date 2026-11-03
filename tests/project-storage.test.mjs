@@ -67,3 +67,16 @@ test('Vorhandene Backups ohne neue Felder bleiben gültig',()=>{
   assert.equal(isGameConfig(previous.config),true);
   assert.deepEqual(parseGameBackup(serializeGameBackup(previous)),previous);
 });
+
+test('Teamprofile mit numerischen Gruppenkennungen lassen sich sichern und wieder laden',()=>{
+ const game=sample();
+ game.config.teamProfiles={'0':{age:'8–10',difficulty:'normal'},'12':{age:'10–12',difficulty:'hard'}};
+ assert.equal(isGameConfig(game.config),true);
+ assert.deepEqual(parseGameBackup(serializeGameBackup(game)),game);
+});
+test('Ungültige Teamprofile werden beim Import abgewiesen',()=>{
+ const base=sample().config;
+ for(const profiles of [{'team-a':{age:'8–10',difficulty:'normal'}},{'100':{age:'8–10',difficulty:'normal'}},{'0':{age:'8–10',difficulty:'extreme'}}]){
+  assert.equal(isGameConfig({...base,teamProfiles:profiles}),false);
+ }
+});
