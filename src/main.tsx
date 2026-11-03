@@ -157,7 +157,7 @@ function App() {
   const newProject = () => {
     const fresh: SavedGame = {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{} },
+      config: { ...config, locations:initialLocations.map(x=>({...x})), meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',startMode:'distributed',routeMode:'same',finishMode:'meeting',stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{} },
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -168,7 +168,7 @@ function App() {
       const remaining = deleteGame(projectId);
       setProjects(remaining);
       if (remaining[0]) { setActiveGameId(remaining[0].id); applyGame(remaining[0]); }
-      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:{...config,locations:initialLocations.map(x=>({...x})),stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{}}};applyGame(fresh);setSelectedProject('');setStorageMessage('');setActiveStep(1); }
+      else { const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:{...config,locations:initialLocations.map(x=>({...x})),meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',startMode:'distributed',routeMode:'same',finishMode:'meeting',stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{}}};applyGame(fresh);setSelectedProject('');setStorageMessage('');setActiveStep(1); }
     } catch(e){ setStorageMessage('Löschen fehlgeschlagen: '+String(e)); }
   };
   const exportProject = () => {
