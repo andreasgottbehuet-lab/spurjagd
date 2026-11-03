@@ -35,3 +35,5 @@ test('Spielleitungsseiten sind separat gezählt und geprüft',()=>{
 });
 
 test('Gesamtumfang wird unabhängig berechnet',()=>{const plan=createPlan(config),m=createPrintManifest(plan);m.taskSheets+=3;m.minimumSheets+=3;assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Mindestumfang')));});
+
+test('Vertauschte Umschlagnummern werden erkannt',()=>{const plan=createPlan(config),m=createPrintManifest(plan);[m.envelopes[0].stationNumber,m.envelopes[1].stationNumber]=[m.envelopes[1].stationNumber,m.envelopes[0].stationNumber];assert.ok(auditPrintManifest(plan,m).length>0);});
