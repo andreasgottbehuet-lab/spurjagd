@@ -2,7 +2,7 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -269,7 +269,7 @@ test('Importtitel bleiben bei maximal 100 Zeichen gültig',()=>{
 test('Cross-tab edits stop autosave and deletion',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.ok(source.includes("window.addEventListener('storage',onStorageChange)"));
- assert.ok(source.includes("event.key==='spurjagd-projects-v1'"));
+ assert.ok(source.includes('projectListChanged(event.key)'));
  assert.ok(source.includes('storageConflict.current=true'));
  assert.ok(source.includes('if (!storageReady || storageConflict.current) return;'));
  assert.ok(source.includes("if(storageConflict.current){setStorageMessage('Löschen gesperrt"));
@@ -289,4 +289,11 @@ test('Pending edits are saved on pagehide and tab backgrounding',()=>{
  assert.ok(source.includes("document.visibilityState==='hidden'"));
  assert.ok(source.includes('saveGame(current)'));
  assert.ok(source.includes('if(!storageReady || storageConflict.current) return;'));
+});
+
+test('Only project-list updates trigger cross-tab protection',()=>{
+ assert.equal(projectListChanged('spurjagd-projects-v1'),true);
+ assert.equal(projectListChanged(null),true);
+ assert.equal(projectListChanged('spurjagd-active-project-v1'),false);
+ assert.equal(projectListChanged('unrelated-key'),false);
 });
