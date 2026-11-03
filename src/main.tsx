@@ -44,6 +44,7 @@ function App() {
   const [storageMessage, setStorageMessage] = useState('');
   const importRef = useRef<HTMLInputElement>(null);
   const skipSave = useRef(false);
+  const storageConflict = useRef(false);
   const [selectedProject, setSelectedProject] = useState('');
 
   const t = messages[lang];
@@ -139,7 +140,19 @@ function App() {
     }
   }, []);
   useEffect(() => {
-    if (!storageReady) return;
+    const onStorageChange=(event:StorageEvent)=>{
+      if(event.storageArea!==window.localStorage) return;
+      if(event.key==='spurjagd-projects-v1'||event.key===null){
+        storageConflict.current=true;
+        setStorageReady(false);
+        setStorageMessage('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte dort eine JSON-Sicherung erstellen und die Seite neu laden.');
+      }
+    };
+    window.addEventListener('storage',onStorageChange);
+    return ()=>window.removeEventListener('storage',onStorageChange);
+  },[]);
+  useEffect(() => {
+    if (!storageReady || storageConflict.current) return;
     if (skipSave.current) { skipSave.current = false; return; }
     const timeout = window.setTimeout(() => {
       try {
@@ -154,6 +167,7 @@ function App() {
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
   // Flush the currently edited draft before changing projects; debounce alone can lose edits.
   const saveCurrentBeforeSwitch = (): boolean => {
+    if(storageConflict.current){setStorageMessage('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return false;}
     if (!storageReady) return true;
     try {
       const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
@@ -174,6 +188,7 @@ function App() {
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
   };
   const removeProject = () => {
+    if(storageConflict.current){setStorageMessage('Löschen gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return;}
     if (!window.confirm(tx('Dieses Projekt wirklich löschen?', 'Delete this project?'))) return;
     try {
       const remaining = deleteGame(projectId);
