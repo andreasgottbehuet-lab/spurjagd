@@ -83,3 +83,22 @@ test('Separater Zielort bleibt unabhängig vom Startort', () => {
   const result=createPlan(config({startMode:'shared',finishMode:'meeting',startPoint:'Parkplatz',meetingPoint:'Sporthalle'}));
   assert.ok(result.teams.every(t=>t.finish==='Sporthalle'));
 });
+
+test('Doppelte Stations-IDs werden auch bei unterschiedlichen Ortsnamen abgewiesen',()=>{
+ assert.throws(()=>createPlan(config({locations:[{id:'same',name:'Spielplatz',description:''},{id:'same',name:'Wiese',description:''}]})),/Stations-IDs/);
+ assert.throws(()=>createPlan(config({locations:[{id:' ',name:'Spielplatz',description:''}]})),/Stations-IDs/);
+});
+test('Alle Varianten der Routenplanung enthalten ausschließlich eindeutige Stationen',()=>{
+ for(const startMode of ['shared','distributed']){
+  for(const routeMode of ['same','varied']){
+   for(let players=1;players<=30;players++){
+    const plan=createPlan(config({players,groupSize:3,startMode,routeMode,durationMinutes:90}));
+    assert.equal(plan.teams.reduce((sum,team)=>sum+team.memberCount,0),players);
+    for(const team of plan.teams){
+     assert.equal(new Set(team.stations.map(station=>station.id)).size,team.stations.length);
+     assert.equal(team.stations.length,plan.stopsPerTeam);
+    }
+   }
+  }
+ }
+});
