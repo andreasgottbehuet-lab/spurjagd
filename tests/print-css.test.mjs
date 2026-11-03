@@ -47,3 +47,5 @@ test('Spielleitung nutzt dynamische A5-Seiten für Routen, Codes und Lösungen',
   assert.ok(source.includes(marker),marker);
  }
 });
+
+test('Druckvorschau nennt Aufgaben-, Spielleitungs-, Etiketten- und Gesamtseiten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');for(const key of ['printManifest.taskSheets','printManifest.organizerSheets','printManifest.labelSheets','printManifest.minimumSheets','ORGANIZER_ITEMS_PER_A5_SHEET'])assert.ok(source.includes(key),key);});
