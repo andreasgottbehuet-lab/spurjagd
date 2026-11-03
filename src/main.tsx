@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
+import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
@@ -31,6 +31,7 @@ function App() {
   const [startPoint, setStartPoint] = useState('Zuhause / Treffpunkt');
   const [sameStartFinish, setSameStartFinish] = useState(false);
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
+  const [teamProfiles, setTeamProfiles] = useState<Record<string,TeamProfile>>({});
   const [routeClueModes, setRouteClueModes] = useState<Record<string,RouteClueMode>>({});
   const [routeClueTexts, setRouteClueTexts] = useState<Record<string,string>>({});
   const [hiddenLocations, setHiddenLocations] = useState<Location[]>([]);
@@ -48,7 +49,7 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
@@ -113,6 +114,7 @@ function App() {
     setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Zuhause / Treffpunkt');
     setSameStartFinish(c.finishMode === 'origin');
     setStationCodes(c.stationCodes ?? {});
+    setTeamProfiles(c.teamProfiles ?? {});
     setRouteClueModes(c.routeClueModes ?? {});
     setRouteClueTexts(c.routeClueTexts ?? {});
     setNextLocationId(Math.max(5, c.locations.length + 10));
@@ -143,11 +145,11 @@ function App() {
       } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
   const newProject = () => {
     const fresh: SavedGame = {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
-      config: { ...config, locations:initialLocations.map(x=>({...x})) },
+      config: { ...config, locations:initialLocations.map(x=>({...x})), stationCodes:{},routeClueModes:{},routeClueTexts:{},teamProfiles:{} },
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
@@ -326,6 +328,7 @@ function App() {
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
+                    <p>Individuelle Alters- und Schwierigkeitsprofile sind für eine spätere Bezahlversion vorgesehen. Die derzeitigen Aufgaben verwenden weiterhin die gemeinsame Altersklasse.</p>
                     {plan.value.teams.map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                     <h2>Codes und Lösungen</h2>
                     {challenges.map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
