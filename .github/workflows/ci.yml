@@ -1,9 +1,6 @@
-name: Quality checks
+name: Legacy CI (manual only)
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
