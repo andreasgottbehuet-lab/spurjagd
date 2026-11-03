@@ -216,7 +216,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
    const letters=[...normalizeSolutionWord(answer)];
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
    const used=new Map<string,number>();
-   const rows=letters.map((ch,i)=>{
+   const rows=letters.map(ch=>{
      const variants=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])];
      const count=used.get(ch)??0;
      used.set(ch,count+1);
