@@ -1,5 +1,5 @@
 import type {GamePlan} from './generator.ts';
-import {LABELS_PER_A5_SHEET, ORGANIZER_A5_SHEETS, type PrintManifest} from './print-manifest.ts';
+import {LABELS_PER_A5_SHEET, organizerSheetCount, type PrintManifest} from './print-manifest.ts';
 
 export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest):string[] {
  const errors:string[]=[];
