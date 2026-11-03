@@ -70,7 +70,7 @@ function App() {
   if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest));
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
-    if (goal !== 'locks') return [];
+    if (goal !== 'locks' || printIssues.length) return [];
     return locations.filter(l=>validCode(stationCodes[l.id] ?? '')).map(l=>{
       const challenge=generateStationChallenge(l.id,stationCodes[l.id],ageLevel,hashSeed(projectId));
       if(codeFromPuzzles(challenge)!==stationCodes[l.id]) throw new Error('Codeprüfung fehlgeschlagen');
