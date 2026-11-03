@@ -52,6 +52,14 @@ function App() {
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes]);
   const completeCodes = locations.every(l=>validCode(stationCodes[l.id]??''));
+  const printIssues = [
+    ...(plan.error ? [plan.error] : []),
+    ...(goal !== 'locks' ? ['Das Druckpaket unterstützt derzeit nur Schloss-Codes.'] : []),
+    ...locations.filter(l=>!l.name.trim()).map((_,i)=>'Mindestens ein Stationsname fehlt ('+(i+1)+').'),
+    ...locations.filter(l=>!validCode(stationCodes[l.id]??'')).map(l=>'Ungültiger Code: '+(l.name||l.id)),
+    ...(!startPoint.trim()?['Startort fehlt.']:[]),
+    ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
+  ];
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks') return [];
@@ -306,7 +314,8 @@ function App() {
                   </article>
                 )}</div>
                 {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
-                {goal==='locks' && completeCodes && <section className="print-packet" aria-label="Druckpaket">
+                {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
+                {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
                   <article className="print-sheet">
                     <h1>{projectTitle} – Spielleitung</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
@@ -318,16 +327,16 @@ function App() {
                     <h2>Vorbereitung und Sicherheit</h2>
                     <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Nächste Station jeder Gruppe vor Spielbeginn festlegen. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
                   </article>
-                  {challenges.map(({location,challenge})=><article className="print-sheet" key={location.id}>
-                    <h1>{projectTitle}</h1><h2>Station: {location.name}</h2>
+                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;if(!challenge)return null;const next=team.stations[stationIndex+1]?.name??team.finish;return <article className="print-sheet" key={teamIndex+'-'+location.id}>
+                    <h1>{projectTitle}</h1><p><strong>Nur für Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length}</p><h2>Station: {location.name}</h2>
                     <p>Bearbeitet die drei Aufgaben der Reihe nach. Jede Lösung ergibt eine Ziffer. Tragt die Ziffern von links nach rechts in euer Schloss ein.</p>
                     {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}<p>Meine Ziffer: ______</p></div>)}
-                    <p><strong>Unser Code: __ __ __</strong></p>
-                  </article>)}
-                  <article className="print-sheet"><h1>Stationsetiketten</h1>{challenges.map(({location,challenge})=><p className="print-label" key={location.id}><strong>{location.name}</strong><span>SPURJAGD · Rätselstation · Material nach Spielende einsammeln</span></p>)}</article>
+                    <p><strong>Unser Code: __ __ __</strong></p><p className="next-stop"><strong>Erst nach dem gelösten Schloss öffnen:</strong> Nächster Ort: {next}</p>
+                  </article>;}))}
+                  <article className="print-sheet"><h1>Stationsetiketten</h1>{plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((location,stationIndex)=><p className="print-label" key={teamIndex+'-'+location.id}><strong>Team {team.name} · {location.name}</strong><span>Umschlag {stationIndex+1} von {team.stations.length} · Nächsten Ort erst nach Lösung bekanntgeben · Material nach Spielende einsammeln</span></p>))}</article>
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" disabled={goal!=='locks' || !completeCodes} onClick={()=>window.print()}>{t.print} ↗</button>
+                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
