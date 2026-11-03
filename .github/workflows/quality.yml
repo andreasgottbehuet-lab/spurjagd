@@ -14,5 +14,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - run: npm test
-      - run: npm run build
+      - name: Unit and integration tests
+        run: npm test
+      - name: TypeScript and production build
+        run: npm run build
+      - name: Publish verification summary
+        if: always()
+        run: |
+          echo '## SPURJAGD – technische Prüfung' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Testlauf: siehe Schritt Unit and integration tests' >> "$GITHUB_STEP_SUMMARY"
+          echo '- TypeScript und Build: siehe Schritt TypeScript and production build' >> "$GITHUB_STEP_SUMMARY"
+          echo '- A5-Druckbild: manuelle Browserprüfung weiterhin erforderlich' >> "$GITHUB_STEP_SUMMARY"
