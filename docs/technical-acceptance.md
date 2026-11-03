@@ -46,3 +46,8 @@ Die Testdatei `tests/print-manifest.test.mjs` enthält zusätzlich eine Matrix m
 Geprüft werden Umschlaganzahl, Zuordnung, Seitenrechnung und die Konsistenz der Druckprüfung. Ein weiterer Test erzeugt ein 80 Buchstaben langes Fragenrätsel mit 16 A5-Wegrätselseiten und prüft die Lösungsbuchstaben.
 
 **Grenze:** Diese Tests prüfen die Programmlogik, nicht die physischen Seitenumbrüche oder das Erscheinungsbild der Ausdrucke. Die tatsächliche Ausführung der Tests und des Builds ist weiterhin nachzuweisen.
+
+## Erweiterte Druckfreigabeprüfungen
+- Die Druckprüfung vergleicht neben den Gruppenstationen auch die berechnete Gesamtdauer und den verbleibenden Zeitpuffer mit dem neu erzeugten Plan. Manipulierte Zeitangaben müssen die Druckfreigabe verhindern.
+- Eigene Weghinweise und Beschreibungen dürfen den vollständigen Zielort auch mit zusätzlichen Satzzeichen oder mehrfachen Leerzeichen nicht vorwegnehmen. Ein mehrteiliger Ortsname ist als Negativtest hinterlegt.
+- Automatisierte Tests sind im Repository angelegt. Ihre erfolgreiche Ausführung und der reale A5-Ausdruck sind weiterhin separat nachzuweisen.
