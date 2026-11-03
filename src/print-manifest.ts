@@ -1,4 +1,4 @@
-import type {GamePlan} from './generator';
+import type {GamePlan} from './generator.ts';
 
 export interface PrintEnvelope {
  id:string;
