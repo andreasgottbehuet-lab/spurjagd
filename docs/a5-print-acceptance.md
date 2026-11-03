@@ -65,3 +65,6 @@ Beim Klick auf **Drucken** zählt SPURJAGD die tatsächlich im DOM vorhandenen l
 
 ## Umschlagweise Druckkontrolle
 Vor dem Druck wird jetzt jeder Kinderblattseite eine Umschlagkennung und Blattart zugeordnet. Pro Umschlag sind genau ein Aufgabenblatt, ein Antwortblatt und die laut Wegrätsel-Länge erforderliche Anzahl Wegrätselblätter erforderlich. Fehlende, doppelte oder einem anderen Umschlag zugeordnete Seiten sperren den Druckdialog auch dann, wenn die Gesamtzahl aller A5-Blätter stimmt. Die tatsächlichen Papierseiten und Umbrüche müssen weiterhin in der Browser-Druckvorschau geprüft werden.
+
+## Packreihenfolge und Etikettenzuordnung
+Die Druckfreigabe prüft neben der Gesamtzahl und den Blattkategorien auch die tatsächliche Reihenfolge der Kinderblätter. Für jeden Umschlag müssen die Seiten unmittelbar aufeinanderfolgen: genau ein Aufgabenblatt, ein Antwortblatt und danach sämtliche Wegrätselblätter. Die Umschläge selbst müssen in der Reihenfolge des Druckmanifests erscheinen. Jedes Stationsetikett trägt dieselbe Umschlagkennung wie die zugehörigen Kinderblätter. Fehlende, doppelte, vertauschte und unbekannte Etiketten sperren den Druck. Auch Etiketten ohne Kennung müssen erfasst werden. Die technische Prüfung ersetzt nicht die Sichtkontrolle des physischen A5-Ausdrucks und das Einsortieren der Seiten in die richtigen Umschläge.
