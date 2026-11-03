@@ -391,7 +391,7 @@ function App() {
                       </article>
                     </React.Fragment>;
                   }))}
-                  <article className="print-sheet"><h1>Stationsetiketten</h1>{plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((location,stationIndex)=><p className="print-label" key={teamIndex+'-'+location.id}><strong>Team {team.name} · {location.name}</strong><span>Umschlag {stationIndex+1} von {team.stations.length} · Alle drei Blätter gleichzeitig ausgeben · Material nach Spielende einsammeln</span></p>))}</article>
+                  <article className="print-sheet"><h1>Stationsetiketten</h1>{printManifest?.envelopes.map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · 3 Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel · Alle gleichzeitig ausgeben</span></p>)}</article>
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
                 <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>window.print()}>{t.print} ↗</button>
