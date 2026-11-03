@@ -80,3 +80,11 @@ test('Ungültige Teamprofile werden beim Import abgewiesen',()=>{
   assert.equal(isGameConfig({...base,teamProfiles:profiles}),false);
  }
 });
+
+test('Backup-Import lehnt leere Altersangaben und reine Leerzeichen-IDs ab',()=>{
+ const base=sample().config;
+ assert.equal(isGameConfig({...base,age:'   '}),false);
+ assert.equal(isGameConfig({...base,locations:[{id:'   ',name:'Spielplatz',description:''}]}),false);
+ assert.equal(isGameConfig({...base,locations:[{id:'a',name:'Wiese',description:''},{id:'b',name:'wiese',description:''}]}),false);
+ assert.equal(isGameConfig({...base,locations:[{id:'a',name:'Wiese',description:''},{id:'b',name:'Wald',description:''}]}),true);
+});
