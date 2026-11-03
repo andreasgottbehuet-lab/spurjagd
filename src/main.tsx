@@ -427,7 +427,7 @@ function App() {
                   ))}
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const actual=document.querySelectorAll('.print-packet > .print-sheet').length;const issues=auditRenderedPrintSheets(printManifest?.minimumSheets??0,actual);if(issues.length){window.alert(issues.join('\n'));return;}window.print();}}>{t.print} ↗</button>
+                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const actual=document.querySelectorAll('.print-packet .print-sheet').length;const issues=auditRenderedPrintSheets(printManifest?.minimumSheets??0,actual);if(issues.length){window.alert(issues.join('\n'));return;}window.print();}}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
