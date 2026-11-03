@@ -133,14 +133,14 @@ export function generateRoutePuzzle(destination: string, seed: number): RoutePuz
 export type RouteClueMode = 'description' | 'questions' | 'letters' | 'custom';
 export interface RouteClue {mode: RouteClueMode; instruction: string; question: string; answer: string; hint: string; rows?: {question:string;solution:string;letterIndex:number}[]}
 const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:number}> = {
- A:{question:'Welches Tier baut Dämme in Flüssen?',solution:'Biber',letterIndex:4},
+ A:{question:'Welche Frucht ist rot oder grün und wächst am Baum?',solution:'Apfel',letterIndex:0},
  B:{question:'Was liest du in der Schule mit vielen Seiten?',solution:'Buch',letterIndex:0},
  C:{question:'Wie heißt das englische Wort für Katze?',solution:'Cat',letterIndex:0},
  D:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:3},
  E:{question:'Welches große Tier hat einen Rüssel?',solution:'Elefant',letterIndex:0},
  F:{question:'Welches Tier lebt im Wasser und hat Flossen?',solution:'Fisch',letterIndex:0},
  G:{question:'Welches Tier schnattert und hat einen langen Hals?',solution:'Gans',letterIndex:0},
- H:{question:'Welches Tier wiehert?',solution:'Pferd',letterIndex:4},
+ H:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:0},
  I:{question:'Wie heißt ein gefrorenes Dessert aus der Waffel?',solution:'Eis',letterIndex:1},
  K:{question:'Welches Tier miaut?',solution:'Katze',letterIndex:0},
  L:{question:'Was leuchtet nachts am Himmel und umkreist die Erde?',solution:'Mond',letterIndex:2},
@@ -151,7 +151,7 @@ const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:
  R:{question:'Welche Farbe haben viele Feuerwehrautos?',solution:'Rot',letterIndex:0},
  S:{question:'Welcher Stern spendet uns tagsüber Licht?',solution:'Sonne',letterIndex:0},
  T:{question:'Welches Tier brüllt und hat Streifen?',solution:'Tiger',letterIndex:0},
- U:{question:'Welches Tier ist ein großer, kräftiger Waldbewohner mit Geweih?',solution:'Uhu',letterIndex:0},
+ U:{question:'Welcher nachtaktive Vogel kann seinen Kopf weit drehen?',solution:'Uhu',letterIndex:0},
  V:{question:'Wie heißt ein anderes Wort für Papa?',solution:'Vater',letterIndex:0},
  W:{question:'Was fällt bei Regen aus den Wolken?',solution:'Wasser',letterIndex:0},
  Z:{question:'Womit putzt man sich die Zähne?',solution:'Zahnbürste',letterIndex:0}
