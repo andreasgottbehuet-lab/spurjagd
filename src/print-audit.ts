@@ -38,6 +38,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    try{
     const clue=generateCreativeRouteClue(destination,target?.description??'',mode,hashSeed(projectId+':destination:'+(target?.id??destination)),config.routeClueTexts?.[target?.id??'']??'');
     if(clue.answer!==destination) throw new Error('Zielort stimmt nicht überein');
+    if(mode==='custom' && clue.question.toLowerCase().includes(destination.toLowerCase())) throw new Error('Das Rätsel nennt bereits den Zielort.');
     if(!verifyCreativeRouteClue(clue)) throw new Error('Wegrätsel ist nicht eindeutig prüfbar oder verrät den Zielort.');
    }catch(error){
     issues.push(team.name+' / '+station.name+' → '+destination+': '+(error instanceof Error?error.message:String(error)));
