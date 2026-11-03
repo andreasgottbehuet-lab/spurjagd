@@ -5,6 +5,9 @@ import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashS
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
  const issues:string[]=[];
  if(config.goal!=='locks') issues.push('Das Druckpaket unterstützt derzeit nur Schloss-Codes.');
+ if(!config.startPoint?.trim()) issues.push('Startort fehlt.');
+ if(config.finishMode==='meeting'&&!config.meetingPoint?.trim()) issues.push('Gemeinsamer Zielort fehlt.');
+ if(new Set(config.locations.map(location=>location.id)).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
  const locations=new Map(config.locations.map(location=>[location.id,location]));
  const codeByStation=new Map<string,string>();
  for(const location of config.locations){
@@ -29,6 +32,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    const station=team.stations[i];
    if(!locations.has(station.id)||!codeByStation.has(station.id)) issues.push(team.name+': Stationscode fehlt für '+station.name);
    const destination=team.stations[i+1]?.name??team.finish;
+   if(!destination.trim()) {issues.push(team.name+': Nächster Zielort fehlt.');continue;}
    const target=config.locations.find(location=>location.name===destination);
    const mode=config.routeClueModes?.[target?.id??'']??'letters';
    try{
