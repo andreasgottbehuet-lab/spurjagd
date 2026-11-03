@@ -129,3 +129,52 @@ export function generateRoutePuzzle(destination: string, seed: number): RoutePuz
   }
   return {kind:'reverse',instruction:'Lest die Zeichenfolge von rechts nach links. Welcher Ort ist gemeint?',question:[...answer].reverse().join(''),hint:'Beginnt mit dem letzten Zeichen.',answer};
 }
+
+export type RouteClueMode = 'description' | 'questions' | 'letters' | 'custom';
+export interface RouteClue {mode: RouteClueMode; instruction: string; question: string; answer: string; hint: string; rows?: {question:string;solution:string;letterIndex:number}[]}
+const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:number}> = {
+ A:{question:'Welches Tier baut Dämme in Flüssen?',solution:'Biber',letterIndex:4},
+ B:{question:'Was liest du in der Schule mit vielen Seiten?',solution:'Buch',letterIndex:0},
+ C:{question:'Wie heißt das englische Wort für Katze?',solution:'Cat',letterIndex:0},
+ D:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:3},
+ E:{question:'Welches große Tier hat einen Rüssel?',solution:'Elefant',letterIndex:0},
+ F:{question:'Welches Tier lebt im Wasser und hat Flossen?',solution:'Fisch',letterIndex:0},
+ G:{question:'Welches Tier schnattert und hat einen langen Hals?',solution:'Gans',letterIndex:0},
+ H:{question:'Welches Tier wiehert?',solution:'Pferd',letterIndex:4},
+ I:{question:'Wie heißt ein gefrorenes Dessert aus der Waffel?',solution:'Eis',letterIndex:1},
+ K:{question:'Welches Tier miaut?',solution:'Katze',letterIndex:0},
+ L:{question:'Was leuchtet nachts am Himmel und umkreist die Erde?',solution:'Mond',letterIndex:2},
+ M:{question:'Welcher Himmelskörper leuchtet nachts und umkreist die Erde?',solution:'Mond',letterIndex:0},
+ N:{question:'Was ist das Gegenteil von Tag?',solution:'Nacht',letterIndex:0},
+ O:{question:'Welche runde Frucht kann orange sein?',solution:'Orange',letterIndex:0},
+ P:{question:'Welches Tier wiehert?',solution:'Pferd',letterIndex:0},
+ R:{question:'Welche Farbe haben viele Feuerwehrautos?',solution:'Rot',letterIndex:0},
+ S:{question:'Welcher Stern spendet uns tagsüber Licht?',solution:'Sonne',letterIndex:0},
+ T:{question:'Welches Tier brüllt und hat Streifen?',solution:'Tiger',letterIndex:0},
+ U:{question:'Welches Tier ist ein großer, kräftiger Waldbewohner mit Geweih?',solution:'Uhu',letterIndex:0},
+ V:{question:'Wie heißt ein anderes Wort für Papa?',solution:'Vater',letterIndex:0},
+ W:{question:'Was fällt bei Regen aus den Wolken?',solution:'Wasser',letterIndex:0},
+ Z:{question:'Womit putzt man sich die Zähne?',solution:'Zahnbürste',letterIndex:0}
+};
+export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
+ const answer=destination.trim();
+ if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
+ if(mode==='custom') {
+   if(!custom.trim()) throw new Error('Ein eigenes Wegrätsel fehlt');
+   return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
+ }
+ if(mode==='description') {
+   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'________');
+   if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
+   return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
+ }
+ if(mode==='questions') {
+   const letters=[...answer.toUpperCase()].filter(ch=>/[A-Z]/.test(ch));
+   if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
+   const rows=letters.map(ch=>({...QUESTION_BANK[ch]}));
+   if(rows.some((r,i)=>r.solution[r.letterIndex]?.toUpperCase()!==letters[i])) throw new Error('Fragenrätsel ist nicht konsistent.');
+   return {mode,instruction:'Beantwortet die Fragen. Nehmt jeweils den angegebenen Buchstaben der Antwort. Die Buchstaben ergeben den nächsten Ort (ohne Leerzeichen).',question:'',hint:'Schreibt die Lösungsbuchstaben nacheinander auf.',answer,rows};
+ }
+ const p=generateRoutePuzzle(answer,seed);
+ return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
+}
