@@ -194,7 +194,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
-   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'________');'),'gi'),'________');
+   const safe=description.trim().split(answer).join('________');
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
  }
