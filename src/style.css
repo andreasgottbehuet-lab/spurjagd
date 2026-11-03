@@ -158,3 +158,8 @@
 @media print {
  .print-route-question { break-inside:avoid; page-break-inside:avoid; margin:3mm 0; line-height:1.35; }
 }
+
+/* The organizer packing list stays separate from the safety instructions. */
+@media print {
+ .print-checklist-row { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; border-bottom:1px solid #bbb; line-height:1.4; }
+}
