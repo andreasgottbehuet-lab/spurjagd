@@ -196,7 +196,7 @@ export function normalizeSolutionWord(value:string):string {
  return value.toLocaleUpperCase('de').replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/ß/g,'SS').replace(/[^A-Z]/g,'');
 }
 export function verifyRouteQuestions(clue:RouteClue):boolean {
- return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
+ return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length && [...Object.values(QUESTION_BANK),...Object.values(QUESTION_ALTERNATIVES).flatMap(rows=>rows??[])].some(known=>known.question===row.question && known.solution===row.solution && known.letterIndex===row.letterIndex)) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
 }
 function maskDestination(description:string, destination:string):string {
  const source=description.trim();
