@@ -80,3 +80,26 @@ export function auditRenderedLabels(expected:ExpectedEnvelope[],actualIds:string
  for(const id of actualIds) if(!allowed.has(id)) issues.push('Stationsetikett mit unbekanntem Umschlag: '+(id||'(leer)'));
  return [...new Set(issues)];
 }
+
+/** Detects content that extends beyond the A5 sheet's printable content box. */
+export interface PrintSheetGeometry {
+ id:string;
+ contentWidth:number;
+ contentHeight:number;
+ scrollWidth:number;
+ scrollHeight:number;
+}
+export function auditPrintOverflow(sheets:PrintSheetGeometry[],tolerance=2):string[] {
+ const issues:string[]=[];
+ for(const sheet of sheets){
+  if(![sheet.contentWidth,sheet.contentHeight,sheet.scrollWidth,sheet.scrollHeight].every(v=>Number.isFinite(v)&&v>=0)){
+   issues.push('A5-Blatt '+sheet.id+': Druckabmessungen konnten nicht geprüft werden.');
+   continue;
+  }
+  if(sheet.scrollWidth>sheet.contentWidth+tolerance)
+   issues.push('A5-Blatt '+sheet.id+': Inhalt ist zu breit und kann abgeschnitten werden.');
+  if(sheet.scrollHeight>sheet.contentHeight+tolerance)
+   issues.push('A5-Blatt '+sheet.id+': Inhalt überschreitet die vorgesehene Seitenhöhe.');
+ }
+ return issues;
+}
