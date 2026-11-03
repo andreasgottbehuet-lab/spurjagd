@@ -121,3 +121,10 @@ test('Fragenvarianten liefern für verschiedene Seeds stets die richtigen Buchst
   }
  }
 });
+
+test('Ortsbeschreibungen verbergen den Zielnamen unabhängig von Großschreibung',()=>{
+ const clue=generateCreativeRouteClue('Spielplatz','Am SPIELPLATZ stehen Schaukeln. Der spielplatz hat eine Rutsche.','description',7);
+ assert.equal(clue.question.toLocaleLowerCase('de').includes('spielplatz'),false);
+ assert.match(clue.question,/Schaukeln/);
+ assert.match(clue.question,/Rutsche/);
+});
