@@ -334,6 +334,15 @@ function App() {
                     <p>{team.stations.map(s => s.name).join(' → ')} → {team.finish}</p>
                   </article>
                 )}</div>
+                {plan.value && <section className="challenge-preview"><h3>Wegrätsel – Vorschau nach Zielort</h3><p className="helper">Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((station,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
+                  const target=locations.find(l=>l.name===destination);
+                  try {
+                    const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
+                    return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} (Buchstabe {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">Lösung für die Spielleitung: {clue.answer}</p></article>;
+                  } catch(error) {
+                    return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
+                  }
+                })}</section>}
                 {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
