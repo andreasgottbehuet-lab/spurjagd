@@ -137,3 +137,19 @@
  .print-sheet { break-before:auto; break-after:page; page-break-after:always; }
  .print-sheet:last-child { break-after:auto; page-break-after:auto; }
 }
+
+/* Four compact envelope labels per A5 sheet, with bounded layout. */
+@media print {
+ .print-label-sheet .print-label {
+  box-sizing:border-box;
+  min-height:42mm;
+  margin:0;
+  padding:3mm;
+  font-size:9pt;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+ }
+ .print-label-sheet .print-label span { font-size:8pt; margin-top:2mm; }
+ .print-label-sheet h1 { margin-bottom:5mm; }
+ .print-label-grid { display:grid; grid-template-columns:1fr; gap:3mm; }
+}
