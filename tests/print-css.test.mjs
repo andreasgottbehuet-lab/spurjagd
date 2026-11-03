@@ -28,3 +28,15 @@ test('Envelope labels use a dedicated A5 grid and page chunks',()=>{
  assert.match(source,/className="print-label-grid"/);
  assert.match(source,/\.slice\(page\*LABELS_PER_A5_SHEET,\(page\+1\)\*LABELS_PER_A5_SHEET\)/);
 });
+
+test('Vier Etiketten lassen auf A5 Platz für Titel und Seitenränder',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const labelRule=css.match(/\.print-label-sheet \.print-label\s*\{([^}]+)\}/)?.[1];
+ const gridRule=css.match(/\.print-label-grid\s*\{([^}]+)\}/)?.[1];
+ assert.ok(labelRule&&gridRule);
+ const row=Number(labelRule.match(/min-height:(\d+)mm/)?.[1]);
+ const gap=Number(gridRule.match(/gap:(\d+)mm/)?.[1]);
+ const printableHeight=210-2*10;
+ const reservedTitle=25;
+ assert.ok(4*row+3*gap+reservedTitle<=printableHeight,'Vier Etiketten überschreiten das A5-Höhenbudget');
+});
