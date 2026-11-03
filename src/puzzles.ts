@@ -88,7 +88,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     id, kind,
     instruction: 'Entschlüssele das Wort. Es verrät dir eine Ziffer. Verschiebe jeden Buchstaben im Alphabet um ' + shift + (shift===1?' Stelle':' Stellen') + ' zurück. Beim Rückwärtszählen kommt vor A der Buchstabe Z.',
     question: encoded,
-    hint: 'Der erste Buchstabe lautet ' + word[0] + '.',
+    hint: age==='young'?'Gehe bei jedem Zeichen einen Buchstaben im Alphabet zurück.':'Der erste Buchstabe lautet ' + word[0] + '.',
     explanation: encoded + ' bedeutet ' + word + ', also ' + target + '.',
     expectedDigit: target,
   };
