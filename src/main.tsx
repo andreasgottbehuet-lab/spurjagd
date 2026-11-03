@@ -27,8 +27,8 @@ function App() {
   const [startMode, setStartMode] = useState<StartMode>('distributed');
   const [routeMode, setRouteMode] = useState<RouteMode>('same');
   const [finishMode, setFinishMode] = useState<FinishMode>('meeting');
-  const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
-  const [startPoint, setStartPoint] = useState('Zuhause / Treffpunkt');
+  const [meetingPoint, setMeetingPoint] = useState('Treffpunkt');
+  const [startPoint, setStartPoint] = useState('Treffpunkt');
   const [sameStartFinish, setSameStartFinish] = useState(false);
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
   const [teamProfiles, setTeamProfiles] = useState<Record<string,TeamProfile>>({});
@@ -114,8 +114,8 @@ function App() {
     setStartMode(c.startMode ?? 'distributed');
     setRouteMode(c.routeMode ?? 'same');
     setFinishMode(c.finishMode ?? 'meeting');
-    setMeetingPoint(c.meetingPoint ?? 'Zuhause / Treffpunkt');
-    setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Zuhause / Treffpunkt');
+    setMeetingPoint(c.meetingPoint ?? 'Treffpunkt');
+    setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Treffpunkt');
     setSameStartFinish(c.finishMode === 'origin');
     setStationCodes(c.stationCodes ?? {});
     setTeamProfiles(c.teamProfiles ?? {});
