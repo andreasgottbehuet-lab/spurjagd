@@ -186,6 +186,19 @@ export function normalizeSolutionWord(value:string):string {
 export function verifyRouteQuestions(clue:RouteClue):boolean {
  return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
 }
+function maskDestination(description:string, destination:string):string {
+ const source=description.trim();
+ const lower=source.toLocaleLowerCase('de');
+ const needle=destination.toLocaleLowerCase('de');
+ let start=0;
+ let result='';
+ while(true){
+  const index=lower.indexOf(needle,start);
+  if(index<0) return result+source.slice(start);
+  result+=source.slice(start,index)+'________';
+  start=index+destination.length;
+ }
+}
 export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
  const answer=destination.trim();
  if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
@@ -194,7 +207,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
-   const safe=description.trim().replaceAll(answer,'________').replaceAll(answer.toLocaleLowerCase('de'),'________');
+   const safe=maskDestination(description,answer);
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
  }
