@@ -41,7 +41,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    if(!locations.has(station.id)||!codeByStation.has(station.id)) issues.push(team.name+': Stationscode fehlt für '+station.name);
    const destination=team.stations[i+1]?.name??team.finish;
    if(!destination.trim()) {issues.push(team.name+': Nächster Zielort fehlt.');continue;}
-   const target=config.locations.find(location=>location.name===destination);
+   const target=config.locations.find(location=>location.name.trim()===destination.trim());
    const mode=config.routeClueModes?.[target?.id??'']??'letters';
    try{
     const clue=generateCreativeRouteClue(destination,target?.description??'',mode,hashSeed(projectId+':destination:'+(target?.id??destination)),config.routeClueTexts?.[target?.id??'']??'');
