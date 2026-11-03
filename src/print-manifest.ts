@@ -35,7 +35,7 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
   sheetCount:3 as const
  })));
  const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
- // Labels share pages, but their actual page count depends on printer and text length.
+ // Four labels are assigned to each A5 sheet; physical overflow remains subject to browser print review.
  const labelSheets=Math.ceil(envelopes.length/LABELS_PER_A5_SHEET);
  return {envelopes,organizerSheets:1,labelSheets,taskSheets,minimumSheets:taskSheets+1+labelSheets};
 }
