@@ -88,3 +88,18 @@
  .print-task,.answer-space,.print-label { break-inside:avoid; page-break-inside:avoid; }
  .print-sheet .route-letters,.print-sheet .symbols,.print-sheet .writing-lines { overflow-wrap:anywhere; }
 }
+
+/* A5 is the default for children's handouts. Organizer and labels use the same paper size in this print run. */
+@media print {
+ @page { size:A5 portrait; margin:10mm; }
+ .print-sheet { font-size:10pt; line-height:1.35; }
+ .print-sheet h1 { font-size:16pt; margin-bottom:6mm; }
+ .print-sheet h2 { font-size:12pt; }
+ .print-task { padding:3mm; margin:4mm 0; }
+ .print-question { font-size:12pt; }
+ .answer-space { margin:7mm 0; }
+ .writing-lines { line-height:1.8; margin-top:3mm; }
+ .route-letters { font-size:14pt; }
+ .symbols { font-size:18pt; letter-spacing:2pt; }
+ .print-label { padding:4mm; margin:4mm 0; }
+}
