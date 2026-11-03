@@ -52,3 +52,19 @@
 @media(max-width:950px){.project-bar{margin:22px 5% 0}}
 @media(max-width:620px){.project-bar{grid-template-columns:1fr}.project-actions{gap:6px}}
 @media print{.project-bar{display:none!important}}
+
+/* Station-based lock puzzles: adult answers stay off the children's printouts. */
+.challenge-preview{margin-top:26px;border-top:1px solid #d9e5dc;padding-top:20px}
+.challenge-preview h3{font-size:19px;margin:0 0 14px}
+.station-worksheet{border:1px solid #bdcfc3;border-radius:12px;padding:19px;margin:17px 0;background:#fff}
+.station-worksheet h4{font-size:17px;margin:0 0 8px}
+.worksheet-intro,.worksheet-answer{font-size:14px;color:#254338}
+.worksheet-puzzles{display:grid;gap:11px}
+.worksheet-puzzle{padding:12px;border:1px solid #dce6df;border-radius:8px}
+.worksheet-puzzle p{margin:8px 0;line-height:1.45}
+.worksheet-symbols{border:1px dashed #889f91;min-height:36px;padding:5px;display:flex;gap:9px;flex-wrap:wrap;font-size:25px}
+.worksheet-question{font-weight:700}
+.leader-only{margin-top:14px;padding:13px;background:#f0f4e8;border-radius:8px;font-size:13px}
+.leader-only p{margin:8px 0 0}
+.print:disabled{opacity:.45;cursor:not-allowed}
+@media print{.leader-only{display:none!important}.station-worksheet{break-inside:avoid-page;box-shadow:none;border:1px solid #555}.worksheet-puzzle{break-inside:avoid}.challenge-preview{border:0}.challenge-preview .helper{display:none!important}}
