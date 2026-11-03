@@ -48,3 +48,13 @@ test('Routen und Rätsel bleiben bei wiederholter Generierung reproduzierbar',()
  assert.deepEqual(first,second);
  assert.deepEqual(createPrintManifest(first),createPrintManifest(second));
 });
+
+test('Druckmanifest erkennt fehlende Umschläge und vertauschte Zielorte',()=>{
+ const plan=createPlan(config);
+ const missing=createPrintManifest(plan);
+ missing.envelopes.pop();
+ assert.ok(auditPrintManifest(plan,missing).some(issue=>issue.includes('Umschlag')));
+ const swapped=createPrintManifest(plan);
+ swapped.envelopes[0].destination='Falsches Ziel';
+ assert.ok(auditPrintManifest(plan,swapped).some(issue=>issue.includes('Zielort')));
+});
