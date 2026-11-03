@@ -129,3 +129,11 @@
  .print-sheet .destination-line { display:block; margin-top:4mm; font-weight:400; letter-spacing:1pt; }
  .print-sheet .route-letters { letter-spacing:1pt; line-height:1.6; }
 }
+
+/* Print only the prepared packet, never the interactive planner or answer previews. */
+@media print {
+ .wizard-panel > :not(.print-packet) { display:none!important; }
+ .wizard-panel > .print-packet { display:block!important; }
+ .print-sheet { break-before:auto; break-after:page; page-break-after:always; }
+ .print-sheet:last-child { break-after:auto; page-break-after:auto; }
+}
