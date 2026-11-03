@@ -113,3 +113,19 @@
  .print-sheet .writing-lines { font-size:9pt; letter-spacing:0; }
  .print-sheet .print-label { font-size:9pt; }
 }
+
+/* A5 child worksheet: readable tasks, useful writing space and safe pagination. */
+@media print {
+ .print-sheet { orphans:3; widows:3; }
+ .print-sheet h1 { line-height:1.2; }
+ .print-sheet .print-task { margin:3mm 0; padding:3mm 4mm; border-radius:2mm; }
+ .print-sheet .print-task h3 { font-size:11pt; margin-bottom:2mm; }
+ .print-sheet .print-task p { margin:2mm 0; }
+ .print-sheet .answer-space { margin:6mm 0; }
+ .print-sheet .writing-lines { line-height:1.9; }
+ .print-sheet .print-question { line-height:1.4; }
+ .print-sheet .print-hint { font-size:9pt; line-height:1.3; }
+ .print-sheet .destination-answer { margin-top:7mm; font-weight:700; }
+ .print-sheet .destination-line { display:block; margin-top:4mm; font-weight:400; letter-spacing:1pt; }
+ .print-sheet .route-letters { letter-spacing:1pt; line-height:1.6; }
+}
