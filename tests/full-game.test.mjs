@@ -58,3 +58,9 @@ test('Druckmanifest erkennt fehlende Umschläge und vertauschte Zielorte',()=>{
  swapped.envelopes[0].destination='Falsches Ziel';
  assert.ok(auditPrintManifest(plan,swapped).some(issue=>issue.includes('Zielort')));
 });
+
+test('Druckmanifest weist falsche Umschlagkennungen zurück',()=>{
+ const plan=createPlan(config),manifest=createPrintManifest(plan);
+ manifest.envelopes[0].id='anderes-team-andere-station';
+ assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes('Umschlagkennung')));
+});
