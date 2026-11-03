@@ -51,7 +51,6 @@ function App() {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes]);
-  const completeCodes = locations.every(l=>validCode(stationCodes[l.id]??''));
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
     ...(goal !== 'locks' ? ['Das Druckpaket unterstützt derzeit nur Schloss-Codes.'] : []),
@@ -327,12 +326,13 @@ function App() {
                     <h2>Vorbereitung und Sicherheit</h2>
                     <p>Schlösser auf die Codes einstellen und tatsächlich testen. Rätselblätter den richtigen Stationen zuordnen. Nächste Station jeder Gruppe vor Spielbeginn festlegen. Wege, Straßenquerungen, Gewässer, Baustellen, Wetter und Aufsicht vor Ort prüfen. Material nach Spielende einsammeln.</p>
                   </article>
-                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;if(!challenge)return null;const next=team.stations[stationIndex+1]?.name??team.finish;return <article className="print-sheet" key={teamIndex+'-'+location.id}>
+                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;if(!challenge)return null;return <article className="print-sheet" key={teamIndex+'-'+location.id}>
                     <h1>{projectTitle}</h1><p><strong>Nur für Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length}</p><h2>Station: {location.name}</h2>
                     <p>Bearbeitet die drei Aufgaben der Reihe nach. Jede Lösung ergibt eine Ziffer. Tragt die Ziffern von links nach rechts in euer Schloss ein.</p>
                     {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}<p>Meine Ziffer: ______</p></div>)}
-                    <p><strong>Unser Code: __ __ __</strong></p><p className="next-stop"><strong>Erst nach dem gelösten Schloss öffnen:</strong> Nächster Ort: {next}</p>
+                    <p><strong>Unser Code: __ __ __</strong></p>
                   </article>;}))}
+                  {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=><article className="print-sheet hint-sheet" key={"hint-"+teamIndex+"-"+location.id}><h1>Geheimer nächster Hinweis</h1><p>Team {team.name} · nach Station {location.name}</p><p className="print-question">Geht als Nächstes zu: {team.stations[stationIndex+1]?.name??team.finish}</p><p>Dieses Blatt getrennt vom Rätselblatt in einen verschlossenen Umschlag legen und erst nach der richtigen Lösung öffnen.</p></article>))}
                   <article className="print-sheet"><h1>Stationsetiketten</h1>{plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((location,stationIndex)=><p className="print-label" key={teamIndex+'-'+location.id}><strong>Team {team.name} · {location.name}</strong><span>Umschlag {stationIndex+1} von {team.stations.length} · Nächsten Ort erst nach Lösung bekanntgeben · Material nach Spielende einsammeln</span></p>))}</article>
                 </section>}
                 <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
