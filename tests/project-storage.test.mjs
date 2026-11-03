@@ -52,3 +52,11 @@ test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=
     else globalThis.localStorage=old;
   }
 });
+
+test('Backup-Grenze misst UTF-8-Bytes statt Zeichen', () => {
+  const backup = serializeGameBackup({...sample(),title:'Überraschung'});
+  assert.equal(parseGameBackup(backup).title,'Überraschung');
+  const tooLarge = 'ä'.repeat(100_001);
+  assert.ok(tooLarge.length <= 200_000);
+  assert.throws(()=>parseGameBackup(tooLarge),/zu groß/);
+});
