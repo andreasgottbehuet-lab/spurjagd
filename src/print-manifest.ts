@@ -1,6 +1,7 @@
 import type {GamePlan} from './generator.ts';
 
 export const LABELS_PER_A5_SHEET = 4;
+export const ORGANIZER_A5_SHEETS = 4;
 
 export interface PrintEnvelope {
  id:string;
@@ -37,5 +38,5 @@ export function createPrintManifest(plan:GamePlan):PrintManifest {
  const taskSheets=envelopes.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  // Four labels are assigned to each A5 sheet; physical overflow remains subject to browser print review.
  const labelSheets=Math.ceil(envelopes.length/LABELS_PER_A5_SHEET);
- return {envelopes,organizerSheets:1,labelSheets,taskSheets,minimumSheets:taskSheets+1+labelSheets};
+ return {envelopes,organizerSheets:ORGANIZER_A5_SHEETS,labelSheets,taskSheets,minimumSheets:taskSheets+ORGANIZER_A5_SHEETS+labelSheets};
 }
