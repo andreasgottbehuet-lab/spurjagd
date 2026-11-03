@@ -29,6 +29,13 @@ export function isGameConfig(data: unknown): data is GameConfig {
     return text(r.id, 80) && Boolean(r.id) && text(r.name, 80) && Boolean(String(r.name).trim()) && text(r.description, 400);
   })) return false;
   const locations = places as Location[];
+  if (p.puzzleSeed !== undefined && !integer(p.puzzleSeed, 0, 0xffffffff)) return false;
+  if (p.stationCodes !== undefined) {
+    if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
+    const codes = Object.entries(p.stationCodes as Record<string, unknown>);
+    const knownIds = new Set(locations.map(x => x.id));
+    if (!codes.every(([id,code]) => knownIds.has(id) && typeof code === 'string' && /^[0-9]{0,4}$/.test(code))) return false;
+  }
   return new Set(locations.map(x => x.id)).size === locations.length
     && new Set(locations.map(x => x.name.trim().toLowerCase())).size === locations.length;
 }
