@@ -119,7 +119,7 @@ test('Gemeinsame Station kann je Team zu unterschiedlichen Folgezielen führen',
 });
 
 test('Warnungen aus der Routenplanung werden auf eigenen A5-Seiten vollständig gezählt',()=>{
- const c={...config,players:100,groupSize:1,startMode:'shared',routeMode:'varied'};
+ const c={...config,players:100,groupSize:1,startMode:'distributed',routeMode:'varied'};
  const plan=createPlan(c),manifest=createPrintManifest(plan,c);
  assert.ok(plan.cautions.length>4);
  assert.equal(organizerCautionSheetCount(plan),Math.ceil(plan.cautions.length/4));
