@@ -41,11 +41,9 @@ test('Vier Etiketten lassen auf A5 Platz für Titel und Seitenränder',()=>{
  assert.ok(4*row+3*gap+reservedTitle<=printableHeight,'Vier Etiketten überschreiten das A5-Höhenbudget');
 });
 
-test('Spielleitung besitzt vier getrennte A5-Abschnitte',()=>{
+test('Spielleitung nutzt dynamische A5-Seiten für Routen, Codes und Lösungen',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const title of ['Spielleitung (1/4)','Codes (2/4)','Wegrätsel (3/4)','Kontrolle (4/4)']){
-  assert.ok(source.includes(title),title);
+ for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-'+destination}","Spielleitung – Kontrolle"]){
+  assert.ok(source.includes(marker),marker);
  }
- const organizer=source.slice(source.indexOf('aria-label="Druckpaket"'),source.indexOf('{plan.value.teams.map((team,teamIndex)'));
- assert.equal((organizer.match(/<article className="print-sheet">/g)||[]).length,4);
 });
