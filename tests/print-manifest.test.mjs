@@ -41,3 +41,14 @@ test('Vertauschte Umschlagnummern werden erkannt',()=>{const plan=createPlan(con
 test('Veränderte Etikettenreihenfolge wird erkannt',()=>{const plan=createPlan(config),m=createPrintManifest(plan);m.envelopes.reverse();assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Umschlagreihenfolge')));});
 
 test('Dynamischer Druckumfang berücksichtigt unterschiedliche Gruppenzahlen',()=>{for(const players of [1,3,12,24,60,100]){const plan=createPlan({...config,players});const m=createPrintManifest(plan);const routes=Math.ceil(plan.teams.length/2);const codes=Math.ceil(new Set(plan.teams.flatMap(t=>t.stations.map(s=>s.id))).size/2);const destinations=new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>t.stations[i+1]?.name??t.finish))).size;assert.equal(m.organizerSheets,routes+codes+destinations+1);assert.equal(m.minimumSheets,m.taskSheets+m.organizerSheets+m.labelSheets);assert.deepEqual(auditPrintManifest(plan,m),[]);}});
+
+test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschlagzahlen',()=>{
+ const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'},durationMinutes:40};
+ const plan=createPlan(c),m=createPrintManifest(plan,c);
+ assert.ok(m.envelopes.some(e=>e.sheetCount>3));
+ assert.equal(m.taskSheets,m.envelopes.reduce((sum,e)=>sum+e.sheetCount,0));
+ assert.deepEqual(auditPrintManifest(plan,m,c),[]);
+ const broken=createPrintManifest(plan,c);
+ broken.envelopes.find(e=>e.sheetCount>3).sheetCount=3;
+ assert.ok(auditPrintManifest(plan,broken,c).some(issue=>issue.includes('Anzahl A5-Blätter')));
+});
