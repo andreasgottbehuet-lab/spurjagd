@@ -57,3 +57,5 @@ test('Fragen und Antwortzeilen bleiben beim A5-Druck zusammen',()=>{const css=re
 test('Lösungsschlüssel teilt lange Fragenrätsel in dieselben A5-Blöcke',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET'));assert.ok(source.includes("key={'clue-'+destination+'-'+page}"));});
 
 test('Druck und Prüfcode lösen Stationsnamen mit Leerzeichen konsistent auf',()=>{const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const audit=readFileSync(new URL('../src/print-audit.ts',import.meta.url),'utf8');assert.ok(main.includes('l.name.trim()===destination.trim()'));assert.ok(audit.includes('location.name.trim()===destination.trim()'));});
+
+test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('Umschläge mit je mindestens 3 Blättern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} Kinderblätter'));});
