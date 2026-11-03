@@ -60,3 +60,19 @@ test('Backup-Grenze misst UTF-8-Bytes statt Zeichen', () => {
   assert.ok(tooLarge.length <= 200_000);
   assert.throws(()=>parseGameBackup(tooLarge),/zu groß/);
 });
+
+test('Schloss-Codes und Seed bleiben im JSON-Backup erhalten',()=>{
+  const project = {...sample(),config:{...sample().config,stationCodes:{'1':'0007'},puzzleSeed:4294967295}};
+  assert.equal(isSavedGame(project),true);
+  assert.deepEqual(parseGameBackup(serializeGameBackup(project)),project);
+});
+test('Unvollständige Codes sind als Entwurf erlaubt, ungültige Eingaben nicht',()=>{
+  const config=sample().config;
+  assert.equal(isGameConfig({...config,stationCodes:{'1':'00'},puzzleSeed:0}),true);
+  assert.equal(isGameConfig({...config,stationCodes:{'1':'0007'}}),true);
+  assert.equal(isGameConfig({...config,stationCodes:{'1':'abc'}}),false);
+  assert.equal(isGameConfig({...config,stationCodes:{unknown:'123'}}),false);
+  assert.equal(isGameConfig({...config,puzzleSeed:-1}),false);
+  assert.equal(isGameConfig({...config,puzzleSeed:4294967296}),false);
+  assert.equal(isGameConfig(config),true); // Ältere Sicherungen bleiben gültig.
+});
