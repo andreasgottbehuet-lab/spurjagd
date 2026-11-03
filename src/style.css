@@ -52,3 +52,6 @@
 @media(max-width:950px){.project-bar{margin:22px 5% 0}}
 @media(max-width:620px){.project-bar{grid-template-columns:1fr}.project-actions{gap:6px}}
 @media print{.project-bar{display:none!important}}
+
+/* Tablet-friendly sliders */
+.range-field{display:flex;flex-direction:column;gap:12px;font-weight:700;font-size:14px}.range-field span{display:flex;justify-content:space-between;align-items:center;gap:16px}.range-field strong{font-size:23px;font-variant-numeric:tabular-nums}.range-field input[type=range]{width:100%;accent-color:#2e654f;min-height:34px;cursor:pointer}.location-range{margin:12px 0 20px}
