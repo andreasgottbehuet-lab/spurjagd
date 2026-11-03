@@ -102,6 +102,11 @@ export function setActiveGameId(id: string): void {
   localStorage.setItem(ACTIVE, id);
 }
 export function newGameId(): string { return crypto.randomUUID(); }
+/** Preserve the import suffix while respecting the 100-character project-title limit. */
+export function importedProjectTitle(title:string):string {
+  const suffix=' (Import)';
+  return title.slice(0,100-suffix.length).trimEnd()+suffix;
+}
 export function downloadBackup(project: SavedGame): void {
   const blob = new Blob([serializeGameBackup(project)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
