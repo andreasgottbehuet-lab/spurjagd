@@ -34,9 +34,9 @@ test('Nicht zugeordnete oder fehlende Druckblätter verhindern die Druckfreigabe
 test('Jeder Umschlag benötigt genau ein Aufgaben- und Antwortblatt sowie alle Wegrätselblätter',()=>{
  const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:5}];
  const correct=[
-  {envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route'},
+  {envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route',routePage:1},
   {envelopeId:'1-b',kind:'task'},{envelopeId:'1-b',kind:'answer'},
-  ...Array.from({length:3},()=>({envelopeId:'1-b',kind:'route'}))
+  ...Array.from({length:3},()=>({envelopeId:'1-b',kind:'route',routePage:1}))
  ];
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
  assert.ok(auditRenderedEnvelopes(expected,correct.filter(sheet=>!(sheet.envelopeId==='1-b'&&sheet.kind==='answer'))).some(issue=>issue.includes('Umschlag 1-b')));
@@ -63,8 +63,8 @@ test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
   {envelopeId:'0-a',kind:'route'},
   {envelopeId:'1-b',kind:'task'},
   {envelopeId:'1-b',kind:'answer'},
-  {envelopeId:'1-b',kind:'route'},
-  {envelopeId:'1-b',kind:'route'}
+  {envelopeId:'1-b',kind:'route',routePage:1},
+  {envelopeId:'1-b',kind:'route',routePage:2}
  ];
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
  const wrongOrder=[...correct];
@@ -106,6 +106,11 @@ test('Multi-page route puzzles reject swapped page indices',()=>{
  assert.deepEqual(auditRenderedEnvelopes(expected,sheets),[]);
  const changed=sheets.map(x=>({...x}));changed[3].routePage=3;changed[4].routePage=2;
  assert.ok(auditRenderedEnvelopes(expected,changed).some(x=>x.includes('Wegrätsel-Seitenfolge')));
+});
+
+test('Route pages without a number block printing',()=>{
+ const sheets=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route'}];
+ assert.ok(auditRenderedEnvelopes([{id:'0-a',sheetCount:3}],sheets).some(x=>x.includes('Wegrätsel-Seitenfolge')));
 });
 
 test('A5 overflow audit identifies height, width and invalid measurements',()=>{
