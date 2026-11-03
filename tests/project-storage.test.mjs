@@ -274,3 +274,10 @@ test('Cross-tab edits stop autosave and deletion',()=>{
  assert.ok(source.includes('if (!storageReady || storageConflict.current) return;'));
  assert.ok(source.includes("if(storageConflict.current){setStorageMessage('Löschen gesperrt"));
 });
+
+test('Empty saved list is corrupt, not first-run',()=>{
+ const old=globalThis.localStorage;
+ globalThis.localStorage={getItem:()=>'',setItem:()=>{},removeItem:()=>{}};
+ try{assert.throws(()=>loadGames(),/leer oder beschädigt/);}
+ finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
+});
