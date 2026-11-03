@@ -134,3 +134,16 @@ test('Neue Projekte übernehmen keine privaten Treffpunkte aus der vorherigen Sc
  assert.ok(creation.includes('stationCodes:{}'));
  assert.ok(creation.includes('routeClueTexts:{}'));
 });
+
+test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwurfs',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const helper=source.slice(source.indexOf('const saveCurrentBeforeSwitch ='),source.indexOf('const newProject ='));
+ assert.ok(helper.includes('saveGame(current)'));
+ assert.ok(helper.includes('return false'));
+ const selector=source.slice(source.indexOf('id="savedProjects"'),source.indexOf('</select>',source.indexOf('id="savedProjects"')));
+ assert.ok(selector.includes('saveCurrentBeforeSwitch()'));
+ const newProject=source.slice(source.indexOf('const newProject ='),source.indexOf('const removeProject ='));
+ assert.ok(newProject.includes('if(!saveCurrentBeforeSwitch()) return'));
+ const importer=source.slice(source.indexOf('const importProject ='),source.indexOf('return (',source.indexOf('const importProject =')));
+ assert.ok(importer.includes('if(!saveCurrentBeforeSwitch()) return'));
+});
