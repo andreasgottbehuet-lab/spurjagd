@@ -5,7 +5,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
-import { createPrintManifest, LABELS_PER_A5_SHEET, ORGANIZER_ITEMS_PER_A5_SHEET } from './print-manifest';
+import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import './style.css';
 
@@ -66,8 +66,8 @@ function App() {
     ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
   ];
   if (plan.value) printIssues.push(...auditPrintPacket(config,plan.value,projectId));
-  const printManifest = plan.value ? createPrintManifest(plan.value) : null;
-  if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest));
+  const printManifest = plan.value ? createPrintManifest(plan.value,config) : null;
+  if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest,config));
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks' || printIssues.length) return [];
