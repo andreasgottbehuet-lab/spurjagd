@@ -89,3 +89,5 @@ test('Druckprüfung erkennt manipulierte Stationsnamen und Beschreibungen',()=>{
  plan.teams[0].stations[1].description='Veränderte Ortsangabe';
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Gruppenroute')));
 });
+
+test('Veränderte Gruppenprofile werden bei der Druckprüfung erkannt',()=>{const c=config();c.teamProfiles={'0':{age:'8–10',difficulty:'normal'}};const plan=createPlan(c);plan.teams[0].profile.difficulty='hard';assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Gruppenroute')));});
