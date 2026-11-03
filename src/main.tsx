@@ -5,7 +5,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
-import { createPrintManifest, LABELS_PER_A5_SHEET } from './print-manifest';
+import { createPrintManifest, LABELS_PER_A5_SHEET, ORGANIZER_ITEMS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import './style.css';
 
@@ -339,18 +339,18 @@ function App() {
                 {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge mit jeweils 3 Blättern = {printManifest.taskSheets} A5-Aufgabenblätter. Spielleitungsübersicht und Etiketten kommen hinzu. Die tatsächliche Seitenzahl hängt von der Textlänge ab.</p></div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
-                  {Array.from({length:Math.ceil(plan.value.teams.length/2)},(_,page)=><article className="print-sheet" key={'routes-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
                     <p>Individuelle Alters- und Schwierigkeitsprofile sind für eine spätere Bezahlversion vorgesehen. Die derzeitigen Aufgaben verwenden weiterhin die gemeinsame Altersklasse.</p>
-                    {plan.value.teams.slice(page*2,(page+1)*2).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
+                    {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
-                  {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/2)},(_,page)=><article className="print-sheet" key={'codes-'+page}>
+                  {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
-                    {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*2,(page+1)*2).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
+                    {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                   </article>)}
                   {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=><article className="print-sheet" key={'clue-'+destination}>
                     <h1>Spielleitung – Wegrätsel</h1>
