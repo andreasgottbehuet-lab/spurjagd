@@ -142,18 +142,22 @@ const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:
  G:{question:'Welches Tier schnattert und hat einen langen Hals?',solution:'Gans',letterIndex:0},
  H:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:0},
  I:{question:'Wie heißt ein gefrorenes Dessert aus der Waffel?',solution:'Eis',letterIndex:1},
+ J:{question:'Wie nennt man einen Zeitraum von zwölf Monaten?',solution:'Jahr',letterIndex:0},
  K:{question:'Welches Tier miaut?',solution:'Katze',letterIndex:0},
  L:{question:'Welches Tier ist der König der Tiere?',solution:'Löwe',letterIndex:0},
  M:{question:'Welcher Himmelskörper leuchtet nachts und umkreist die Erde?',solution:'Mond',letterIndex:0},
  N:{question:'Was ist das Gegenteil von Tag?',solution:'Nacht',letterIndex:0},
  O:{question:'Welche runde Frucht kann orange sein?',solution:'Orange',letterIndex:0},
  P:{question:'Welches Tier wiehert?',solution:'Pferd',letterIndex:0},
+ Q:{question:'Wie heißt der Ort, an dem ein Fluss entspringt?',solution:'Quelle',letterIndex:0},
  R:{question:'Welche Farbe haben viele Feuerwehrautos?',solution:'Rot',letterIndex:0},
  S:{question:'Welcher Stern spendet uns tagsüber Licht?',solution:'Sonne',letterIndex:0},
  T:{question:'Welches Tier brüllt und hat Streifen?',solution:'Tiger',letterIndex:0},
  U:{question:'Welcher nachtaktive Vogel kann seinen Kopf weit drehen?',solution:'Uhu',letterIndex:0},
  V:{question:'Wie heißt ein anderes Wort für Papa?',solution:'Vater',letterIndex:0},
  W:{question:'Was fällt bei Regen aus den Wolken?',solution:'Wasser',letterIndex:0},
+ X:{question:'Welches Musikinstrument besteht aus gestimmten Holzstäben, die man anschlägt?',solution:'Xylophon',letterIndex:0},
+ Y:{question:'Wie heißt eine Bewegungs- und Entspannungslehre mit Körperübungen?',solution:'Yoga',letterIndex:0},
  Z:{question:'Womit putzt man sich die Zähne?',solution:'Zahnbürste',letterIndex:0}
 };
 export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
