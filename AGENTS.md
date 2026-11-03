@@ -54,3 +54,10 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - `AGENTS.md` ist die führende Entwicklungsanweisung im Repo. `README.md` beschreibt den tatsächlich implementierten Stand; Behauptungen über bestehende Funktionen nur nach Codeprüfung.
 - Entscheidungen und Änderungen an Zielgruppe, Geschäftsmodell, Datenmodell oder Spielregeln unmittelbar hier dokumentieren; keine parallelen widersprüchlichen Regeldateien.
 - Wichtige Meilensteine nach Möglichkeit zusätzlich im persönlichen Google Drive sichern; niemals ungefragt Dropbox verwenden.
+
+## Entscheidung 2026-11-03 – Planer
+- Schrittfolge: Gruppe & Zeit, Spielregeln, Standorte, Spielplan.
+- Teilnehmer, Gruppengröße und Anzahl der Rätselstationen per Schieberegler mit Zahl.
+- Startort und Zielort als eigene Eingaben; Checkbox „Start ist Ziel“ setzt den Zielmodus `origin`. Der bisherige Modus `start` (Rückkehr zur jeweils ersten Rätselstation) bleibt für alte Projekte erhalten.
+- `startPoint` ist optional, damit bestehende Sicherungen weiterhin gelesen werden können. Bei verteilten Starts bleibt der tatsächliche erste Rätselort gruppenabhängig; der Startort bezeichnet dann den gemeinsamen Treffpunkt. Die Routenlogik und Bezeichnungen müssen vor Release entsprechend geprüft werden.
+- Noch offen: Standortregler ohne Datenverlust bei Verkleinerung, vollständige Preflight-Prüfung, Rätselintegration, Druckpaket, reale Geräte- und Browserprüfung.
