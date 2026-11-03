@@ -11,6 +11,11 @@ const KEY = 'spurjagd-projects-v1';
 const ACTIVE = 'spurjagd-active-project-v1';
 const MAX_PROJECTS = 40;
 const MAX_FILE_BYTES = 200_000;
+/** Only project-list changes invalidate an open editor; active-tab selection alone does not. */
+export function projectListChanged(key:string|null):boolean {
+  return key===KEY || key===null;
+}
+
 
 export function isGameConfig(data: unknown): data is GameConfig {
   if (!data || typeof data !== 'object') return false;
