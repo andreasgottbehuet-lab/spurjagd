@@ -56,3 +56,6 @@ Die Start- und Sicherheitsanweisung der Spielleitung erhält eine eigene A5-Seit
 
 ## Kontrollliste als Spielleitungs-Spickzettel
 Auf der Umschlagkontrollliste werden je Team/Stationsbesuch neben der Kinderblattzahl auch der zugehörige dreistellige Schloss-Code und der **nächste Zielort** ausgewiesen. Die Liste bleibt ausschließlich bei der Spielleitung; Codes und Zielorte dürfen nicht auf die Kinder-Umschlagetiketten gelangen. Bei mehrfach besuchter Station muss der Code für alle Gruppen identisch sein, der nächste Zielort darf gruppenabhängig abweichen.
+
+## Dynamische Planungshinweise
+Bei Überschneidungen, gleichzeitigem Start oder anderen Warnungen erzeugt die Anwendung zusätzliche Spielleitungsseiten mit höchstens vier Hinweisen pro A5-Blatt. Die Seitenzahl wird in der Druckübersicht mitgerechnet. Bei der Abnahme eine Konfiguration mit vielen Teams prüfen und sicherstellen, dass **sämtliche** Hinweise aus der Bildschirmansicht auch auf den A5-Seiten erscheinen. Bei vier Teams ohne zusätzliche Planungshinweise bleibt das dokumentierte Grundbeispiel bei mindestens 52 A5-Seiten.
