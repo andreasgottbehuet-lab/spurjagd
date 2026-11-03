@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -153,3 +153,5 @@ test('Ortsnamen mit gleichem Vorwärts- und Rückwärtstext verraten nicht die L
   assert.equal(clue.kind,'missing-vowels');
  }
 });
+
+test('Eigene Ortsrätsel nennen den Zielort nicht ausdrücklich',()=>{const a=generateCreativeRouteClue('Wiese','','custom',1,'Geht zur WIESE.');assert.equal(verifyCreativeRouteClue(a),false);const b=generateCreativeRouteClue('Wiese','','custom',1,'Wo wachsen hohe Gräser?');assert.equal(verifyCreativeRouteClue(b),true);});
