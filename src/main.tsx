@@ -57,11 +57,12 @@ function App() {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
   }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
     ...(goal !== 'locks' ? ['Das Druckpaket unterstützt derzeit nur Schloss-Codes.'] : []),
     ...locations.filter(l=>!l.name.trim()).map((_,i)=>'Mindestens ein Stationsname fehlt ('+(i+1)+').'),
-    ...locations.filter(l=>!validCode(stationCodes[l.id]??'')).map(l=>'Ungültiger Code: '+(l.name||l.id)),
+    ...locations.filter(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??'')).map(l=>'Ungültiger Code: '+(l.name||l.id)),
     ...(!startPoint.trim()?['Startort fehlt.']:[]),
     ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
   ];
@@ -71,12 +72,12 @@ function App() {
   const ageLevel: AgeLevel = age === '4–6' || age === '6–8' ? 'young' : age === '8–10' ? 'middle' : 'older';
   const challenges = useMemo(() => {
     if (goal !== 'locks' || printIssues.length) return [];
-    return locations.filter(l=>validCode(stationCodes[l.id] ?? '')).map(l=>{
+    return locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id] ?? '')).map(l=>{
       const challenge=generateStationChallenge(l.id,stationCodes[l.id],ageLevel,hashSeed(projectId));
       if(codeFromPuzzles(challenge)!==stationCodes[l.id]) throw new Error('Codeprüfung fehlgeschlagen');
       return {location:l,challenge};
     });
-  },[locations,stationCodes,ageLevel,projectId,goal,printIssues.length]);
+  },[locations,stationCodes,ageLevel,projectId,goal,printIssues.length,plan.value]);
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -335,7 +336,7 @@ function App() {
                     return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
                   }
                 })}</section>}
-                {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
+                {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
                 {printManifest && <div className="warnings"><strong>Druckumfang A5</strong><p>{printManifest.envelopes.length} Umschläge mit je mindestens 3 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Insgesamt mindestens {printManifest.minimumSheets} A5-Seiten. Bei langen Texten kann der tatsächliche Druckumfang größer sein.</p></div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{printIssues.map((issue,i)=><p key={i}>{issue}</p>)}</div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
