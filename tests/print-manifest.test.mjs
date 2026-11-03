@@ -46,6 +46,7 @@ test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschla
  const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'},durationMinutes:60};
  const plan=createPlan(c),m=createPrintManifest(plan,c);
  assert.ok(m.envelopes.some(e=>e.sheetCount>3));
+ assert.ok(m.organizerSheets>createPrintManifest(plan).organizerSheets,'Auch der Lösungsschlüssel benötigt Fortsetzungsblätter');
  assert.equal(m.taskSheets,m.envelopes.reduce((sum,e)=>sum+e.sheetCount,0));
  assert.deepEqual(auditPrintManifest(plan,m,c),[]);
  const broken=createPrintManifest(plan,c);
