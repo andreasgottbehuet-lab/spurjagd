@@ -97,3 +97,13 @@ test('Unbeschriftete Etiketten und falsch einsortierte Mehrseiten-Wegrätsel wer
  assert.equal(sheets.length,5);
  assert.ok(auditRenderedEnvelopes(expected,sheets).some(issue=>issue.includes('Umschlag-Reihenfolge')));
 });
+
+test('Multi-page route puzzles reject swapped page indices',()=>{
+ const expected=[{id:'0-a',sheetCount:5}];
+ const sheets=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},
+  {envelopeId:'0-a',kind:'route',routePage:1},{envelopeId:'0-a',kind:'route',routePage:2},
+  {envelopeId:'0-a',kind:'route',routePage:3}];
+ assert.deepEqual(auditRenderedEnvelopes(expected,sheets),[]);
+ const changed=sheets.map(x=>({...x}));changed[3].routePage=3;changed[4].routePage=2;
+ assert.ok(auditRenderedEnvelopes(expected,changed).some(x=>x.includes('Wegrätsel-Seitenfolge')));
+});
