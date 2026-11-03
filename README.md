@@ -69,3 +69,12 @@ Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
 
 ## Mehrsprachigkeit
 Deutsch ist führend, Englisch als technische Oberfläche vorbereitet. Rätseltexte und Wortlösungen sind pro Sprache eigenständig zu prüfen.
+
+
+## Entwicklungsstand 2026-11-03 – nicht freigegeben
+- Planer: Schritte Gruppe/Zeit, Regeln, Standorte, Spielplan. Schieberegler für Teilnehmer, Gruppengröße und Rätselstationen.
+- Eigene Start- und Zielangaben, Rückkehr zum gemeinsamen Startort möglich. Frühere Zielmodi bleiben für gespeicherte Projekte erhalten.
+- Bei Schloss-Spielziel: freie dreistellige Codes je Station, auch führende Nullen. Deterministische Aufgaben mit Rechen-, Symbol- und Buchstabenrätsel; Vorschau mit Lösungen.
+- Erster DIN-A4-Druckentwurf: Spielleitungsblatt, Stationsaufgaben und Etiketten. Druck nur bei vollständigen Codes aktiv.
+- Entwürfe mit noch leeren Stationsnamen und unvollständigen Codes können gespeichert werden. Beim vorübergehenden Verkleinern des Stationsreglers werden Eingaben während der laufenden Sitzung zwischengespeichert; sie sind noch nicht über Projektwechsel hinweg gesichert.
+- Offen: vollständige nächste-Stations-Hinweise pro Team, Druck-Preflight, altersgerechte Aufgabenprüfung, End-to-End- und Browserprüfungen, Build-/CI-/Deployment-Nachweis. Kein öffentlicher Release aus diesem Stand ableiten.
