@@ -176,3 +176,19 @@ test('Gruppenanzahl und Planungshinweise werden unabhängig geprüft',()=>{
  assert.ok(issues.some(issue=>issue.includes('Gruppenplan')));
  assert.ok(issues.some(issue=>issue.includes('Planungshinweise')));
 });
+
+test('Umlaut-Umschreibung darf in eigenen Zielhinweisen keinen Zielort verraten',()=>{
+ const c=config();
+ c.locations[1].name='Wiese über der Sabine';
+ c.routeClueModes.b='custom';
+ c.routeClueTexts.b='Geht zur Wiese ueber der Sabine.';
+ assert.ok(auditPrintPacket(c,createPlan(c),'projekt-1').some(issue=>issue.includes('nennt bereits den Zielort')));
+});
+
+test('Ortsbeschreibung mit verstecktem Zielnamen wird bei der Druckprüfung abgewiesen',()=>{
+ const c=config();
+ c.locations[1].name='Wiese über der Sabine';
+ c.locations[1].description='Ihr sucht die Wiese ueber der Sabine neben den Bäumen.';
+ c.routeClueModes.b='description';
+ assert.ok(auditPrintPacket(c,createPlan(c),'projekt-1').some(issue=>issue.includes('Wegrätsel')));
+});
