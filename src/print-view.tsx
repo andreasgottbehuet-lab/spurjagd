@@ -16,7 +16,7 @@ function ChildCardView({ card }: { card: ChildCard }) {
       <h2>Schloss-Rätsel</h2>
       <p className="print-station-name">{card.station}</p>
       <p className="print-intro">Löst die Aufgaben in der angegebenen Reihenfolge. Jede Antwort ergibt eine Ziffer des Schloss-Codes.</p>
-      <div className="print-tasks">
+      <div className={'print-tasks' + (card.puzzles.length === 4 ? ' print-tasks-four' : '')}>
         {card.puzzles.map((p, i) => <section className="print-task" key={i}>
           <strong>{i + 1}. {p.instruction}</strong>
           {p.render && <div className="print-symbols">{Array.from({ length: p.render.count }, (_, j) => <span key={j}>{p.render?.symbol}</span>)}</div>}
