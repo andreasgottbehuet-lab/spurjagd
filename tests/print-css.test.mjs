@@ -12,9 +12,9 @@ test('A5 print packet is isolated from interactive planner elements',()=>{
 
 test('Child packet contains separate task, answer and route sheets',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(source,/Blatt 1\/3/);
- assert.match(source,/Blatt 2\/3/);
- assert.match(source,/Blatt 3\/3/);
+ assert.ok(source.includes('Blatt 1/{2+routeSheetCount'));
+ assert.ok(source.includes('Blatt 2/{2+routeSheetCount'));
+ assert.ok(source.includes('Blatt {3+routePage}'));
  assert.match(source,/printIssues\.length===0\s*&&\s*<section className="print-packet"/);
  assert.match(source,/disabled=\{printIssues\.length>0\}/);
 });
