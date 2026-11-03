@@ -79,7 +79,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
       question = factor + ' × ' + extra + ' − ' + (factor * extra - target) + ' = ?';
       explanation = factor + ' × ' + extra + ' − (' + (factor * extra - target) + ') = ' + target;
     }
-    return { id, kind, instruction: 'Löse die Rechnung. Das Ergebnis ist eine Ziffer für den Code.', question, hint: 'Rechne Punkt vor Strich und überprüfe dein Ergebnis.', explanation, expectedDigit: target };
+    return { id, kind, instruction: 'Löse die Rechnung. Das Ergebnis ist eine Ziffer für den Code.', question, hint: age==='young'?'Zähle mit den Fingern oder male Punkte.':age==='middle'?'Rechne Schritt für Schritt und prüfe die letzte Rechnung.':'Rechne zuerst die Multiplikation und danach die Subtraktion.', explanation, expectedDigit: target };
   }
   const word = DIGIT_WORDS[target];
   const shift = age==='young'?1:age==='middle'?chooseInt(rng,1,3):chooseInt(rng,2,5);
