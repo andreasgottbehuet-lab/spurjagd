@@ -171,7 +171,7 @@ const QUESTION_ALTERNATIVES: Partial<Record<string,{question:string;solution:str
  K:[{question:'Was trägt man bei Kälte auf dem Kopf?',solution:'Kappe',letterIndex:0}],
  L:[{question:'Was leuchtet, wenn man es einschaltet?',solution:'Lampe',letterIndex:0}],
  M:[{question:'Welcher Monat kommt nach April?',solution:'Mai',letterIndex:0}],
- N:[{question:'Welches Tier hat einen langen Hals und lebt in Afrika?',solution:'Giraffe',letterIndex:5}],
+ N:[{question:'Was ist das Gegenteil von ja?',solution:'Nein',letterIndex:0}],
  P:[{question:'Was wächst auf einem Baum und hat einen Kern?',solution:'Apfel',letterIndex:1}],
  R:[{question:'Was fällt als Wasser aus den Wolken?',solution:'Regen',letterIndex:0}],
  S:[{question:'Was trägt man an den Füßen unter den Schuhen?',solution:'Socken',letterIndex:0}],
