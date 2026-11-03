@@ -17,6 +17,10 @@ export interface GameConfig {
   routeMode?: RouteMode;
   finishMode?: FinishMode;
   meetingPoint?: string;
+  /** Optional per-station lock codes. Partial numeric entries may be stored as drafts. */
+  stationCodes?: Record<string, string>;
+  /** Stable deterministic seed, preserved across project imports. */
+  puzzleSeed?: number;
 }
 export interface TeamPlan {
   name: string;
