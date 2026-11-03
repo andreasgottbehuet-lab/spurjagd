@@ -134,7 +134,7 @@ export function generateRoutePuzzle(destination: string, seed: number): RoutePuz
   const rng = seededRandom(seed);
   const missingVowels = [...answer].some(ch => /[AEIOUÄÖÜaeiouäöü]/.test(ch));
   const reversed=[...answer].reverse().join('');
-  if (missingVowels && (rng() >= 0.5 || reversed===answer)) {
+  if (missingVowels && (rng() >= 0.5 || reversed.toLocaleLowerCase('de')===answer.toLocaleLowerCase('de'))) {
     const question = answer.replace(/[AEIOUÄÖÜaeiouäöü]/g, '_');
     return {kind:'missing-vowels',instruction:'Ergänzt die fehlenden Selbstlaute (A, E, I, O, U, Ä, Ö, Ü). Welcher Ort ist gemeint?',question,hint:'Die Striche stehen für fehlende Buchstaben.',answer};
   }
