@@ -192,3 +192,5 @@ test('Wegrätsel dürfen den Zielort nicht durch zusätzliche Leerzeichen oder S
  const custom=generateCreativeRouteClue(destination,'','custom',7,'Geht zur Wiese, über der Sabine!');
  assert.equal(verifyCreativeRouteClue(custom),false);
 });
+
+test('Zielortprüfung unterscheidet vollständige Wörter von Teilwörtern',()=>{assert.equal(clueRevealsDestination('Am Motor steht ein Hinweis','Tor'),false);assert.equal(clueRevealsDestination('Geht zum Tor!','Tor'),true);assert.equal(clueRevealsDestination('Zum Feuerwehr-Platz gehen','Feuerwehr Platz'),true);assert.equal(clueRevealsDestination('Zur Feuerwehrplatz-Rutsche','Feuerwehrplatz'),true);assert.equal(clueRevealsDestination('Zum Sportplatz laufen','Ort'),false);});
