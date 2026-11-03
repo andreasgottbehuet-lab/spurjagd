@@ -64,4 +64,4 @@ test('Druckfreigabe weist doppelte Stations-IDs zurück',()=>{
  assert.ok(issues.some(issue=>issue.includes('Stations-IDs')));
 });
 
-test('Unlösbare oder offen verratene Ortsrätsel verhindern Druck',()=>{const c=config();c.routeClueModes.a='description';c.locations[0].description='Geht zum Spielplatz';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('Ortsbeschreibung')||issue.includes('Wegrätsel')));});
+test('Unlösbare oder offen verratene Ortsrätsel verhindern Druck',()=>{const c=config();c.routeClueModes.a='description';c.locations[0].description='Spielplatz';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('Ortsbeschreibung')||issue.includes('Wegrätsel')));});
