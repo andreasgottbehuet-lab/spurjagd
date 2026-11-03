@@ -135,7 +135,7 @@ test('Mehr Teams als Stationen führen zu konkreten Andrangwarnungen',()=>{
 });
 
 test('Gruppenprofile werden beim Erzeugen des Spielplans vom Eingabeobjekt entkoppelt',()=>{
- const c={...base,teamProfiles:{'0':{age:'6–8',difficulty:'easy'},'1':{age:'11–13',difficulty:'hard'}}};
+ const c={...config(),teamProfiles:{'0':{age:'6–8',difficulty:'easy'},'1':{age:'11–13',difficulty:'hard'}}};
  const original=structuredClone(c.teamProfiles);
  const plan=createPlan(c);
  assert.deepEqual(plan.teams[0].profile,original['0']);
