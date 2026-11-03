@@ -137,8 +137,10 @@ function App() {
         // Apply asynchronously only as a reaction to initial loading; save is gated until initialization is complete.
         applyGame(current);
       }
-    } catch(e) { setStorageMessage('Lokale Speicherung: ' + String(e)); }
-    setStorageReady(true);
+      setStorageReady(true);
+    } catch(e) { setStorageMessage('Lokale Speicherung beschädigt oder nicht verfügbar. Automatisches Speichern bleibt zum Schutz der vorhandenen Daten deaktiviert: ' + String(e));
+      setStorageReady(false);
+    }
   }, []);
   useEffect(() => {
     if (!storageReady) return;
