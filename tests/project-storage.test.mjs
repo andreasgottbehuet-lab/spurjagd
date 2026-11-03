@@ -2,7 +2,7 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -254,4 +254,14 @@ test('Frische Entwürfe sind vollständig unabhängig und enthalten keine vorher
  assert.deepEqual(b.stationCodes,{});
  assert.deepEqual(b.teamProfiles,{});
  assert.notStrictEqual(a.locations[0],b.locations[0]);
+});
+
+test('Importtitel bleiben bei maximal 100 Zeichen gültig',()=>{
+ for(const title of ['Geburtstag','A'.repeat(92),'B'.repeat(100)]){
+  const result=importedProjectTitle(title);
+  assert.ok(result.endsWith(' (Import)'));
+  assert.ok(result.length<=100);
+  assert.equal(isSavedGame({...sample(),title:result}),true);
+ }
+ assert.equal(importedProjectTitle('Geburtstag'),'Geburtstag (Import)');
 });
