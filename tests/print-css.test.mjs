@@ -79,3 +79,11 @@ test('Keine widersprüchliche A4-Seitengröße im Druckstylesheet',()=>{
  assert.ok(declarations.every(value=>/size\s*:\s*A5 portrait\s*;/.test(value)));
  assert.doesNotMatch(css,/size\s*:\s*A4\b/);
 });
+
+test('Druckknopf kontrolliert tatsächliche DOM-Blattzahl vor dem Öffnen des Druckdialogs',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes("document.querySelectorAll('.print-packet > .print-sheet').length"));
+ assert.ok(source.includes('auditRenderedPrintSheets(printManifest?.minimumSheets??0,actual)'));
+ assert.ok(source.includes("if(issues.length){window.alert(issues.join("));
+ assert.ok(source.includes('window.print();'));
+});
