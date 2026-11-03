@@ -10,7 +10,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
  if(new Set(config.locations.map(location=>location.id)).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
  try {
   const expected=createPlan(config);
-  if(plan.teams.length!==expected.teams.length || plan.stopsPerTeam!==expected.stopsPerTeam) issues.push('Gruppenplan stimmt nicht mit den Eingaben überein.');
+  if(plan.teams.length!==expected.teams.length || plan.stopsPerTeam!==expected.stopsPerTeam || plan.estimatedMinutes!==expected.estimatedMinutes || plan.remainderMinutes!==expected.remainderMinutes) issues.push('Gruppenplan oder Zeitberechnung stimmt nicht mit den Eingaben überein.');
   else for(let i=0;i<expected.teams.length;i++){
    const actual=plan.teams[i], correct=expected.teams[i];
    if(actual.name!==correct.name || actual.memberCount!==correct.memberCount || actual.finish!==correct.finish || JSON.stringify(actual.profile??null)!==JSON.stringify(correct.profile??null) || actual.stations.length!==correct.stations.length || actual.stations.some((station,j)=>station.id!==correct.stations[j]?.id || station.name!==correct.stations[j]?.name || station.description!==correct.stations[j]?.description)) issues.push('Gruppenroute '+correct.name+' weicht von der Planung ab.');
