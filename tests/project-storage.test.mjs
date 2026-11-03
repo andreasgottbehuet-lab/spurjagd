@@ -119,7 +119,18 @@ test('Nach Löschen des letzten Projekts darf kein alter Inhalt in das neue Proj
  assert.ok(deletion.includes('deleteGame(projectId)'));
  assert.ok(deletion.includes('applyGame(fresh)'));
  assert.ok(deletion.includes('locations:initialLocations.map'));
+ assert.ok(deletion.includes("meetingPoint:'Treffpunkt'"));
+ assert.ok(deletion.includes("startPoint:'Treffpunkt'"));
  assert.ok(deletion.includes('stationCodes:{}'));
  assert.ok(deletion.includes('routeClueTexts:{}'));
  assert.ok(deletion.includes('teamProfiles:{}'));
+});
+
+test('Neue Projekte übernehmen keine privaten Treffpunkte aus der vorherigen Schnitzeljagd',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const creation=source.slice(source.indexOf('const newProject = () =>'),source.indexOf('const removeProject = () =>'));
+ assert.ok(creation.includes("meetingPoint:'Treffpunkt'"));
+ assert.ok(creation.includes("startPoint:'Treffpunkt'"));
+ assert.ok(creation.includes('stationCodes:{}'));
+ assert.ok(creation.includes('routeClueTexts:{}'));
 });
