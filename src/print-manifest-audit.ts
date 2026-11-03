@@ -18,7 +18,7 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest):string[
   if(e.id!==teamIndex+'-'+station.id) errors.push(team.name+': Umschlagkennung stimmt nicht mit der Station überein.');
   if(e.destination!==(team.stations[index+1]?.name??team.finish)) errors.push(team.name+': falscher nächster Zielort.');
   if(e.sheetCount!==3) errors.push(team.name+': Umschlag muss drei A5-Blätter enthalten.');
-  if(e.team!==team.name||e.stationTotal!==team.stations.length) errors.push(team.name+': Umschlagbeschriftung stimmt nicht.');
+  if(e.team!==team.name||e.teamIndex!==teamIndex||e.stationNumber!==index+1||e.stationTotal!==team.stations.length) errors.push(team.name+': Umschlagbeschriftung stimmt nicht.');
  }));
  return [...new Set(errors)];
 }
