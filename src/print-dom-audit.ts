@@ -59,5 +59,24 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
    issues.push('Umschlag '+envelope.id+': '+tasks+' Aufgaben-, '+answers+' Antwort- und '+routes+' Wegrätselblätter statt 1/1/'+(envelope.sheetCount-2)+'.');
   }
  }
+ // The packet must be packable in manifest order: task, answer, then route pages.
+ const expectedSequence=expected.flatMap(envelope=>[
+  {envelopeId:envelope.id,kind:'task'},
+  {envelopeId:envelope.id,kind:'answer'},
+  ...Array.from({length:Math.max(0,envelope.sheetCount-2)},()=>({envelopeId:envelope.id,kind:'route'}))
+ ]);
+ if(expectedSequence.length!==actual.length || expectedSequence.some((sheet,index)=>
+   actual[index]?.envelopeId!==sheet.envelopeId || actual[index]?.kind!==sheet.kind
+ )) issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Antwort, Wegrätsel) angeordnet.');
+ return [...new Set(issues)];
+}
+
+/** Label order must match the envelope list so printed labels can be packed without guesswork. */
+export function auditRenderedLabels(expected:ExpectedEnvelope[],actualIds:string[]):string[] {
+ const expectedIds=expected.map(envelope=>envelope.id);
+ if(expectedIds.length===actualIds.length && expectedIds.every((id,index)=>id===actualIds[index])) return [];
+ const issues=['Stationsetiketten fehlen, sind doppelt oder entsprechen nicht der Umschlag-Reihenfolge.'];
+ const allowed=new Set(expectedIds);
+ for(const id of actualIds) if(!allowed.has(id)) issues.push('Stationsetikett mit unbekanntem Umschlag: '+(id||'(leer)'));
  return [...new Set(issues)];
 }
