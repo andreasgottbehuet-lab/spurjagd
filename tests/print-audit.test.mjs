@@ -93,3 +93,24 @@ test('Druckprüfung erkennt manipulierte Stationsnamen und Beschreibungen',()=>{
 test('Veränderte Gruppenprofile werden bei der Druckprüfung erkannt',()=>{const c=config();c.teamProfiles={'0':{age:'8–10',difficulty:'normal'}};const plan=createPlan(c);plan.teams[0].profile.difficulty='hard';assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Gruppenroute')));});
 
 test('Stationsnamen mit Rand-Leerzeichen behalten ihre Fragenrätsel-Einstellung',()=>{const c=config();c.locations[0].name='  Spielplatz  ';const plan=createPlan(c);assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);});
+
+test('Nicht besuchte Stationen benötigen keinen Schloss-Code',()=>{
+ const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{a:'007'}};
+ const plan=createPlan(c);
+ assert.equal(plan.stopsPerTeam,1);
+ assert.deepEqual(plan.teams[0].stations.map(station=>station.id),['a']);
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+});
+
+test('Ein fehlender Code an einer besuchten Station sperrt weiterhin den Druck',()=>{
+ const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{}};
+ const plan=createPlan(c);
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Code')&&issue.includes('Spielplatz')));
+});
+
+test('Bei mehreren Teams zählen nur tatsächlich besuchte Stationen für Codepflicht',()=>{
+ const c={...config(),players:6,groupSize:3,durationMinutes:30,stationCodes:{a:'007',b:'120'}};
+ const plan=createPlan(c);
+ assert.deepEqual(plan.teams.map(team=>team.stations[0].id),['a','b']);
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+});
