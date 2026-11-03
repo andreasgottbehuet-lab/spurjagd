@@ -34,3 +34,15 @@ Alternativ den GitHub-Actions-Workflow **Quality checks** über **Actions → Qu
 Datum, Commit-SHA, Node-Version, Browser, Druckeinstellung, Test- und Build-Ergebnis, tatsächliche A5-Seitenzahl sowie festgestellte Abweichungen dokumentieren.
 
 Bis diese Ergebnisse vorliegen, bleibt der Status **nicht abgenommen**.
+
+## Automatisierte Grenzfall-Matrix
+
+Die Testdatei `tests/print-manifest.test.mjs` enthält zusätzlich eine Matrix mit 180 Konfigurationen:
+- Teilnehmerzahlen 1, 2, 7, 12, 25 und 100
+- Gruppengrößen 1, 3 und 10
+- Stationszahlen 1, 2, 4, 8 und 20
+- gleiche und wechselnde Routenrichtung
+
+Geprüft werden Umschlaganzahl, Zuordnung, Seitenrechnung und die Konsistenz der Druckprüfung. Ein weiterer Test erzeugt ein 80 Buchstaben langes Fragenrätsel mit 16 A5-Wegrätselseiten und prüft die Lösungsbuchstaben.
+
+**Grenze:** Diese Tests prüfen die Programmlogik, nicht die physischen Seitenumbrüche oder das Erscheinungsbild der Ausdrucke. Die tatsächliche Ausführung der Tests und des Builds ist weiterhin nachzuweisen.
