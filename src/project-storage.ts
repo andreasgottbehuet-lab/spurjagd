@@ -22,6 +22,11 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
   if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start', 'origin'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
   if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
+  if (p.stationCodes !== undefined) {
+    if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
+    const codes = Object.entries(p.stationCodes as Record<string, unknown>);
+    if (codes.length > 20 || codes.some(([key, value]) => key.length > 80 || typeof value !== 'string' || !/^[0-9]{3}$/.test(value))) return false;
+  }
   if (!Array.isArray(p.locations) || p.locations.length < 1 || p.locations.length > 20) return false;
   const places = p.locations as unknown[];
   if (!places.every((row: unknown) => {
