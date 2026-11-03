@@ -84,7 +84,7 @@ export function createPlan(config: GameConfig): GamePlan {
     const stations = Array.from({ length: stopsPerTeam }, (_, j) =>
       places[(startIndex + direction * j + places.length * j) % places.length]);
     return {
-      name: COLORS[i] ?? 'Team ' + (i + 1),
+      name: COLORS[i] ?? String(i + 1),
       memberCount: base + (i < extra ? 1 : 0),
       ...(config.teamProfiles?.[String(i)] ? {profile:config.teamProfiles[String(i)]} : {}),
       stations,
