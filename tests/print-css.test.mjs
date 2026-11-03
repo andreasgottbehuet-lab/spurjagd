@@ -97,3 +97,12 @@ test('Alle Druckseiten werden einer der drei geprüften Blattkategorien zugeordn
   assert.ok(source.includes("packet?.querySelectorAll('."+name+"').length"));
  }
 });
+
+test('A5-Kinderblätter tragen ihre Umschlagkennung und Blattart',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.equal((source.match(/data-envelope-id=\{teamIndex\+'-'\+location\.id\}/g)??[]).length,3);
+ for(const kind of ['task','answer','route']) assert.ok(source.includes('data-sheet-kind="'+kind+'"'));
+ assert.ok(source.includes('auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes)'));
+ assert.ok(source.includes("sheet.dataset.envelopeId??''"));
+ assert.ok(source.includes("sheet.dataset.sheetKind??''"));
+});
