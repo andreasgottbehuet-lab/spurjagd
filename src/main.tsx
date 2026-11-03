@@ -394,9 +394,9 @@ function App() {
                     </React.Fragment>;
                   }))}
                   {printManifest && Array.from({length:printManifest.labelSheets},(_,page)=>(
-                    <article className="print-sheet" key={'labels-'+page}>
+                    <article className="print-sheet print-label-sheet" key={'labels-'+page}>
                       <h1>Stationsetiketten – Blatt {page+1}/{printManifest.labelSheets}</h1>
-                      {printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · 3 Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel · Alle gleichzeitig ausgeben</span></p>)}
+                      <div className="print-label-grid">{printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · 3 Blätter: Stationsaufgaben, Antwortblatt, Wegrätsel · Alle gleichzeitig ausgeben</span></p>)}</div>
                     </article>
                   ))}
                 </section>}
