@@ -12,3 +12,5 @@ test('Fehlende Umschläge und falsche Ziele verhindern die Druckfreigabe',()=>{c
 test('Doppelte Kennungen und falsche Blattanzahl werden erkannt',()=>{const plan=createPlan(config);const manifest=createPrintManifest(plan);manifest.envelopes[1].id=manifest.envelopes[0].id;manifest.taskSheets=1;assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('eindeutig')));assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('Aufgabenblätter')));});
 
 test('Fehlerhafte Seitenzahl verhindert Druckfreigabe',()=>{const plan=createPlan(config);const m=createPrintManifest(plan);m.minimumSheets=1;assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Mindestumfang')));});
+
+test('Falsche Teambezeichnung auf Umschlag wird erkannt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan);m.envelopes[0].team='Fremde Gruppe';assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Umschlagbeschriftung')));});
