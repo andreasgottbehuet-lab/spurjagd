@@ -56,3 +56,10 @@ Geprüft werden Umschlaganzahl, Zuordnung, Seitenrechnung und die Konsistenz der
 Für die A5-Abnahme zusätzlich eine Konfiguration mit 60 oder mehr Teams und verteilten Startstationen testen. Sämtliche automatisch erzeugten Hinweise zu möglichem Andrang und Startkonflikten müssen auf eigenen Spielleitungsblättern erscheinen (maximal vier pro Blatt). Die Druckmanifestprüfung muss diese Blätter mitzählen. Werden Warnungen aus einem Plan entfernt oder verändert, muss die Druckfreigabe scheitern. Für den praktischen Ausdruck die tatsächliche Blattzahl und die Lesbarkeit separat dokumentieren.
 
 Die Regressionstests kontrollieren außerdem, dass ein Zielwort wie „Tor“ nicht fälschlich in „Motor“ erkannt wird, während ein tatsächlich genanntes Ziel als verratene Lösung gilt.
+
+## Nachweis der automatischen Prüfung
+Der GitHub-Workflow speichert bei jeder Ausführung die geprüfte Commit-SHA, Node- und npm-Version sowie – soweit die jeweiligen Schritte ausgeführt wurden – die vollständigen Ausgaben von `npm test` und `npm run build` als herunterladbares Actions-Artefakt `spurjagd-verification-<run-id>` (30 Tage Aufbewahrung). Bei einem fehlgeschlagenen Installationsschritt können die beiden Logdateien fehlen; das ist **kein** bestandenes Prüfergebnis.
+
+**Abnahmeverfahren:** Im Repository unter **Actions → Quality checks** den neuesten Lauf des freizugebenden Commits öffnen. Nur ein grüner Lauf mit erfolgreich ausgeführten Schritten **Unit and integration tests** und **TypeScript and production build** zählt als technische Freigabe. Die zugehörigen Logdateien herunterladen und den Commit mit dem Abnahmeprotokoll abgleichen. Ein grüner Lauf für einen älteren Commit genügt nicht.
+
+Für Windows kann `scripts/verify-windows.ps1` verwendet werden; das Transcript `spurjagd-verification.log` enthält zusätzlich Node-Version, npm-Version und – bei vorhandenem Git – den Commit. Anschließend weiterhin A5-Druckvorschau und vollständigen Probedruck prüfen.
