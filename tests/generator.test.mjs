@@ -118,3 +118,12 @@ test('Teams ab Nummer elf erhalten eindeutige Namen ohne doppeltes Team-Praefix'
  assert.deepEqual(plan.teams.slice(10).map(team=>team.name),['11','12']);
  assert.equal(new Set(plan.teams.map(team=>team.name)).size,12);
 });
+
+test('Verteilte Routen mit Richtungswechsel werden auf gleichzeitige Besuche geprüft',()=>{
+ const plan=createPlan(config({players:12,groupSize:3,startMode:'distributed',routeMode:'varied'}));
+ for(let slot=0;slot<plan.stopsPerTeam;slot++){
+  const stations=plan.teams.map(team=>team.stations[slot].id);
+  assert.equal(new Set(stations).size,stations.length);
+ }
+ assert.equal(plan.cautions.some(w=>w.includes('Möglicher Andrang')),false);
+});
