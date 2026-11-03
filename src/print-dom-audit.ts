@@ -98,8 +98,9 @@ export interface PrintSheetGeometry {
 }
 export function auditPrintOverflow(sheets:PrintSheetGeometry[],tolerance=2):string[] {
  const issues:string[]=[];
+ if(!Number.isFinite(tolerance)||tolerance<0) return ['Ungültige Messtoleranz für A5-Blätter.'];
  for(const sheet of sheets){
-  if(![sheet.contentWidth,sheet.contentHeight,sheet.scrollWidth,sheet.scrollHeight].every(v=>Number.isFinite(v)&&v>=0)){
+  if(![sheet.contentWidth,sheet.contentHeight,sheet.scrollWidth,sheet.scrollHeight].every(v=>Number.isFinite(v)&&v>0)){
    issues.push('A5-Blatt '+sheet.id+': Druckabmessungen konnten nicht geprüft werden.');
    continue;
   }
