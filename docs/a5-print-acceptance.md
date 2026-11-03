@@ -62,3 +62,6 @@ Bei Überschneidungen, gleichzeitigem Start oder anderen Warnungen erzeugt die A
 
 ## Zusätzliche Druckkontrolle vor dem Browserdialog
 Beim Klick auf **Drucken** zählt SPURJAGD die tatsächlich im DOM vorhandenen logischen A5-Blätter des Druckpakets und vergleicht sie mit der unabhängig berechneten Gesamtzahl des Druckmanifests. Bei fehlenden oder zusätzlichen Blatt-Elementen wird der Druckdialog nicht geöffnet und eine Fehlermeldung angezeigt. Diese Kontrolle prüft die **Anzahl der vorgesehenen Blatt-Elemente**, nicht die physische Seitenzahl im Browserdruck: Zu lange Texte, unerwartete Umbrüche und Druckerskalierung müssen weiterhin in der Druckvorschau und beim Probedruck kontrolliert werden.
+
+## Umschlagweise Druckkontrolle
+Vor dem Druck wird jetzt jeder Kinderblattseite eine Umschlagkennung und Blattart zugeordnet. Pro Umschlag sind genau ein Aufgabenblatt, ein Antwortblatt und die laut Wegrätsel-Länge erforderliche Anzahl Wegrätselblätter erforderlich. Fehlende, doppelte oder einem anderen Umschlag zugeordnete Seiten sperren den Druckdialog auch dann, wenn die Gesamtzahl aller A5-Blätter stimmt. Die tatsächlichen Papierseiten und Umbrüche müssen weiterhin in der Browser-Druckvorschau geprüft werden.
