@@ -24,9 +24,10 @@ Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Obe
 - Routenführung: gleiche Umlaufrichtung oder wechselnde Umlaufrichtung
 - Ziel: gemeinsamer Treffpunkt oder Rückkehr zur eigenen Startstation
 - Warnhinweise bei gemeinsamen Starts und begrenzten Standorten
-- Vorläufige Druckansicht des Spielplans
+- Drei- und vierstellige Schloss-Codes mit führenden Nullen, deterministischen Rätseln und gespeichertem Seed
+- Getrennte A4-Druckausgaben für Rätselkarten, geheime Hinweise und Spielleitungs-Lösungen; vier Aufgaben im 2×2-Raster
 - Tests der Berechnungs-, Validierungs- und Routenoptionen; GitHub Actions führt Tests und Build bei Änderungen aus
-- Mehrere lokale Projekte im Browser: automatisches Speichern, Wechseln, Neuanlegen und Löschen
+- Mehrere lokale Projekte im Browser: unmittelbares Speichern gültiger Änderungen, geschütztes Wechseln und Neuanlegen sowie Löschen nach Bestätigung
 - Validierter Export und Import als versionierte JSON-Sicherungsdatei; importierte Projekte erhalten eine neue ID
 - Kein Login, keine Datenbank, keine serverseitige Speicherung der Eingaben
 
@@ -38,7 +39,8 @@ Der erste Planungsassistent ist über Cloudflare Workers bereitstellbar. Die Obe
 - Routen entsprechen einem einfachen Stationsrundkurs: gleiche Richtung oder wechselnde Richtung. Unterschiedliche, frei optimierte oder manuell zugewiesene Routen und konfliktfreie Zeitfenster fehlen noch.
 - Bei gleichem Start können mehrere Teams gleichzeitig an derselben Station ankommen. Eine automatische Wartezeitplanung fehlt.
 - Standortbeschreibungen führen noch nicht automatisch zu Rätseln.
-- Spielziele sind Auswahloptionen; Codes, Lösungswörter, Rätselbibliothek und vollständige PDF-Pakete fehlen noch.
+- Schloss-Rätsel und das Druckpaket sind im Entwicklungsbranch implementiert. Lösungswort- und Karten-Spielziele sind weiterhin nur Auswahloptionen. Physischer Druck und echte Schlösser sind noch nicht abgenommen.
+- Ungültige Zwischenstände (z. B. eine Station ohne Namen) bleiben zunächst nur in der geöffneten Oberfläche. Projektwechsel, Neuanlage und Importübernahme bleiben dann gesperrt; beim Verlassen warnt der Browser. Eingaben korrigieren oder die betreffende Station entfernen. Bei vollem Browserspeicher kann ein gültiges Projekt weiterhin als JSON exportiert werden.
 - Zeitansätze sind keine Sicherheitsprüfung; Zugänge, Querungen, Aufsicht und Wetter müssen Erwachsene prüfen.
 - Vorschau ist noch nicht für den öffentlichen Regelbetrieb geeignet; Impressum und Datenschutz stehen aus.
 
@@ -52,6 +54,27 @@ npm run build
 npm run dev
 ```
 
+### Browser-Regressionsprüfung
+
+Die Tests in `tests/browser/project-flow.test.mjs` laufen getrennt von `npm test`. Sie verwenden künstliche Daten in isolierten Browserkontexten und ändern keine bestehenden Browserprofile. Playwright muss in der Prüfumgebung vorhanden sein. Optional lokal bereitstellen:
+
+```bash
+npm install --no-save --package-lock=false playwright
+npx playwright install chromium
+```
+
+In einem Terminal den Entwicklungsserver auf Port 5174 starten, im zweiten die Tests ausführen:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5174
+```
+
+```bash
+node --test tests/browser/project-flow.test.mjs
+```
+
+Optionale Umgebungsvariablen: `TEST_URL` für einen anderen lokalen Prüfserver, `PLAYWRIGHT_MODULE` für ein vorhandenes Playwright-Modul und `BROWSER_EXECUTABLE` für einen vorhandenen Chromium-/Edge-Browser. Die GitHub-Standardprüfung führt weiterhin Unit-Tests und Produktionsbuild aus; die Browserfälle sind ein zusätzlicher separater Prüfschritt.
+
 ## Cloudflare Workers
 Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
 - Build-Befehl: `npm run build`
@@ -61,11 +84,10 @@ Das GitHub-Repository mit Cloudflare Workers (Git-Integration) verbinden:
 `wrangler.jsonc` stellt die statischen Assets aus `dist` bereit. Domain `spurjagd.de` wird nach Aktivierung bei netcup über Cloudflare-DNS angebunden.
 
 ## Nächste Ausbaustufe
-1. Standorttyp (Feuerwehr, Spielplatz, Sportplatz, Wiese, frei).
-2. Geprüfte Rätselbibliothek mit altersabhängigen Hilfen.
-3. Pro Station vollständiger Schloss-Code oder Wort-/Bildbaustein.
-4. Eindeutige Lösungsprüfung, Hilfekarten, Spielleiterunterlagen.
-5. PDF-Erstellung direkt im Browser, ohne fortlaufende Serverkosten.
+1. Papierdruck, Druckerränder und echte Schlösser praktisch prüfen.
+2. Standardhinweise je Zielstation und Großdruck ergänzen.
+3. Beteiligung aller Kinder bei unterschiedlichen Gruppengrößen verbessern.
+4. Weitere geprüfte Rätselarten und altersabhängige Hilfen ergänzen.
 
 ## Mehrsprachigkeit
 Deutsch ist führend, Englisch als technische Oberfläche vorbereitet. Rätseltexte und Wortlösungen sind pro Sprache eigenständig zu prüfen.

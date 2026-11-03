@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode } from './generator';
 import { messages, type Language } from './i18n';
@@ -31,7 +31,6 @@ function App() {
   const [finishMode, setFinishMode] = useState<FinishMode>('meeting');
   const [meetingPoint, setMeetingPoint] = useState('Zuhause / Treffpunkt');
   const [activeStep, setActiveStep] = useState(1);
-  const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [stationCodes, setStationCodes] = useState<Record<string, string>>({});
   const [routeClues, setRouteClues] = useState<RouteClues>({});
@@ -42,7 +41,8 @@ function App() {
   const [storageReady, setStorageReady] = useState(false);
   const [storageMessage, setStorageMessage] = useState('');
   const importRef = useRef<HTMLInputElement>(null);
-  const skipSave = useRef(false);
+  const currentProject = useRef<SavedGame | null>(null);
+  const unsavedChanges = useRef(false);
   const [selectedProject, setSelectedProject] = useState('');
 
   const t = messages[lang];
@@ -90,12 +90,12 @@ function App() {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
   const addLocation = () => {
-    setLocations(old => [...old, { id: 'loc-' + nextLocationId, name: '', description: '' }]);
-    setNextLocationId(n => n + 1);
+    let id = 'loc-' + newGameId();
+    while (locations.some(location => location.id === id)) id = 'loc-' + newGameId();
+    setLocations(old => [...old, { id, name: '', description: '' }]);
   };
   const applyGame = (project: SavedGame) => {
     const c = project.config;
-    skipSave.current = true;
     setProjectId(project.id);
     setSelectedProject(project.id);
     setProjectTitle(project.title);
@@ -115,8 +115,27 @@ function App() {
     setRouteMode(c.routeMode ?? 'same');
     setFinishMode(c.finishMode ?? 'meeting');
     setMeetingPoint(c.meetingPoint ?? 'Zuhause / Treffpunkt');
-    setNextLocationId(Math.max(5, c.locations.length + 10));
     setStorageMessage('');
+  };
+  // Also called before navigation. Read the latest committed form state, including
+  // edits made while an imported file was being read asynchronously.
+  const saveCurrentProject = (): boolean => {
+    if (!storageReady || !currentProject.current) {
+      setStorageMessage('Lokale Projekte konnten nicht geladen werden. Ein Projektwechsel ist nicht möglich.');
+      return false;
+    }
+    try {
+      const snapshot = currentProject.current;
+      setProjects(saveGame(snapshot));
+      setSelectedProject(snapshot.id);
+      unsavedChanges.current = false;
+      setStorageMessage(message => message.startsWith('Aktuelle Änderungen sind nicht gespeichert.') ? '' : message);
+      return true;
+    } catch (e) {
+      unsavedChanges.current = true;
+      setStorageMessage('Aktuelle Änderungen sind nicht gespeichert. Bitte Eingaben prüfen; bei Speicherproblemen eine JSON-Sicherung herunterladen. ' + String(e));
+      return false;
+    }
   };
   useEffect(() => {
     try {
@@ -124,27 +143,32 @@ function App() {
       setProjects(saved);
       const current = saved.find(p=>p.id===activeGameId()) ?? saved[0];
       if (current) {
-        // Apply asynchronously only as a reaction to initial loading; save is gated until initialization is complete.
         applyGame(current);
       }
+      setStorageReady(true);
     } catch(e) { setStorageMessage('Lokale Speicherung: ' + String(e)); }
-    setStorageReady(true);
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    currentProject.current = {
+      version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt',
+      updatedAt:new Date().toISOString(),
+      config: { ...config, locations:config.locations.map(x=>({...x})) },
+    };
     if (!storageReady) return;
-    if (skipSave.current) { skipSave.current = false; return; }
-    const timeout = window.setTimeout(() => {
-      try {
-        const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:new Date().toISOString(), config: { ...config, locations:config.locations.map(x=>({...x})) } };
-        const saved = saveGame(project);
-        setProjects(saved);
-        setSelectedProject(projectId);
-        setStorageMessage('');
-      } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
-    }, 650);
-    return () => window.clearTimeout(timeout);
+    // Synchronous storage before the browser can navigate or reload.
+    saveCurrentProject();
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, stationCodes, puzzleSeed, routeClues]);
+  useEffect(() => {
+    const warnUnsaved = (event: BeforeUnloadEvent) => {
+      if (!unsavedChanges.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnUnsaved);
+    return () => window.removeEventListener('beforeunload', warnUnsaved);
+  }, []);
   const newProject = () => {
+    if (!saveCurrentProject()) return;
     const id = newGameId();
     const fresh: SavedGame = {
       version:1, id, title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
@@ -174,7 +198,8 @@ function App() {
     try {
       if (file.size > 200_000) throw new Error('Datei zu groß.');
       const imported = parseGameBackup(await file.text());
-      const restored: SavedGame = {...imported,id:newGameId(),title:imported.title+' (Import)',updatedAt:new Date().toISOString(),config:{...imported.config,puzzleSeed: imported.config.puzzleSeed ?? hashSeed(imported.id)}};
+      if (!saveCurrentProject()) return;
+      const restored: SavedGame = {...imported,id:newGameId(),title:imported.title.slice(0,91)+' (Import)',updatedAt:new Date().toISOString(),config:{...imported.config,puzzleSeed: imported.config.puzzleSeed ?? hashSeed(imported.id)}};
       const updated = saveGame(restored);
       setProjects(updated);
       applyGame(restored);
@@ -207,7 +232,9 @@ function App() {
             <label htmlFor="savedProjects">{tx('Gespeicherte Projekte','Saved projects')}</label>
             <select id="savedProjects" value={selectedProject} onChange={e=>{
               const project=projects.find(p=>p.id===e.target.value);
-              if(project){setActiveGameId(project.id);applyGame(project);setActiveStep(1);}
+              if (!project || project.id === projectId || !saveCurrentProject()) return;
+              try { setActiveGameId(project.id); applyGame(project); setActiveStep(1); }
+              catch (e) { setStorageMessage('Projektwechsel fehlgeschlagen: ' + String(e)); }
             }}>
               {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}
               {projects.map(p=><option value={p.id} key={p.id}>{p.title}</option>)}
