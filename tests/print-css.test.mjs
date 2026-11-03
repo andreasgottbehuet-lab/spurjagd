@@ -18,3 +18,13 @@ test('Child packet contains separate task, answer and route sheets',()=>{
  assert.match(source,/printIssues\.length===0\s*&&\s*<section className="print-packet"/);
  assert.match(source,/disabled=\{printIssues\.length>0\}/);
 });
+
+test('Envelope labels use a dedicated A5 grid and page chunks',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.match(css,/\.print-label-grid\s*\{\s*display:grid;/);
+ assert.match(css,/\.print-label-sheet\s+\.print-label\s*\{/);
+ assert.match(source,/className="print-sheet print-label-sheet"/);
+ assert.match(source,/className="print-label-grid"/);
+ assert.match(source,/\.slice\(page\*LABELS_PER_A5_SHEET,\(page\+1\)\*LABELS_PER_A5_SHEET\)/);
+});
