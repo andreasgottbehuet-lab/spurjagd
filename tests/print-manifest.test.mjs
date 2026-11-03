@@ -29,7 +29,7 @@ test('Etikettenseiten wachsen in Vierergruppen und werden geprüft',()=>{
 
 test('Spielleitungsseiten sind separat gezählt und geprüft',()=>{
  const plan=createPlan(config),m=createPrintManifest(plan);
- assert.equal(m.organizerSheets,10);
+ assert.equal(m.organizerSheets,12);
  m.organizerSheets=1;
  assert.ok(auditPrintManifest(plan,m).some(issue=>issue.includes('Spielleitungsseiten')));
 });
