@@ -226,7 +226,6 @@ export function generateCreativeRouteClue(destination: string, description: stri
  if(mode==='questions') {
    if (/\d/.test(answer)) throw new Error('Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.');
    const letters=[...normalizeSolutionWord(answer)];
-   if(letters.length>10) throw new Error('Das Fragenrätsel ist für ein A5-Blatt zu lang (maximal 10 Lösungsbuchstaben). Bitte eine andere Rätselart wählen.');
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
    const used=new Map<string,number>();
    const rows=letters.map(ch=>{
