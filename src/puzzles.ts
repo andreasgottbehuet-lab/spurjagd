@@ -160,6 +160,32 @@ const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:
  Y:{question:'Wie heißt eine Bewegungs- und Entspannungslehre mit Körperübungen?',solution:'Yoga',letterIndex:0},
  Z:{question:'Womit putzt man sich die Zähne?',solution:'Zahnbürste',letterIndex:0}
 };
+const QUESTION_ALTERNATIVES: Partial<Record<string,{question:string;solution:string;letterIndex:number}[]>> = {
+ A:[{question:'Was wächst am Baum und kann rot oder grün sein?',solution:'Apfel',letterIndex:0}],
+ B:[{question:'Welches Tier baut Dämme in Flüssen?',solution:'Biber',letterIndex:0}],
+ D:[{question:'Was ist das Gegenteil von hell?',solution:'Dunkel',letterIndex:0}],
+ E:[{question:'Wie heißt gefrorenes Wasser?',solution:'Eis',letterIndex:0}],
+ G:[{question:'Was wächst auf einer Wiese und ist grün?',solution:'Gras',letterIndex:0}],
+ H:[{question:'Welches Tier hat lange Ohren und hoppelt?',solution:'Hase',letterIndex:0}],
+ J:[{question:'Welcher Monat kommt nach Mai?',solution:'Juni',letterIndex:0}],
+ K:[{question:'Was trägt man bei Kälte auf dem Kopf?',solution:'Kappe',letterIndex:0}],
+ L:[{question:'Was leuchtet, wenn man es einschaltet?',solution:'Lampe',letterIndex:0}],
+ M:[{question:'Welcher Monat kommt nach April?',solution:'Mai',letterIndex:0}],
+ N:[{question:'Welches Tier hat einen langen Hals und lebt in Afrika?',solution:'Giraffe',letterIndex:5}],
+ P:[{question:'Was wächst auf einem Baum und hat einen Kern?',solution:'Apfel',letterIndex:1}],
+ R:[{question:'Was fällt als Wasser aus den Wolken?',solution:'Regen',letterIndex:0}],
+ S:[{question:'Was trägt man an den Füßen unter den Schuhen?',solution:'Socken',letterIndex:0}],
+ T:[{question:'Womit schreibt man auf Papier?',solution:'Stift',letterIndex:1}],
+ U:[{question:'Was zeigt eine Uhr an?',solution:'Uhrzeit',letterIndex:0}],
+ W:[{question:'Was weht bei stürmischem Wetter?',solution:'Wind',letterIndex:0}],
+ Z:[{question:'Welches gestreifte Tier sieht einem Pferd ähnlich?',solution:'Zebra',letterIndex:0}]
+};
+export function normalizeSolutionWord(value:string):string {
+ return value.toLocaleUpperCase('de').replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/ß/g,'SS').replace(/[^A-Z]/g,'');
+}
+export function verifyRouteQuestions(clue:RouteClue):boolean {
+ return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
+}
 export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
  const answer=destination.trim();
  if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
@@ -173,9 +199,15 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
  }
  if(mode==='questions') {
-   const letters=[...answer.toUpperCase()].filter(ch=>/[A-Z]/.test(ch));
+   const letters=[...normalizeSolutionWord(answer)];
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
-   const rows=letters.map(ch=>({...QUESTION_BANK[ch]}));
+   const used=new Map<string,number>();
+   const rows=letters.map((ch,i)=>{
+     const variants=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])];
+     const count=used.get(ch)??0;
+     used.set(ch,count+1);
+     return {...variants[(hashSeed(seed+':'+ch)%variants.length+count)%variants.length]};
+   });
    if(rows.some((r,i)=>r.solution[r.letterIndex]?.toUpperCase()!==letters[i])) throw new Error('Fragenrätsel ist nicht konsistent.');
    return {mode,instruction:'Beantwortet die Fragen. Nehmt jeweils den angegebenen Buchstaben der Antwort. Die Buchstaben ergeben den nächsten Ort (ohne Leerzeichen).',question:'',hint:'Schreibt die Lösungsbuchstaben nacheinander auf.',answer,rows};
  }
