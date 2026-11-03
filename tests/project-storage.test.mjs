@@ -76,3 +76,11 @@ test('Unvollständige Codes sind als Entwurf erlaubt, ungültige Eingaben nicht'
   assert.equal(isGameConfig({...config,puzzleSeed:4294967296}),false);
   assert.equal(isGameConfig(config),true); // Ältere Sicherungen bleiben gültig.
 });
+
+test('Hinweiskarten mit Zielbindung überstehen Export und Import', () => {
+  const game = {...sample(),config:{...sample().config,routeClues:{'0:0':{to:'@finish:Zuhause',text:'Löse das letzte Rätsel.'}}}};
+  assert.equal(isGameConfig(game.config),true);
+  assert.deepEqual(parseGameBackup(serializeGameBackup(game)),game);
+  assert.equal(isGameConfig({...sample().config,routeClues:{'0:0':{to:'b',text:42}}}),false);
+  assert.equal(isGameConfig({...sample().config,routeClues:{'../':{to:'b',text:'A'}}}),false);
+});
