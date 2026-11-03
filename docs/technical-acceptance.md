@@ -63,3 +63,8 @@ Der GitHub-Workflow speichert bei jeder Ausführung die geprüfte Commit-SHA, No
 **Abnahmeverfahren:** Im Repository unter **Actions → Quality checks** den neuesten Lauf des freizugebenden Commits öffnen. Nur ein grüner Lauf mit erfolgreich ausgeführten Schritten **Unit and integration tests** und **TypeScript and production build** zählt als technische Freigabe. Die zugehörigen Logdateien herunterladen und den Commit mit dem Abnahmeprotokoll abgleichen. Ein grüner Lauf für einen älteren Commit genügt nicht.
 
 Für Windows kann `scripts/verify-windows.ps1` verwendet werden; das Transcript `spurjagd-verification.log` enthält zusätzlich Node-Version, npm-Version und – bei vorhandenem Git – den Commit. Anschließend weiterhin A5-Druckvorschau und vollständigen Probedruck prüfen.
+
+## Projektverwaltung und Wegrätsel – Regression
+Beim Löschen des letzten gespeicherten Projekts muss der Editor mit neutralen Standardstationen, leeren Codes und leeren Wegrätsel- und Gruppenprofil-Einstellungen starten. Die zuvor gelöschte Schnitzeljagd darf nicht durch die automatische Speicherung unter einer neuen Projekt-ID wieder auftauchen. Ein importiertes Teamprofil mit leerer Altersangabe muss abgewiesen werden.
+
+Die Zielortprüfung muss Schreibvarianten mit Bindestrichen, Leerzeichen, zusammengesetzten Ortsnamen und Umlaut-Umschreibung erkennen (z. B. „Feuerwehr-Platz“ bei Ziel „Feuerwehrplatz“), darf aber Teilwörter wie „Tor“ in „Motor“ nicht fälschlich als ausgeschriebenen Zielort werten. Die Tests dafür sind im Repository hinterlegt; ihre erfolgreiche Ausführung bleibt bis zu einem tatsächlichen Testlauf offen.
