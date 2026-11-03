@@ -5,7 +5,7 @@ export const LABELS_PER_A5_SHEET = 4;
 export const ROUTE_QUESTIONS_PER_A5_SHEET = 5;
 /** Returns the exact number of route-clue question pages, or one page for other modes. */
 export function routeSheetCount(destination:string,config?:GameConfig):number {
- const target=config?.locations.find(location=>location.name===destination);
+ const target=config?.locations.find(location=>location.name.trim()===destination.trim());
  if(!target || config?.routeClueModes?.[target.id]!=='questions') return 1;
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
