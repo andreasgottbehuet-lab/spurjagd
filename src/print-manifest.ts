@@ -19,7 +19,7 @@ export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const solutionSheets=[...destinations].reduce((sum,destination)=>sum+routeSheetCount(destination,config),0);
  const envelopeCount=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
  const controlSheets=Math.max(1,Math.ceil(envelopeCount/ORGANIZER_ENVELOPES_PER_A5_SHEET));
- return routes+codes+solutionSheets+controlSheets;
+ return routes+codes+solutionSheets+controlSheets+1; // Separate safety and start-control sheet
 }
 
 export interface PrintEnvelope {
