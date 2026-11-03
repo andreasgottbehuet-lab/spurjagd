@@ -51,3 +51,8 @@ Geprüft werden Umschlaganzahl, Zuordnung, Seitenrechnung und die Konsistenz der
 - Die Druckprüfung vergleicht neben den Gruppenstationen auch die berechnete Gesamtdauer und den verbleibenden Zeitpuffer mit dem neu erzeugten Plan. Manipulierte Zeitangaben müssen die Druckfreigabe verhindern.
 - Eigene Weghinweise und Beschreibungen dürfen den vollständigen Zielort auch mit zusätzlichen Satzzeichen oder mehrfachen Leerzeichen nicht vorwegnehmen. Ein mehrteiliger Ortsname ist als Negativtest hinterlegt.
 - Automatisierte Tests sind im Repository angelegt. Ihre erfolgreiche Ausführung und der reale A5-Ausdruck sind weiterhin separat nachzuweisen.
+
+## Planungshinweise und Druckfreigabe
+Für die A5-Abnahme zusätzlich eine Konfiguration mit 60 oder mehr Teams und verteilten Startstationen testen. Sämtliche automatisch erzeugten Hinweise zu möglichem Andrang und Startkonflikten müssen auf eigenen Spielleitungsblättern erscheinen (maximal vier pro Blatt). Die Druckmanifestprüfung muss diese Blätter mitzählen. Werden Warnungen aus einem Plan entfernt oder verändert, muss die Druckfreigabe scheitern. Für den praktischen Ausdruck die tatsächliche Blattzahl und die Lesbarkeit separat dokumentieren.
+
+Die Regressionstests kontrollieren außerdem, dass ein Zielwort wie „Tor“ nicht fälschlich in „Motor“ erkannt wird, während ein tatsächlich genanntes Ziel als verratene Lösung gilt.
