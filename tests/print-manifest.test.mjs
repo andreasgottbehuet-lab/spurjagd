@@ -54,3 +54,5 @@ test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschla
 });
 
 test('Fragenrätsel werden in Fünferblöcke aufgeteilt',()=>{const c={...config,routeClueModes:{a:'questions'}};assert.equal(ROUTE_QUESTIONS_PER_A5_SHEET,5);assert.equal(routeSheetCount('Spielplatz',c),2);assert.equal(routeSheetCount('ABCDEFGHIJKLMNOPQRSTUVWXYZ',{...c,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''}]}),6);});
+
+test('Umlautnamen werden für A5-Fragenseiten korrekt gezählt',()=>{const c={...config,locations:[{id:'a',name:'Ärger',description:''}],routeClueModes:{a:'questions'}};assert.equal(routeSheetCount('Ärger',c),2);assert.equal(routeSheetCount('Ärger',{...c,routeClueModes:{a:'letters'}}),1);});
