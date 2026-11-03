@@ -17,8 +17,9 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
   }
  } catch(error) { issues.push('Gruppenplanung konnte nicht geprüft werden: '+(error instanceof Error?error.message:String(error))); }
  const locations=new Map(config.locations.map(location=>[location.id,location]));
+ const visitedStationIds=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));
  const codeByStation=new Map<string,string>();
- for(const location of config.locations){
+ for(const location of config.locations.filter(location=>visitedStationIds.has(location.id))){
   const code=config.stationCodes?.[location.id]??'';
   if(!validCode(code)){
    issues.push('Ungültiger dreistelliger Code: '+(location.name||location.id));
