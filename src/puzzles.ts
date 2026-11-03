@@ -194,11 +194,12 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
-   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'________');
+   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\   const safe=description.trim().replace(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'________');'),'gi'),'________');
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
  }
  if(mode==='questions') {
+   if (/\d/.test(answer)) throw new Error('Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.');
    const letters=[...normalizeSolutionWord(answer)];
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
    const used=new Map<string,number>();
