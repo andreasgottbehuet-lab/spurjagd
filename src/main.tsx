@@ -9,6 +9,7 @@ import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET,
 import { auditPrintManifest } from './print-manifest-audit';
 import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabels } from './print-dom-audit';
 import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
+import {allocateLocationIds,nextLocationId as findNextLocationId} from './location-ids';
 import './style.css';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
@@ -86,15 +87,16 @@ function App() {
     } else if (count > locations.length) {
       const needed = count - locations.length;
       const reused = hiddenLocations.slice(0, needed);
-      const additional = Array.from({length:needed-reused.length},(_,i)=>({id:'loc-'+(nextLocationId+i),name:'',description:''}));
+      const additional = allocateLocationIds(locations,hiddenLocations,needed-reused.length,nextLocationId).map(id=>({id,name:'',description:''}));
       setLocations(old => [...old,...reused,...additional]);
       setHiddenLocations(old => old.slice(needed));
-      setNextLocationId(n=>n+additional.length);
+      setNextLocationId(findNextLocationId([...locations,...reused,...additional],hiddenLocations,nextLocationId));
     }
   };
   const addLocation = () => {
-    setLocations(old => [...old, { id: 'loc-' + nextLocationId, name: '', description: '' }]);
-    setNextLocationId(n => n + 1);
+    const id=allocateLocationIds(locations,hiddenLocations,1,nextLocationId)[0];
+    setLocations(old => [...old, { id, name: '', description: '' }]);
+    setNextLocationId(findNextLocationId([...locations,{id,name:'',description:''}],hiddenLocations,nextLocationId));
   };
   const applyGame = (project: SavedGame) => {
     const c = project.config;
@@ -122,7 +124,7 @@ function App() {
     setTeamProfiles(c.teamProfiles ?? {});
     setRouteClueModes(c.routeClueModes ?? {});
     setRouteClueTexts(c.routeClueTexts ?? {});
-    setNextLocationId(Math.max(5, c.locations.length + 10));
+    setNextLocationId(findNextLocationId(c.locations,[],5));
     setStorageMessage('');
   };
   useEffect(() => {
