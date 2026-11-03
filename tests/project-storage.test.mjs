@@ -281,3 +281,12 @@ test('Empty saved list is corrupt, not first-run',()=>{
  try{assert.throws(()=>loadGames(),/leer oder beschädigt/);}
  finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });
+
+test('Pending edits are saved on pagehide and tab backgrounding',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes("window.addEventListener('pagehide',flushOnExit)"));
+ assert.ok(source.includes("document.addEventListener('visibilitychange',onVisibilityChange)"));
+ assert.ok(source.includes("document.visibilityState==='hidden'"));
+ assert.ok(source.includes('saveGame(current)'));
+ assert.ok(source.includes('if(!storageReady || storageConflict.current) return;'));
+});
