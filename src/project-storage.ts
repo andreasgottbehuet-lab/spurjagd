@@ -20,7 +20,8 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!integer(p.players, 1, 100) || !integer(p.groupSize, 1, 10) || !integer(p.durationMinutes, 15, 480)) return false;
   if (!text(p.age, 24) || !['locks', 'word', 'cards'].includes(String(p.goal))) return false;
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
-  if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
+  if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start', 'origin'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
+  if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
   if (!Array.isArray(p.locations) || p.locations.length < 1 || p.locations.length > 20) return false;
   const places = p.locations as unknown[];
   if (!places.every((row: unknown) => {
