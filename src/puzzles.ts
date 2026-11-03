@@ -55,14 +55,24 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     let question: string;
     let explanation: string;
     if (age === 'young') {
-      const first = chooseInt(rng, 0, target);
-      const second = target - first;
-      question = first + ' + ' + second + ' = ?';
-      explanation = first + ' + ' + second + ' = ' + target;
+      if(rng()<0.5){
+        const first=chooseInt(rng,0,target);
+        const second=target-first;
+        question=first+' + '+second+' = ?';
+        explanation=question.replace('?',String(target));
+      }else{
+        const extra=chooseInt(rng,0,Math.min(3,9-target));
+        question=(target+extra)+' − '+extra+' = ?';
+        explanation=question.replace('?',String(target));
+      }
     } else if (age === 'middle') {
-      const extra = chooseInt(rng, 1, 9);
-      question = (target + extra) + ' − ' + extra + ' = ?';
-      explanation = (target + extra) + ' − ' + extra + ' = ' + target;
+      const extra=chooseInt(rng,1,9);
+      if(rng()<0.5){
+        question=(target+extra)+' − '+extra+' = ?';
+      }else{
+        question=target+' + '+extra+' − '+extra+' = ?';
+      }
+      explanation=question.replace('?',String(target));
     } else {
       const factor = chooseInt(rng, 2, 5);
       const extra = chooseInt(rng, 1, 5);
@@ -72,7 +82,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     return { id, kind, instruction: 'Löse die Rechnung. Das Ergebnis ist eine Ziffer für den Code.', question, hint: 'Rechne Punkt vor Strich und überprüfe dein Ergebnis.', explanation, expectedDigit: target };
   }
   const word = DIGIT_WORDS[target];
-  const shift = chooseInt(rng, 1, 5);
+  const shift = age==='young'?1:age==='middle'?chooseInt(rng,1,3):chooseInt(rng,2,5);
   const encoded = [...word].map(char => ALPHABET[(ALPHABET.indexOf(char) + shift) % ALPHABET.length]).join('');
   return {
     id, kind,
