@@ -9,7 +9,7 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 
 ## Druckvorschau
 - Papierformat **A5 Hochformat**, Skalierung **100 %**, Browser-Kopf- und Fußzeilen deaktivieren, wenn sie den Inhalt verschieben.
-- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit mindestens einer Spielleitungsseite insgesamt **mindestens 40 A5-Seiten**; die tatsächliche Zahl kann höher sein.
+- Erwartung im Beispiel: **4 Teams × 3 Stationsbesuche = 12 Umschläge × 3 Kinderblätter = 36 Kinderblätter**. Spielleitungsübersicht und Etiketten kommen hinzu. Bei 12 Umschlägen werden **3 Etikettenseiten mit je maximal 4 Etiketten** erstellt. Mit vier getrennten Spielleitungsseiten insgesamt **mindestens 43 A5-Seiten**; die tatsächliche Zahl kann höher sein.
 - Jeder Stationsbesuch hat Blatt 1/3 (Aufgaben), Blatt 2/3 (Antworten), Blatt 3/3 (Wegrätsel). Keine Inhalte abgeschnitten; Schrift und Schreibflächen lesbar.
 - Die Kinderblätter verraten den nächsten Zielort nicht direkt. Der Ort muss durch das Rätsel ermittelt werden. Schloss-Code und Lösung dürfen nicht versehentlich im Kindertext stehen.
 - Spielleitungsübersicht enthält die Codes und Lösungen; Etiketten passen zu Team, Station und Umschlag.
@@ -35,3 +35,6 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 - Entscheidung: Freigabe / Nacharbeit erforderlich
 
 Erst nach dokumentiertem Prüfergebnis kann dieser Punkt als abgeschlossen gelten.
+
+## Spielleitungsübersicht
+Die vier A5-Abschnitte sind Gruppen und Routen, Codes und Lösungen, Wegrätsel-Lösungen sowie Gruppenwege und Sicherheit. Bei vielen Teams oder langen Texten auf zusätzliche physische Druckseiten achten; der Manifestwert ist weiterhin ein rechnerischer Mindestumfang.
