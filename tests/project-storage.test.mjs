@@ -98,7 +98,7 @@ test('Größenlimit für Backups gilt für UTF-8-Bytes, nicht Zeichen',()=>{
 test('Exportierte Sicherungen dürfen das Importlimit nicht überschreiten',()=>{
  const project=sample();
  project.config.routeClueTexts={};
- for(let i=0;i<25;i++)project.config.routeClueTexts['station-'+i]='ä'.repeat(1500);
+ for(let i=0;i<25;i++)project.config.routeClueTexts['station-'+i]=String.fromCharCode(0).repeat(1500);
  assert.equal(isSavedGame(project),true);
  assert.throws(()=>serializeGameBackup(project),/zu groß/);
 });
