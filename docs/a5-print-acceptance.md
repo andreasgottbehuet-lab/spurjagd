@@ -13,6 +13,7 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 - Jeder Stationsbesuch hat Blatt 1/3 (Aufgaben), Blatt 2/3 (Antworten), Blatt 3/3 (Wegrätsel). Keine Inhalte abgeschnitten; Schrift und Schreibflächen lesbar.
 - Die Kinderblätter verraten den nächsten Zielort nicht direkt. Der Ort muss durch das Rätsel ermittelt werden. Schloss-Code und Lösung dürfen nicht versehentlich im Kindertext stehen.
 - Spielleitungsübersicht enthält die Codes und Lösungen; Etiketten passen zu Team, Station und Umschlag.
+- Etikettenblatt: maximal vier Etiketten, alle Texte vollständig sichtbar. Der rechnerische Platzansatz beträgt 4 × 36 mm Mindesthöhe plus 3 × 3 mm Zwischenraum; die tatsächliche Druckhöhe und Zeilenumbrüche sind im Browser zu prüfen.
 - Die Druckfreigabe muss auch bei vertauschten Stationen, falschen Zielorten oder veränderten Teamgrößen verweigert werden; die gedruckte Route muss dem aktuellen Spielplan entsprechen.
 - Die drei Blätter eines Umschlags bleiben getrennt von den anderen Umschlägen. Bei längeren Ortsnamen und Fragen besonders auf zusätzliche Seiten und Umbrüche achten.
 - Schwarz-Weiß-Druck und tatsächliche Lesbarkeit auf einem A5-Blatt prüfen.
