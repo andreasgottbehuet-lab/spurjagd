@@ -67,3 +67,18 @@ test('Druckfreigabe weist doppelte Stations-IDs zurück',()=>{
 test('Unlösbare oder offen verratene Ortsrätsel verhindern Druck',()=>{const c=config();c.routeClueModes.a='description';c.locations[0].description='Spielplatz';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('Ortsbeschreibung')||issue.includes('Wegrätsel')));});
 
 test('Eigenes Wegrätsel darf den Zielort nicht nennen',()=>{const c=config();c.routeClueModes.b='custom';c.routeClueTexts.b='Geht direkt zur Wiese.';const issues=auditPrintPacket(c,createPlan(c),'projekt-1');assert.ok(issues.some(issue=>issue.includes('nennt bereits den Zielort')));});
+
+test('Druckprüfung erkennt vertauschte, aber einzeln gültige Gruppenstationen',()=>{
+ const c=config(), plan=createPlan(c);
+ const team=plan.teams[0];
+ [team.stations[0],team.stations[1]]=[team.stations[1],team.stations[0]];
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Gruppenroute')));
+});
+test('Druckprüfung erkennt manipulierten Zielort und Teilnehmerzahl',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.teams[0].finish='Unbekannt';
+ plan.teams[1].memberCount=1;
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Gruppenroute')));
+});
