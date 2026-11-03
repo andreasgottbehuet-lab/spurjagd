@@ -5,7 +5,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, parseGameBackup, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
-import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET } from './print-manifest';
+import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import './style.css';
 
@@ -361,14 +361,16 @@ function App() {
                       {clue.mode==='questions'?clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET,(page+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((row,i)=><p key={i}>{page*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {row.solution} (Buchstabe {row.letterIndex+1})</p>):<p>Lösung: {clue.answer}</p>}
                     </article>);
                   })}
-                  <article className="print-sheet">
-                    <h1>Spielleitung – Kontrolle</h1>
+                  {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet" key={'control-'+page}>
+                    <h1>Spielleitung – Kontrolle {page+1}</h1>
                     <h2>Ausgabe und Kontrolle</h2>
                     <p>Pro Umschlag: je ein A5-Aufgaben- und Antwortblatt sowie ein oder mehrere Wegrätselblätter. Vor der Ausgabe Teamname, Stationsname und Umschlagnummer mit der passenden Gruppenroutenseite abgleichen.</p>
                     <p>Die Umschläge je Team nach Stationsnummer sortieren und vollständig bereitlegen. Den nächsten Zielort nicht vor dem Lösen des Wegrätsels verraten.</p>
-                    <h2>Vorbereitung und Sicherheit</h2>
-                    <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p>
-                  </article>
+                    <h2>Umschläge prüfen und abhaken</h2>
+                    {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p key={envelope.id}>□ Team {envelope.team} · Station {envelope.stationNumber}: {envelope.stationName} · {envelope.sheetCount} Blätter</p>)}
+                    {page===0 && <><h2>Vorbereitung und Sicherheit</h2>
+                    <p>Schlösser auf die Codes einstellen und mit den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden. Vor Spielbeginn Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Nach Spielende alle Kinder zählen und Material einsammeln.</p></>}
+                  </article>)}
                   {plan.value.teams.map((team,teamIndex)=>team.stations.map((location,stationIndex)=>{
                     const challenge=challenges.find(c=>c.location.id===location.id)?.challenge;
                     if(!challenge)return null;
