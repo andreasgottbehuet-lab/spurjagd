@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -38,4 +38,18 @@ test('Manipulierte Rätsel und ungültige Codes werden abgewiesen', () => {
   challenge.puzzles[0].question='9 + 9 = ?';
   assert.equal(verifyDigitPuzzle(challenge.puzzles[0]),false);
   assert.throws(()=>codeFromPuzzles(challenge),/Rätselprüfung/);
+});
+
+test('Wegrätsel bleiben je Seed gleich und verraten das festgelegte Ziel nicht als Klartext',()=>{
+  for(const destination of ['Spielplatz','Wiese am Wasserbassin','Feuerwehrplatz','Zuhause','Burg']){
+    for(const seed of [0,1,23,1000]){
+      const clue=generateRoutePuzzle(destination,seed);
+      assert.equal(clue.answer,destination);
+      assert.deepEqual(generateRoutePuzzle(destination,seed),clue);
+      assert.notEqual(clue.question,destination);
+      if(clue.kind==='reverse') assert.equal([...clue.question].reverse().join(''),destination);
+      else assert.equal(clue.question.length,destination.length);
+    }
+  }
+  assert.throws(()=>generateRoutePuzzle('  ',1),/Zielort/);
 });
