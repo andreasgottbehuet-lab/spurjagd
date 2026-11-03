@@ -1,5 +1,5 @@
 import type { GamePlan, Location } from './generator';
-import { codeFromPuzzles, generateStationChallenge, validCode, type AgeLevel, type Puzzle } from './puzzles';
+import { codeFromPuzzles, generateStationChallenge, validCode, type AgeLevel, type Puzzle } from './puzzles.ts';
 
 export interface RouteClue {
   to: string;
@@ -64,8 +64,8 @@ export function createPrintKit(
         continue;
       }
       const clueText = clue.text.trim();
-      if (clueText.length > 400) {
-        issues.push(label + ': Hinweis überschreitet 400 Zeichen.');
+      if (clueText.length > 240) {
+        issues.push(label + ': Hinweis überschreitet 240 Zeichen.');
         continue;
       }
       if (next.trim().length > 2 && clueText.toLocaleLowerCase('de').includes(next.trim().toLocaleLowerCase('de'))) {
