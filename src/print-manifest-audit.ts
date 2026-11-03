@@ -10,6 +10,7 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest):string[
  if(manifest.labelSheets!==Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Anzahl der A5-Etikettenseiten ist falsch.');
  if(manifest.minimumSheets!==expected*3+ORGANIZER_A5_SHEETS+Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Mindestumfang der Druckseiten ist falsch.');
  if(new Set(manifest.envelopes.map(e=>e.id)).size!==manifest.envelopes.length) errors.push('Umschlagkennungen sind nicht eindeutig.');
+ if(manifest.envelopes.some((envelope,index)=>envelope.teamIndex!==plan.teams.findIndex(team=>team.name===envelope.team) || envelope.stationNumber<1 || !Number.isInteger(envelope.stationNumber))) errors.push('Umschlagreihenfolge oder Gruppenzuordnung ist ungültig.');
  plan.teams.forEach((team,teamIndex)=>team.stations.forEach((station,index)=>{
   const found=manifest.envelopes.filter(e=>e.teamIndex===teamIndex&&e.stationNumber===index+1);
   if(found.length!==1){errors.push(team.name+': Umschlag fehlt oder ist doppelt.');return;}
