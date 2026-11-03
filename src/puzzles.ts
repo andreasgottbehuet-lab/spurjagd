@@ -234,7 +234,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
      const count=used.get(ch)??0;
      used.set(ch,count+1);
      const start=(hashSeed(seed+':'+ch)%variants.length+count)%variants.length;
-     const selected=variants.find((_,offset)=>!usedQuestions.has(variants[(start+offset)%variants.length].question));
+     const selected=Array.from({length:variants.length},(_,offset)=>variants[(start+offset)%variants.length]).find(row=>!usedQuestions.has(row.question));
      const row=selected??variants[start];
      usedQuestions.add(row.question);
      return {...row};
