@@ -53,3 +53,6 @@ Die Spielleitung erhält eine abhakbare Liste mit höchstens vier Umschlägen pr
 
 ## Eigenständiges Sicherheitsblatt
 Die Start- und Sicherheitsanweisung der Spielleitung erhält eine eigene A5-Seite. Sie darf nicht zusammen mit einer vollen vierzeiligen Umschlagkontrollliste auf ein Blatt gedrängt werden. Bei der Beispielkonfiguration (12 Umschläge, vier Teams, drei Stationen je Team) sind deshalb **13 Spielleitungsseiten** und **mindestens 52 A5-Seiten insgesamt** vorgesehen. Das Druckbild ist weiterhin manuell zu prüfen.
+
+## Kontrollliste als Spielleitungs-Spickzettel
+Auf der Umschlagkontrollliste werden je Team/Stationsbesuch neben der Kinderblattzahl auch der zugehörige dreistellige Schloss-Code und der **nächste Zielort** ausgewiesen. Die Liste bleibt ausschließlich bei der Spielleitung; Codes und Zielorte dürfen nicht auf die Kinder-Umschlagetiketten gelangen. Bei mehrfach besuchter Station muss der Code für alle Gruppen identisch sein, der nächste Zielort darf gruppenabhängig abweichen.
