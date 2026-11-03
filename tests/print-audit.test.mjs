@@ -116,7 +116,7 @@ test('Bei mehreren Teams zählen nur tatsächlich besuchte Stationen für Codepf
 });
 
 test('Ungültige Alt-Codes an unbesuchten Stationen blockieren einen kurzen Parcours nicht',()=>{
- const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{a:'007',b:'12',c:'',d:'9999'}};
+ const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{a:'007',b:'12',c:'',d:'99'}};
  const plan=createPlan(c);
  assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
 });
