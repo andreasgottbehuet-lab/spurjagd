@@ -103,3 +103,13 @@
  .symbols { font-size:18pt; letter-spacing:2pt; }
  .print-label { padding:4mm; margin:4mm 0; }
 }
+
+/* Keep long destination riddles legible on A5 without cutting words. */
+@media print {
+ .print-sheet { width:auto; max-width:100%; }
+ .print-sheet p { overflow-wrap:anywhere; }
+ .print-sheet .print-task { break-inside:avoid; }
+ .print-sheet .route-letters { white-space:normal; word-break:normal; }
+ .print-sheet .writing-lines { font-size:9pt; letter-spacing:0; }
+ .print-sheet .print-label { font-size:9pt; }
+}
