@@ -46,11 +46,6 @@ export function isGameConfig(data: unknown): data is GameConfig {
     const r = row as Record<string, unknown>;
     return text(r.id, 80) && Boolean((r.id as string).trim()) && text(r.name, 80) && text(r.description, 400);
   })) return false;
-  const stationIds=new Set(places.map(row=>(row as Location).id));
-  for(const field of ['stationCodes','routeClueModes','routeClueTexts']){
-    const values=p[field] as Record<string,unknown>|undefined;
-    if(values && Object.keys(values).some(id=>!stationIds.has(id))) return false;
-  }
   const locations = places as Location[];
   return new Set(locations.map(x => x.id)).size === locations.length
     && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLocaleLowerCase('de'))).size === locations.filter(x=>x.name.trim()).length;
