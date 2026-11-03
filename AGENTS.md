@@ -61,3 +61,10 @@ Stand: 2026-11-02. Diese Datei ist die führende Arbeitsgrundlage für ChatGPT, 
 - Startort und Zielort als eigene Eingaben; Checkbox „Start ist Ziel“ setzt den Zielmodus `origin`. Der bisherige Modus `start` (Rückkehr zur jeweils ersten Rätselstation) bleibt für alte Projekte erhalten.
 - `startPoint` ist optional, damit bestehende Sicherungen weiterhin gelesen werden können. Bei verteilten Starts bleibt der tatsächliche erste Rätselort gruppenabhängig; der Startort bezeichnet dann den gemeinsamen Treffpunkt. Die Routenlogik und Bezeichnungen müssen vor Release entsprechend geprüft werden.
 - Noch offen: Standortregler ohne Datenverlust bei Verkleinerung, vollständige Preflight-Prüfung, Rätselintegration, Druckpaket, reale Geräte- und Browserprüfung.
+
+## Entscheidung 2026-11-03 – A5-Druck und Arbeitsweise
+- Verbindliches Standardformat für sämtliche Kinderblätter: **DIN A5 Hochformat**, nicht DIN A4. Drei getrennte Blätter pro Team und Stationsbesuch: 1. Stationsaufgaben, 2. Antwort-/Arbeitsblatt, 3. Wegrätsel zum nächsten Ort.
+- Zielorte dürfen auf Kinderblättern nicht im Klartext vorweggenommen werden. Ortsrätsel und Codes werden vor Druck auf Konsistenz geprüft. Umschläge sind gruppen- und stationsbezogen zu beschriften.
+- Spielleitungsübersicht und Etiketten dürfen künftig bei getrenntem Drucklauf auf A4 ausgegeben werden; bis dahin gilt A5 für den gesamten Drucklauf. Mindestseitenzahlen sind Untergrenzen, keine bestätigten physischen Druckseiten.
+- Größere zusammenhängende Entwicklungsblöcke einschließlich Fehlerkorrekturen, Tests und Dokumentation bearbeiten. Bei kurzen Nutzeranweisungen wie „Weiter“ nicht nachfragen. Windows-Laptop als mögliche lokale Testumgebung nutzen; keinen lokalen Zugriff behaupten, solange er nicht besteht.
+- Bestehende README-Angaben zu A4 und fehlenden Rätseln sind überholt und müssen an den Code angeglichen werden.
