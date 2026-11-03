@@ -153,3 +153,8 @@
  .print-label-sheet h1 { margin-bottom:5mm; }
  .print-label-grid { display:grid; grid-template-columns:1fr; gap:3mm; }
 }
+
+/* Keep each question and its answer space together on A5. */
+@media print {
+ .print-route-question { break-inside:avoid; page-break-inside:avoid; margin:3mm 0; line-height:1.35; }
+}
