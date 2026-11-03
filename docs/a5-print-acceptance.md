@@ -37,4 +37,4 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 Erst nach dokumentiertem Prüfergebnis kann dieser Punkt als abgeschlossen gelten.
 
 ## Spielleitungsübersicht
-Die vier A5-Abschnitte sind Gruppen und Routen, Codes und Lösungen, Wegrätsel-Lösungen sowie Gruppenwege und Sicherheit. Bei vielen Teams oder langen Texten auf zusätzliche physische Druckseiten achten; der Manifestwert ist weiterhin ein rechnerischer Mindestumfang.
+Die vier A5-Abschnitte sind Gruppen und Routen, Codes und Lösungen, Wegrätsel-Lösungen sowie Ausgabe- und Sicherheitskontrolle. Die Gruppenwege werden auf Blatt 1 geführt und nicht erneut abgedruckt. Bei vielen Teams oder langen Texten auf zusätzliche physische Druckseiten achten; der Manifestwert ist weiterhin ein rechnerischer Mindestumfang.
