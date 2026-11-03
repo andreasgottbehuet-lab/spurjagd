@@ -156,3 +156,41 @@ test('Beschädigte Browserdaten dürfen durch Autostart nicht überschrieben wer
  assert.ok(init.includes('Automatisches Speichern bleibt'));
  assert.ok(source.includes('if (!storageReady) return;'));
 });
+
+test('Beschädigte Browserdaten bleiben beim fehlgeschlagenen Speichern unverändert',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map([['spurjagd-projects-v1','{kaputt']]);
+ globalThis.localStorage={
+  getItem:key=>memory.get(key)??null,
+  setItem:(key,value)=>memory.set(key,String(value)),
+  removeItem:key=>memory.delete(key)
+ };
+ try{
+  assert.throws(()=>loadGames(),SyntaxError);
+  assert.throws(()=>saveGame(sample()),SyntaxError);
+  assert.equal(memory.get('spurjagd-projects-v1'),'{kaputt');
+ }finally{
+  if(old===undefined) delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
+test('Bei mehr als vierzig Projekten bleibt der bisherige Datenbestand erhalten',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map();
+ globalThis.localStorage={
+  getItem:key=>memory.get(key)??null,
+  setItem:(key,value)=>memory.set(key,String(value)),
+  removeItem:key=>memory.delete(key)
+ };
+ try{
+  const existing=Array.from({length:40},(_,i)=>({...sample(),id:'p-'+i}));
+  memory.set('spurjagd-projects-v1',JSON.stringify(existing));
+  assert.throws(()=>saveGame({...sample(),id:'p-40'}),/Maximal 40/);
+  assert.equal(loadGames().length,40);
+  assert.equal(memory.get('spurjagd-active-project-v1'),undefined);
+ }finally{
+  if(old===undefined) delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
