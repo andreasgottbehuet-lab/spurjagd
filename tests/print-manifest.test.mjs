@@ -53,4 +53,4 @@ test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschla
  assert.ok(auditPrintManifest(plan,broken,c).some(issue=>issue.includes('Anzahl A5-Blätter')));
 });
 
-test('Fragenrätsel werden in Fünferblöcke aufgeteilt',()=>{const c={...config,routeClueModes:{a:'questions'}};assert.equal(ROUTE_QUESTIONS_PER_A5_SHEET,5);assert.equal(routeSheetCount('Spielplatz',c),1);assert.equal(routeSheetCount('ABCDEFGHIJKLMNOPQRSTUVWXYZ',{...c,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''}]}),6);});
+test('Fragenrätsel werden in Fünferblöcke aufgeteilt',()=>{const c={...config,routeClueModes:{a:'questions'}};assert.equal(ROUTE_QUESTIONS_PER_A5_SHEET,5);assert.equal(routeSheetCount('Spielplatz',c),2);assert.equal(routeSheetCount('ABCDEFGHIJKLMNOPQRSTUVWXYZ',{...c,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''}]}),6);});
