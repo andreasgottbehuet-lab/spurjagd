@@ -114,3 +114,18 @@ test('Bei mehreren Teams zählen nur tatsächlich besuchte Stationen für Codepf
  assert.deepEqual(plan.teams.map(team=>team.stations[0].id),['a','b']);
  assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
 });
+
+test('Ungültige Alt-Codes an unbesuchten Stationen blockieren einen kurzen Parcours nicht',()=>{
+ const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{a:'007',b:'12',c:'',d:'9999'}};
+ const plan=createPlan(c);
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+});
+
+test('Nach Verlängerung der Spieldauer wird ein zuvor optionaler Code wieder Pflicht',()=>{
+ const c={...config(),players:3,groupSize:3,durationMinutes:30,stationCodes:{a:'007'}};
+ assert.deepEqual(auditPrintPacket(c,createPlan(c),'projekt-1'),[]);
+ c.durationMinutes=60;
+ const plan=createPlan(c);
+ assert.equal(plan.stopsPerTeam,3);
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Code')&&issue.includes('Wiese')));
+});
