@@ -166,6 +166,6 @@ test('Fragenrätsel akzeptieren ausschließlich geprüfte Fragen und Antworten',
  assert.equal(verifyRouteQuestions(changed),false);
  assert.equal(verifyCreativeRouteClue(changed),false);
  const wrong={...clue,rows:clue.rows.map(row=>({...row}))};
- wrong.rows[0].solution='Sonne';
+ wrong.rows[0].solution='Erfundene Antwort';
  assert.equal(verifyRouteQuestions(wrong),false);
 });
