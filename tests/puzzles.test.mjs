@@ -66,3 +66,20 @@ test('Beschreibung verbirgt den Zielnamen und eigene Rätsel bleiben erhalten',(
  assert.equal(custom.question,'Wo wächst das Gras?');
  assert.throws(()=>generateCreativeRouteClue('Wiese','','description',1),/Ortsbeschreibung/);
 });
+
+test('Alle hinterlegten Fragen ergeben ihre vorgesehenen Lösungsbuchstaben',()=>{
+ const alphabet='ABCDEFGHIJKLMNOPRSTUVWZ';
+ for(const letter of alphabet){
+   const clue=generateCreativeRouteClue(letter,'','questions',123);
+   assert.equal(clue.rows.length,1);
+   const row=clue.rows[0];
+   assert.equal(row.solution[row.letterIndex].toUpperCase(),letter);
+ }
+});
+test('Wegrätsel für einen Zielort sind unabhängig von der Gruppe',()=>{
+ const destination='Spielplatz';
+ const seed=hashSeed('projekt:destination:loc-1');
+ const a=generateCreativeRouteClue(destination,'Rutsche und Schaukeln','letters',seed);
+ const b=generateCreativeRouteClue(destination,'Rutsche und Schaukeln','letters',seed);
+ assert.deepEqual(a,b);
+});
