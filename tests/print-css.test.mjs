@@ -49,3 +49,5 @@ test('Spielleitung nutzt dynamische A5-Seiten für Routen, Codes und Lösungen',
 });
 
 test('Druckvorschau nennt Aufgaben-, Spielleitungs-, Etiketten- und Gesamtseiten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');for(const key of ['printManifest.taskSheets','printManifest.organizerSheets','printManifest.labelSheets','printManifest.minimumSheets','ORGANIZER_ITEMS_PER_A5_SHEET'])assert.ok(source.includes(key),key);});
+
+test('Mehrseitige Wegrätsel teilen Fragen in A5-Blöcke und nummerieren weiter',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('routePuzzle.rows.slice(routePage*ROUTE_QUESTIONS_PER_A5_SHEET'));assert.ok(source.includes('routePage*ROUTE_QUESTIONS_PER_A5_SHEET+i+1'));assert.ok(source.includes('routePage===routeSheetCount(destination,config)-1'));});
