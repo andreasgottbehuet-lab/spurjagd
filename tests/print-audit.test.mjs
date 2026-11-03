@@ -91,3 +91,5 @@ test('Druckprüfung erkennt manipulierte Stationsnamen und Beschreibungen',()=>{
 });
 
 test('Veränderte Gruppenprofile werden bei der Druckprüfung erkannt',()=>{const c=config();c.teamProfiles={'0':{age:'8–10',difficulty:'normal'}};const plan=createPlan(c);plan.teams[0].profile.difficulty='hard';assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Gruppenroute')));});
+
+test('Stationsnamen mit Rand-Leerzeichen behalten ihre Fragenrätsel-Einstellung',()=>{const c=config();c.locations[0].name='  Spielplatz  ';const plan=createPlan(c);assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);});
