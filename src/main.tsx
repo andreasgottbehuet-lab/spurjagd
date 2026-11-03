@@ -183,8 +183,8 @@ function App() {
           <nav className="steps" aria-label={tx('Planungsschritte','Planning steps')}>
             {[
               tx('Gruppe & Zeit', 'Group & time'),
-              tx('Standorte', 'Locations'),
               tx('Spielregeln', 'Game rules'),
+              tx('Standorte', 'Locations'),
               tx('Spielplan', 'Game plan'),
             ].map((label, i) => <button key={i} className={activeStep === i + 1 ? 'step-button active' : 'step-button'} onClick={() => setActiveStep(i + 1)} aria-current={activeStep === i + 1 ? 'step' : undefined}><span>{String(i + 1).padStart(2, '0')}</span>{label}</button>)}
           </nav>
@@ -193,15 +193,16 @@ function App() {
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
               <div className="form-grid">
-                <label>{t.children}<input min="1" max="100" type="number" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
-                <label>{t.size}<input min="1" max="10" type="number" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))}/></label>
+                <label className="range-field"><span>{t.children}: <strong>{players}</strong></span><input min="1" max="100" type="range" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
+                <label className="range-field"><span>{t.size}: <strong>{groupSize}</strong></span><input min="1" max="10" type="range" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))}/></label>
                 <label>{t.age}<select value={age} onChange={e => setAge(e.target.value)}><option>4–6</option><option>6–8</option><option>8–10</option><option>11–13</option><option>14+</option></select></label>
                 <label>{t.duration}<select value={duration} onChange={e => setDuration(Number(e.target.value))}><option value={30}>30 min</option><option value={45}>45 min</option><option value={60}>60 min</option><option value={90}>90 min</option><option value={120}>120 min</option><option value={180}>180 min</option></select></label>
               </div>
             </>}
-            {activeStep === 2 && <>
-              <div className="section-line"><span className="step">02</span><h2>{t.locations}</h2></div>
+            {activeStep === 3 && <>
+              <div className="section-line"><span className="step">03</span><h2>{t.locations}</h2></div>
               <p className="helper">{tx('Trage die Orte ein und beschreibe, was dort zu sehen ist. Später erzeugen wir daraus passende Rätsel.','Name each stop and describe what can be seen there. This will later be used to generate puzzles.')}</p>
+              <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>{const count=Number(e.target.value);setLocations(old=>count<old.length?old.slice(0,count):[...old,...Array.from({length:count-old.length},(_,i)=>({id:"loc-"+(nextLocationId+i),name:"",description:""}))]);if(count>locations.length)setNextLocationId(n=>n+count-locations.length);}}/></label>
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
@@ -211,8 +212,8 @@ function App() {
               )}</div>
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
             </>}
-            {activeStep === 3 && <>
-              <div className="section-line"><span className="step">03</span><h2>{tx('Spielziel und Zeitansätze','Game rules and timing')}</h2></div>
+            {activeStep === 2 && <>
+              <div className="section-line"><span className="step">02</span><h2>{tx('Spielziel und Zeitansätze','Game rules and timing')}</h2></div>
               <fieldset><legend>{t.outcome}</legend>
                 <label className="radio"><input type="radio" checked={goal==='locks'} onChange={()=>setGoal('locks')}/>{t.locks}</label>
                 <label className="radio"><input type="radio" checked={goal==='word'} onChange={()=>setGoal('word')}/>{t.word}</label>
