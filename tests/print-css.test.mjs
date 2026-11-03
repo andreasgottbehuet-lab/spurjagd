@@ -71,3 +71,11 @@ test('Kontrollliste zerlegt jede Blattzahl in Aufgabe, Antwort und Wegrätsel',(
 test('Druckvorschau erfordert Codes nur für tatsächlich besuchte Stationen',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('const visitedStationIds = new Set('));assert.ok(source.includes("visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]"));assert.ok(source.includes("visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]"));assert.ok(source.includes('Code optional.'));});
 
 test('Alle Routenwarnungen werden auf eigene A5-Blätter verteilt',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');assert.ok(source.includes("key={'cautions-'+page}"));assert.ok(source.includes('plan.value.cautions.slice(page*ORGANIZER_CAUTIONS_PER_A5_SHEET'));assert.ok(source.includes('className="print-caution"'));assert.match(css,/\.print-caution\s*\{[^}]*break-inside:avoid;/);});
+
+test('Keine widersprüchliche A4-Seitengröße im Druckstylesheet',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const declarations=[...css.matchAll(/@page\s*\{([^}]*)\}/g)].map(match=>match[1]);
+ assert.ok(declarations.length>0);
+ assert.ok(declarations.every(value=>/size\s*:\s*A5 portrait\s*;/.test(value)));
+ assert.doesNotMatch(css,/size\s*:\s*A4\b/);
+});
