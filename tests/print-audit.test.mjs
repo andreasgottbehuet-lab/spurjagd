@@ -145,8 +145,9 @@ test('Abweichende verbleibende Minuten blockieren trotz unveränderter Routen di
 
 test('Ein eigener Zielhinweis mit Satzzeichen zwischen Ortswörtern wird gesperrt',()=>{
  const c=config();
+ c.locations[1].name='Wiese über der Sabine';
  c.routeClueModes.b='custom';
- c.routeClueTexts.b='Geht zur Wiese!';
+ c.routeClueTexts.b='Geht zur Wiese, über der Sabine!';
  const plan=createPlan(c);
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('nennt bereits den Zielort')));
 });
