@@ -68,7 +68,7 @@ test('Beschreibung verbirgt den Zielnamen und eigene Rätsel bleiben erhalten',(
 });
 
 test('Alle hinterlegten Fragen ergeben ihre vorgesehenen Lösungsbuchstaben',()=>{
- const alphabet='ABCDEFGHIKLMNOPRSTUVWZ';
+ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
  for(const letter of alphabet){
    const clue=generateCreativeRouteClue(letter,'','questions',123);
    assert.equal(clue.rows.length,1);
@@ -82,4 +82,9 @@ test('Wegrätsel für einen Zielort sind unabhängig von der Gruppe',()=>{
  const a=generateCreativeRouteClue(destination,'Rutsche und Schaukeln','letters',seed);
  const b=generateCreativeRouteClue(destination,'Rutsche und Schaukeln','letters',seed);
  assert.deepEqual(a,b);
+});
+
+test('Fragenrätsel funktionieren auch bei Ortsnamen mit J, Q, X und Y',()=>{
+ const clue=generateCreativeRouteClue('Jux-Quiz','','questions',42);
+ assert.equal(clue.rows.map(r=>r.solution[r.letterIndex]).join('').toUpperCase(),'JUXQUIZ');
 });
