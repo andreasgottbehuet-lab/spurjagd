@@ -142,3 +142,18 @@ test('Abweichende verbleibende Minuten blockieren trotz unveränderter Routen di
  plan.remainderMinutes=999;
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Zeitberechnung')));
 });
+
+test('Ein eigener Zielhinweis mit Satzzeichen zwischen Ortswörtern wird gesperrt',()=>{
+ const c=config();
+ c.routeClueModes.b='custom';
+ c.routeClueTexts.b='Geht zur Wiese!';
+ const plan=createPlan(c);
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('nennt bereits den Zielort')));
+});
+
+test('Eine manipulierte Zeitberechnung lässt sich nicht durch gleiche Gesamtzeit verstecken',()=>{
+ const c=config(),plan=createPlan(c);
+ plan.estimatedMinutes+=2;
+ plan.remainderMinutes-=2;
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Zeitberechnung')));
+});
