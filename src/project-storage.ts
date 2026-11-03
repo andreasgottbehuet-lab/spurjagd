@@ -18,7 +18,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
   const integer = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
   const text = (v: unknown, max: number) => typeof v === 'string' && v.length <= max;
   if (!integer(p.players, 1, 100) || !integer(p.groupSize, 1, 10) || !integer(p.durationMinutes, 15, 480)) return false;
-  if (!text(p.age, 24) || !['locks', 'word', 'cards'].includes(String(p.goal))) return false;
+  if (!text(p.age, 24) || !(p.age as string).trim() || !['locks', 'word', 'cards'].includes(String(p.goal))) return false;
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
   if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start', 'origin'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
   if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
@@ -44,11 +44,11 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!places.every((row: unknown) => {
     if (!row || typeof row !== 'object') return false;
     const r = row as Record<string, unknown>;
-    return text(r.id, 80) && Boolean(r.id) && text(r.name, 80) && text(r.description, 400);
+    return text(r.id, 80) && Boolean((r.id as string).trim()) && text(r.name, 80) && text(r.description, 400);
   })) return false;
   const locations = places as Location[];
   return new Set(locations.map(x => x.id)).size === locations.length
-    && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLowerCase())).size === locations.filter(x=>x.name.trim()).length;
+    && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLocaleLowerCase('de'))).size === locations.filter(x=>x.name.trim()).length;
 }
 export function isSavedGame(raw: unknown): raw is SavedGame {
   if (!raw || typeof raw !== 'object') return false;
