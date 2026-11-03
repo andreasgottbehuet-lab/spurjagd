@@ -36,8 +36,5 @@ Status: **noch nicht physisch durchgeführt**. Diese Checkliste ist eine Arbeits
 
 Erst nach dokumentiertem Prüfergebnis kann dieser Punkt als abgeschlossen gelten.
 
-## Spielleitungsübersicht
-Die vier A5-Abschnitte sind Gruppen und Routen, Codes und Lösungen, Wegrätsel-Lösungen sowie Ausgabe- und Sicherheitskontrolle. Die Gruppenwege werden auf Blatt 1 geführt und nicht erneut abgedruckt. Bei vielen Teams oder langen Texten auf zusätzliche physische Druckseiten achten; der Manifestwert ist weiterhin ein rechnerischer Mindestumfang.
-
 ## Dynamische Spielleitungsseiten
 Gruppenrouten und Code-Lösungen werden in Zweiergruppen auf A5 verteilt. Jedes unterschiedliche Zielrätsel erhält eine eigene Lösungsseite. Dazu kommt eine Kontroll- und Sicherheitsseite. Die rechnerische Mindestseitenzahl ist vor dem Druck mit der Browser-Druckvorschau abzugleichen; sehr lange Texte können weitere physische Seiten erzeugen.
