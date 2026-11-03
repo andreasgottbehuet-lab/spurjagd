@@ -352,15 +352,15 @@ function App() {
                     <h2>Codes und Lösungen</h2>
                     {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                   </article>)}
-                  {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=><article className="print-sheet" key={'clue-'+destination}>
-                    <h1>Spielleitung – Wegrätsel</h1>
-                    <h2>Wegrätsel – Lösungen</h2>
-                    {[destination].map(destination=>{
-                      const target=locations.find(l=>l.name===destination);
-                      const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
-                      return <div key={destination}><strong>{destination}</strong><p>{clue.mode==='questions'?clue.rows?.map((row,i)=>(i+1)+'. '+row.solution+' (Buchstabe '+(row.letterIndex+1)+')').join(' | '):'Lösung: '+clue.answer}</p></div>;
-                    })}
-                  </article>)}
+                  {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).flatMap(destination=>{
+                    const target=locations.find(l=>l.name===destination);
+                    const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
+                    return Array.from({length:routeSheetCount(destination,config)},(_,page)=><article className="print-sheet" key={'clue-'+destination+'-'+page}>
+                      <h1>Spielleitung – Wegrätsel {page+1}/{routeSheetCount(destination,config)}</h1>
+                      <h2>Lösung: {destination}</h2>
+                      {clue.mode==='questions'?clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET,(page+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((row,i)=><p key={i}>{page*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {row.solution} (Buchstabe {row.letterIndex+1})</p>):<p>Lösung: {clue.answer}</p>}
+                    </article>);
+                  })}
                   <article className="print-sheet">
                     <h1>Spielleitung – Kontrolle</h1>
                     <h2>Ausgabe und Kontrolle</h2>
