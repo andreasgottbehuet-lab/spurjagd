@@ -156,3 +156,9 @@ test('Teams share station IDs but not mutable station objects',()=>{
  assert.notEqual(b.name,'Changed');
  assert.notEqual(c.locations[0].name,'Changed');
 });
+
+test('13 Kinder werden bei maximal drei pro Team ausgewogen verteilt',()=>{
+ const result=createPlan(config({players:13,groupSize:3}));
+ assert.deepEqual(result.teams.map(team=>team.memberCount),[3,3,3,2,2]);
+ assert.equal(result.teams.reduce((sum,team)=>sum+team.memberCount,0),13);
+});
