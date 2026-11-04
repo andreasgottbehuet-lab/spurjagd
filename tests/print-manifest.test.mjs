@@ -233,3 +233,34 @@ test('Ungültige Kennungen, Gruppenindizes und Blattzahlen werden vor dem Drucke
   assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes(fragment)),field+': '+String(value));
  }
 });
+
+test('A5-Druckfreigabe weist beschädigte Umschlagdaten einzeln zurück',()=>{
+ const plan=createPlan(config);
+ const cases=[
+  ['stationNumber',0,'Stationsnummer'],
+  ['stationNumber',999,'Stationsnummer'],
+  ['stationNumber',1.5,'Stationsnummer'],
+  ['stationTotal',0,'Stationsgesamtzahl'],
+  ['stationId','','leere Gruppen-'],
+  ['stationName','  ','leere Gruppen-'],
+  ['team','','leere Gruppen-'],
+  ['destination','  ','leere Gruppen-'],
+  ['id','unpassende-kennung','Umschlagkennung']
+ ];
+ for(const [field,value,expected] of cases){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0][field]=value;
+  const issues=auditPrintManifest(plan,manifest);
+  assert.ok(issues.some(issue=>issue.includes(expected)),field+'='+JSON.stringify(value)+': '+issues.join('; '));
+ }
+});
+
+test('Druckmanifest bleibt für alle gültigen Gruppengrößen prüfbar',()=>{
+ for(const groupSize of [1,2,3,4,5,8,10]){
+  for(const players of [1,7,12,29,100]){
+   const scenario={...config,players,groupSize,routeMode:'varied',startMode:'distributed'};
+   const plan=createPlan(scenario);
+   assert.deepEqual(auditPrintManifest(plan,createPrintManifest(plan,scenario),scenario),[],players+' Kinder / '+groupSize+' je Gruppe');
+  }
+ }
+});
