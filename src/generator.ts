@@ -72,6 +72,7 @@ export function createPlan(config: GameConfig): GamePlan {
   if (places.some(place => !place.name)) throw new Error('Jeder Standort benötigt einen Namen');
   if (new Set(places.map(place => place.name.toLocaleLowerCase('de'))).size !== places.length) throw new Error('Standortnamen müssen eindeutig sein');
   if (places.some(place=>place.name.length>80)) throw new Error('Standortnamen dürfen maximal 80 Zeichen enthalten');
+  if (places.some(place=>place.description.length>400)) throw new Error('Standortbeschreibungen dürfen maximal 400 Zeichen enthalten');
   if (new Set(places.map(place => place.id.trim())).size !== places.length || places.some(place=>!place.id.trim())) throw new Error('Stations-IDs müssen eindeutig und ausgefüllt sein');
   const sizes = teamSizes(players,groupSize);
   const teamCount = sizes.length;
