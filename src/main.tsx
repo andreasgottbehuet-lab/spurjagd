@@ -227,7 +227,7 @@ function App() {
       }else{
         const remaining=deleteGame(projectId);
         setProjects(remaining);
-        if(remaining[0]){setActiveGameId(remaining[0].id);applyGame(remaining[0]);}
+        if(remaining[0])applyGame(remaining[0]);
       }
     }catch(e){setStorageMessage('Löschen fehlgeschlagen: '+String(e));}
   };
