@@ -222,3 +222,8 @@ test('Organizer explains the shared age group without product-roadmap copy',()=>
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.match(source,/Alle Gruppen erhalten Aufgaben für die gemeinsam ausgewählte Altersklasse/);
 });
+
+test('Wizard offers explicit next-step navigation and live group summary',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ for(const label of ['Geplante Gruppen','Weiter zu den Spielregeln','Weiter zu den Standorten','Spielplan ansehen'])assert.ok(source.includes(label),label);
+});
