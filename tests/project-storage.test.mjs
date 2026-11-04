@@ -157,8 +157,8 @@ test('Beschädigte Browserdaten bleiben beim fehlgeschlagenen Speichern unverän
   removeItem:key=>memory.delete(key)
  };
  try{
-  assert.throws(()=>loadGames(),SyntaxError);
-  assert.throws(()=>saveGame(sample()),SyntaxError);
+  assert.throws(()=>loadGames(),/ungültiges JSON/);
+  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
   assert.equal(memory.get('spurjagd-projects-v1'),'{kaputt');
  }finally{
   if(old===undefined) delete globalThis.localStorage;
