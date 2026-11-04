@@ -58,6 +58,13 @@ try {
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Reload lost data');
   checks.push('Switch and reload');
+  await page.locator('#projectTitle').fill('Sofortiger Seitenwechsel');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Sofortiger Seitenwechsel');
+  checks.push('Immediate reload flushes pending edits');
+  await page.locator('#projectTitle').fill('Browser Testprojekt');
+  await page.locator('#projectTitle').blur();
+  await page.waitForFunction(() => [...document.querySelectorAll('#savedProjects option')].some(option => option.textContent?.includes('Browser Testprojekt')));
   writeFileSync('verification/project-invalid-backup.json', '{invalid');
   const countBeforeInvalid = await page.locator('#savedProjects option').count();
   await page.locator('input[type="file"]').setInputFiles('verification/project-invalid-backup.json');
