@@ -105,6 +105,29 @@ try {
   const routeSequences = routeLines.filter(line => /→/.test(line) && /\(.+\):/.test(line)).map(line => line.split(':').slice(1).join(':').trim());
   if (routeSequences.length !== 4 || new Set(routeSequences).size < 2)
     failures.push('A5 reference case must print four team routes with at least two different sequences');
+  // Visual acceptance: three-word puzzle must replace, not supplement, three independent tasks.
+  const wordSheets=page.locator('.print-child-sheet[data-sheet-kind="task"]:has(.print-three-word-grid)');
+  if (await wordSheets.count() === 0) failures.push('No combined three-number word-search worksheet printed');
+  for(const sheet of await wordSheets.all()){
+    if(await sheet.locator('.print-task').count()!==1)
+      failures.push('Combined word-search sheet also contains unrelated individual tasks');
+    if(await sheet.locator('.print-three-word-grid .wordsearch-row').count()!==12)
+      failures.push('Combined word-search does not have twelve rows');
+    if(await sheet.locator('.print-three-word-grid .wordsearch-cell').count()!==144)
+      failures.push('Combined word-search does not have 144 cells');
+    if(!(await sheet.innerText()).includes('Reihenfolge:'))
+      failures.push('Combined word-search lacks a digit ordering rule');
+  }
+  const redSheets=page.locator('.print-child-sheet[data-team-color="rot"]');
+  const blueSheets=page.locator('.print-child-sheet[data-team-color="blau"]');
+  if(!await redSheets.count() || !await blueSheets.count()) failures.push('Red and blue A5 team sheets missing');
+  for(const [team,selector] of [['rot','.print-child-sheet[data-team-color="rot"]'],['blau','.print-child-sheet[data-team-color="blau"]']]){
+    const color=await page.locator(selector).first().evaluate(el=>getComputedStyle(el).borderTopColor);
+    if(!color || color==='rgb(0, 0, 0)' || color==='rgba(0, 0, 0, 0)')
+      failures.push('Missing visible '+team+' team border color');
+    if(!await page.locator('.team-route-line[data-team-color="'+team+'"]').count())
+      failures.push('Organizer route lacks '+team+' team color');
+  }
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
