@@ -248,3 +248,9 @@ test('Lange Zielnamen bleiben reproduzierbar und in korrekter Reihenfolge',()=>{
   }
  }
 });
+
+test('Fragenblatt mit Klartext-Ziel ist nicht druckfähig',()=>{
+ const clue=generateCreativeRouteClue('Feuerwehr','','questions',19);
+ clue.rows[0].question='Feuerwehr';
+ assert.equal(verifyCreativeRouteClue(clue),false);
+});
