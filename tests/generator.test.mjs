@@ -213,3 +213,19 @@ test('Rückkehr zum Start bei nur einer Station wird ausdrücklich gekennzeichne
  const longer=createPlan(config({durationMinutes:60,finishMode:'start'}));
  assert.equal(longer.cautions.some(message=>message.includes('Ziel identisch mit der einzigen Rätselstation')),false);
 });
+
+test('Stationsreihenfolge stimmt für alle Start- und Richtungsvarianten',()=>{
+ for(let count=1;count<=20;count++){
+  const locations=Array.from({length:count},(_,i)=>({id:String(i),name:'Ort '+i,description:''}));
+  for(const startMode of ['shared','distributed']) for(const routeMode of ['same','varied']){
+   const plan=createPlan(config({locations,players:24,groupSize:2,durationMinutes:480,startMode,routeMode}));
+   assert.equal(plan.stopsPerTeam,count);
+   for(let i=0;i<plan.teams.length;i++){
+    const start=startMode==='shared'?0:i%count;
+    const direction=routeMode==='varied'&&i%2===1?-1:1;
+    const expected=Array.from({length:count},(_,j)=>String((start+direction*j+count*j)%count));
+    assert.deepEqual(plan.teams[i].stations.map(station=>station.id),expected);
+   }
+  }
+ }
+});
