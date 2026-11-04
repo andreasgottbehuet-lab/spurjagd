@@ -241,10 +241,10 @@ test('Ungültige Kennungen, Gruppenindizes und Blattzahlen werden vor dem Drucke
   ['sheetCount',0,'ungültige Blattzahl'],
   ['sheetCount',2.5,'ungültige Blattzahl'],
   ['sheetCount',Number.NaN,'ungültige Blattzahl'],
-  ['stationNumber',0,'ungültige Stationsnummer'],
-  ['stationNumber',1.5,'ungültige Stationsnummer'],
-  ['stationTotal',0,'ungültige Gesamtzahl'],
-  ['stationTotal',Number.NaN,'ungültige Gesamtzahl']
+  ['stationNumber',0,'Stationsnummer'],
+  ['stationNumber',1.5,'Stationsnummer'],
+  ['stationTotal',0,'Stationsgesamtzahl'],
+  ['stationTotal',Number.NaN,'Stationsgesamtzahl']
  ];
  for(const [field,value,fragment] of cases){
   const manifest=createPrintManifest(plan);
