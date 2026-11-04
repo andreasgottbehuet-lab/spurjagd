@@ -179,3 +179,10 @@ test('A5-Geometriedatensätze ohne Blattkennung werden abgewiesen',()=>{
  const sheet={id:'',contentWidth:120*px,contentHeight:180*px,scrollWidth:120*px,scrollHeight:180*px};
  assert.ok(auditA5PageBounds([sheet],px).some(issue=>issue.includes('ohne Kennung')));
 });
+
+test('Doppelte A5-Blattkennungen verhindern die geometrische Freigabe',()=>{
+ const px=96/25.4;
+ const sheet={id:'A',contentWidth:120*px,contentHeight:180*px,scrollWidth:120*px,scrollHeight:180*px};
+ assert.ok(auditA5PageBounds([sheet,{...sheet}],px).some(issue=>issue.includes('doppelte Blattkennungen')));
+ assert.deepEqual(auditA5PageBounds([sheet,{...sheet,id:'B'}],px),[]);
+});
