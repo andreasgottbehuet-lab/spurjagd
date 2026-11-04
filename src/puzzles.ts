@@ -1,5 +1,5 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch';
 export type AgeLevel = 'young' | 'middle' | 'older';
 export interface Puzzle {
   id: string;
@@ -10,6 +10,7 @@ export interface Puzzle {
   explanation: string;
   expectedDigit: number;
   render?: { symbol: string; count: number };
+  wordGrid?: { rows: string[]; startRow: number; startCol: number; deltaRow: number; deltaCol: number; word: string };
 }
 export interface StationChallenge {
   stationId: string;
@@ -46,6 +47,23 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
+  if (kind === 'wordsearch') {
+    const word = DIGIT_WORDS[target];
+    const size = age === 'young' ? 8 : age === 'middle' ? 10 : 12;
+    const directions = age === 'young' ? [[0,1],[1,0]] : age === 'middle'
+      ? [[0,1],[1,0],[1,1],[-1,1]]
+      : [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+    const candidates: {r:number;c:number;dr:number;dc:number}[] = [];
+    for (const [dr,dc] of directions) for (let r=0;r<size;r++) for(let c=0;c<size;c++) {
+      if(r+(word.length-1)*dr>=0 && r+(word.length-1)*dr<size && c+(word.length-1)*dc>=0 && c+(word.length-1)*dc<size)
+        candidates.push({r,c,dr,dc});
+    }
+    const selected=candidates[chooseInt(rng,0,candidates.length-1)];
+    const grid=Array.from({length:size},()=>Array.from({length:size},()=>ALPHABET[chooseInt(rng,0,25)]));
+    for(let i=0;i<word.length;i++) grid[selected.r+i*selected.dr][selected.c+i*selected.dc]=word[i];
+    const rows=grid.map(row=>row.join(''));
+    return {id,kind,instruction:'Finde ein ausgeschriebenes Zahlwort im Buchstabengitter. Die Zahl ist deine Code-Ziffer.',question:age==='young'?'Suche waagerecht oder senkrecht.':age==='middle'?'Suche auch diagonal.':'Suche waagerecht, senkrecht und diagonal – auch rückwärts.',hint:'Die Buchstaben stehen direkt nebeneinander in einer geraden Linie.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,wordGrid:{rows,startRow:selected.r,startCol:selected.c,deltaRow:selected.dr,deltaCol:selected.dc,word}};
+  }
   if (kind === 'symbols') {
     // Counted symbols are placed on the worksheet; zero is represented explicitly.
     const symbol = SYMBOLS[chooseInt(rng, 0, SYMBOLS.length - 1)];
@@ -97,6 +115,13 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
 export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   if (!Number.isInteger(puzzle.expectedDigit) || puzzle.expectedDigit < 0 || puzzle.expectedDigit > 9) return false;
   const target = puzzle.expectedDigit;
+  if (puzzle.kind === 'wordsearch') {
+    const g=puzzle.wordGrid;
+    if(!g || g.word!==DIGIT_WORDS[target] || !g.rows.length || g.rows.some(row=>row.length!==g.rows.length || !/^[A-Z]+$/.test(row))) return false;
+    const {startRow:r,startCol:c,deltaRow:dr,deltaCol:dc}=g;
+    if(!Number.isInteger(r)||!Number.isInteger(c)||!Number.isInteger(dr)||!Number.isInteger(dc)||(dr===0&&dc===0)||Math.abs(dr)>1||Math.abs(dc)>1) return false;
+    return [...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter);
+  }
   if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0 && puzzle.render.symbol.length <= 4 && puzzle.render.symbol.trim().length > 0;
   if (puzzle.kind === 'arithmetic') {
     const q = puzzle.question.match(/^(-?\d+)\s*([+−×])\s*(-?\d+)(?:\s*−\s*\((-?\d+)\)|\s*−\s*(-?\d+))?\s*=\s*\?$/);
@@ -119,7 +144,10 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   if (!stationId.trim()) throw new Error('Stations-ID fehlt');
   // Younger children should not need Caesar ciphers to open a lock.
   // Keep three independent digits and the existing deterministic seeds.
-  const kinds: PuzzleKind[] = age === 'young' ? ['arithmetic','symbols','arithmetic'] : ['arithmetic','symbols','cipher'];
+  const variants: PuzzleKind[][] = age === 'young'
+    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arithmetic','symbols']]
+    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch']];
+  const kinds=variants[hashSeed(projectSeed+':'+stationId+':types')%variants.length];
   const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
   return { stationId, code, puzzles };
