@@ -51,7 +51,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   if (kind === 'sequence') {
     // The missing final number is always the exact target digit.
     const step=age==='young'?1:chooseInt(rng,1,age==='middle'?3:5);
-    const ascending=rng()<0.5;
+    const ascending=target>=3*step && rng()<0.5;
     const values=Array.from({length:4},(_,i)=>ascending?target-(3-i)*step:target+(3-i)*step);
     return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,3).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
   }
