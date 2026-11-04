@@ -127,21 +127,7 @@ export function replaceLastGame(oldId:string,replacement:SavedGame):SavedGame[] 
  if(!isSavedGame(replacement)||replacement.id===oldId) throw new Error('Ersatzprojekt ungültig.');
  const existing=loadGames();
  if(existing.length!==1||existing[0].id!==oldId) throw new Error('Das Projekt ist nicht das letzte gespeicherte Projekt.');
- const previous=JSON.stringify(existing);
- const previousActive=localStorage.getItem(ACTIVE);
- localStorage.setItem(KEY,JSON.stringify([replacement]));
- try{
-  localStorage.setItem(ACTIVE,replacement.id);
- }catch(error){
-  try{
-   localStorage.setItem(KEY,previous);
-   if(previousActive===null)localStorage.removeItem(ACTIVE);
-   else localStorage.setItem(ACTIVE,previousActive);
-  }catch{
-   throw new Error('Projektwechsel fehlgeschlagen; Wiederherstellung der lokalen Daten konnte nicht bestätigt werden.');
-  }
-  throw error;
- }
+ persistProjects([replacement],replacement.id);
  return [replacement];
 }
 export function activeGameId(): string | null { return localStorage.getItem(ACTIVE); }
