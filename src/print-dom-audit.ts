@@ -206,7 +206,7 @@ export function auditRenderedOrganizerSecrets(expected:RenderedOrganizerSecret[]
   if(!planned || item.envelopeId!==planned.envelopeId ||
      item.code!==planned.code || item.destination!==planned.destination)
    issues.push('Spielleitungs-Packliste: Schloss-Code oder nächster Zielort für Umschlag '+(index+1)+' ist falsch.');
-  if(!/^\\d{3}$/.test(item.code)||!item.destination.trim()||item.destination!==item.destination.trim())
+  if(!/^\d{3}$/.test(item.code)||!item.destination.trim()||item.destination!==item.destination.trim())
    issues.push('Spielleitungs-Packliste: ungültiger Schloss-Code oder Zielort in Umschlag '+(index+1)+'.');
  });
  return [...new Set(issues)];
