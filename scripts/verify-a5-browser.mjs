@@ -25,6 +25,7 @@ try {
   if (browserErrors.length) throw new Error('Browser JavaScript errors: ' + browserErrors.join(' | '));
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
+    await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
     const warnings = await page.locator('.warnings').allTextContents();
     throw new Error('Printable packet unavailable: ' + warnings.join(' | '));
   }
@@ -60,7 +61,10 @@ try {
   const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
-  if (failures.length) throw new Error(failures.join('\n'));
+  if (failures.length) {
+    await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
+    throw new Error(failures.join('\n'));
+  }
   console.log('A5 browser print verified:', expected, 'pages');
 } finally {
   await browser.close();
