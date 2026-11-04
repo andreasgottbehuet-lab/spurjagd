@@ -25,6 +25,7 @@ test('Ungültige und falsche Backups werden abgewiesen',()=>{
   assert.throws(()=>parseGameBackup('{"format":"anderes","project":{}}'),/Kein Spurjagd/);
   assert.throws(()=>parseGameBackup('{"format":"spurjagd-backup-1","project":{"version":1}}'),/Ungültige/);
   assert.throws(()=>parseGameBackup('x'.repeat(200_001)),/zu groß/);
+  assert.throws(()=>parseGameBackup('{invalid'),/kein gültiges JSON/);
 });
 test('Routendaten und Standorte werden überprüft',()=>{
   assert.equal(isGameConfig({...sample().config,routeMode:'random'}),false);
