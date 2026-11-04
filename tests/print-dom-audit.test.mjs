@@ -133,5 +133,5 @@ test('A5 printable area catches over-wide and over-tall sheets',()=>{
  assert.deepEqual(auditA5PageBounds([valid],px),[]);
  assert.ok(auditA5PageBounds([{...valid,id:'B',scrollWidth:130*px}],px).some(x=>x.includes('128 mm')));
  assert.ok(auditA5PageBounds([{...valid,id:'C',scrollHeight:192*px}],px).some(x=>x.includes('190 mm')));
- assert.ok(auditA5PageBounds([valid],0).some(x=>x.includes('Skalierung')));
+ assert.ok(auditA5PageBounds([valid],0).some(x=>x.includes('skalierung')));
 });
