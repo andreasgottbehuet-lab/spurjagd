@@ -257,16 +257,16 @@ try {
     elements.map(element => element.querySelector('p')?.textContent?.trim() ?? ''));
   for (let index = 0; index < printedHeaders.length; index++) {
     const pageNumber = categories.organizer + index + 1;
-    const expectedHeader = printedHeaders[index].replace(/\\s+/g, ' ');
-    const pdfText = (pdfPageTexts[pageNumber - 1] ?? '').replace(/\\s+/g, ' ');
+    const expectedHeader = printedHeaders[index].replace(/\s+/g, ' ');
+    const pdfText = (pdfPageTexts[pageNumber - 1] ?? '').replace(/\s+/g, ' ');
     if (!expectedHeader || !pdfText.includes(expectedHeader))
       failures.push('A5 PDF page ' + pageNumber + ' differs from the team/station/sheet header in the browser');
   }
   // The organizer's packing checklist must include every envelope line.
   const checklistRows = await page.locator('.print-checklist-row').allTextContents();
-  const normalizedOrganizer = organizerText.replace(/\\s+/g, ' ');
+  const normalizedOrganizer = organizerText.replace(/\s+/g, ' ');
   for (let index = 0; index < checklistRows.length; index++) {
-    const row = checklistRows[index].replace(/\\s+/g, ' ').trim();
+    const row = checklistRows[index].replace(/\s+/g, ' ').trim();
     if (!row || !normalizedOrganizer.includes(row))
       failures.push('A5 organizer checklist is missing envelope row ' + (index + 1));
   }
@@ -287,8 +287,8 @@ try {
   const labelDescriptions = await page.locator('.print-label span').allTextContents();
   for (let index = 0; index < labelDescriptions.length; index++) {
     const pageNumber = Math.floor(index / 4);
-    const expectedDescription = labelDescriptions[index].replace(/\\s+/g, ' ').trim();
-    const printedPage = (labelPages[pageNumber] ?? '').replace(/\\s+/g, ' ');
+    const expectedDescription = labelDescriptions[index].replace(/\s+/g, ' ').trim();
+    const printedPage = (labelPages[pageNumber] ?? '').replace(/\s+/g, ' ');
     if (!expectedDescription || !printedPage.includes(expectedDescription))
       failures.push('A5 envelope label ' + (index + 1) + ' lost its sheet count or sequence');
   }
