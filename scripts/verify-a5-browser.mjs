@@ -133,6 +133,25 @@ try {
   const restoredPacking = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredPacking.calls !== 1 || restoredPacking.alerts.length)
     failures.push('Valid A5 organizer packing count did not restore printing');
+  // A duplicated label must be rejected even if the organizer list is
+  // correct; remove the temporary duplicate before PDF generation.
+  await page.evaluate(() => {
+    const label = document.querySelector('.print-label');
+    if (!label) throw new Error('Missing A5 label for duplicate test');
+    label.parentElement?.appendChild(label.cloneNode(true));
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const duplicateLabel = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (duplicateLabel.calls !== 0 || duplicateLabel.alerts.length === 0)
+    failures.push('Duplicated A5 envelope label did not block printing');
+  await page.evaluate(() => {
+    const labels = document.querySelectorAll('.print-label');
+    labels[labels.length - 1]?.remove();
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
