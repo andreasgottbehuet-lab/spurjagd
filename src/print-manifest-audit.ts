@@ -19,6 +19,7 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest,config?:
  if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.stationNumber)||e.stationNumber<1||e.stationNumber>e.stationTotal)) errors.push('Umschlag hat eine Stationsnummer außerhalb der Gruppenroute.');
  if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.stationTotal)||e.stationTotal<1)) errors.push('Umschlag hat keine gültige Stationsgesamtzahl.');
  if(manifest.envelopes.some(e=>!e.stationId.trim()||!e.stationName.trim()||!e.team.trim()||!e.destination.trim())) errors.push('Umschlag enthält eine leere Gruppen-, Stations- oder Zielangabe.');
+ if(manifest.envelopes.some(e=>[e.id,e.team,e.stationId,e.stationName,e.destination].some(value=>value!==value.trim()))) errors.push('Umschlag enthält führende oder nachgestellte Leerzeichen in einer Kennzeichnung.');
  if(manifest.envelopes.some(e=>e.id!==e.teamIndex+'-'+e.stationId)) errors.push('Umschlagkennung passt nicht zur Gruppe und Station.');
  if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.teamIndex)||e.teamIndex<0||e.teamIndex>=plan.teams.length)) errors.push('Umschlag hat einen ungültigen Gruppenindex.');
 
