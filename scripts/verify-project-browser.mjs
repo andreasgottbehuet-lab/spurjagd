@@ -31,6 +31,14 @@ try {
   await page.waitForFunction(previous => document.querySelector('#savedProjects')?.value !== previous && document.querySelector('#savedProjects')?.value, originalId);
   if (await page.locator('#savedProjects').inputValue() === originalId) throw new Error('New project ID');
   checks.push('New project');
+  await page.locator('#projectTitle').fill('Neuer Entwurf mit ungespeicherter Änderung');
+  await page.getByRole('button', { name: 'Neu', exact: true }).click();
+  await page.locator('#savedProjects').selectOption(originalId);
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
+  const titles = await page.locator('#savedProjects option').allTextContents();
+  if (!titles.some(title => title.includes('Neuer Entwurf mit ungespeicherter Änderung')))
+    throw new Error('Immediate project switch lost unsaved edits');
+  checks.push('Save before project switch');
   await page.locator('#savedProjects').selectOption(originalId);
   await page.locator('#projectTitle').waitFor({ state: 'visible' });
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
