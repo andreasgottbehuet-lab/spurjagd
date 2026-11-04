@@ -272,6 +272,8 @@ try {
   }
   if (checklistRows.length !== envelopeGroups.size)
     failures.push('A5 organizer checklist has ' + checklistRows.length + ' rows for ' + envelopeGroups.size + ' envelopes');
+  if (labelIds.length !== checklistRows.length)
+    failures.push('A5 packing checklist and printed envelope labels have different counts');
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.
   const labelNames = await page.locator('.print-label strong').allTextContents();
