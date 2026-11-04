@@ -224,8 +224,10 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   return { stationId, code, puzzles };
 }
 export function codeFromPuzzles(challenge: StationChallenge): string {
-  if (challenge.puzzles.some(p => !verifyDigitPuzzle(p))) throw new Error('Rätselprüfung fehlgeschlagen');
-  return challenge.puzzles.map(p=>String(p.expectedDigit)).join('');
+  if (!validCode(challenge.code) || challenge.puzzles.length!==3 || challenge.puzzles.some(p=>!verifyDigitPuzzle(p))) throw new Error('Rätselprüfung fehlgeschlagen');
+  const code=challenge.puzzles.map(p=>String(p.expectedDigit)).join('');
+  if(code!==challenge.code) throw new Error('Schloss-Code stimmt nicht mit den Rätseln überein');
+  return code;
 }
 
 /** Reversible route clue: the answer is the exact destination, including spaces. */
