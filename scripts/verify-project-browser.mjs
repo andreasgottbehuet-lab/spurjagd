@@ -27,6 +27,8 @@ try {
   if (await page.locator('#savedProjects').inputValue() === originalId) throw new Error('New project ID');
   checks.push('New project');
   await page.locator('#savedProjects').selectOption(originalId);
+  await page.locator('#projectTitle').waitFor({ state: 'visible' });
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Switch lost data');
   await page.reload({ waitUntil: 'networkidle' });
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Reload lost data');
