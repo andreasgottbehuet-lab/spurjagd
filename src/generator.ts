@@ -99,6 +99,7 @@ export function createPlan(config: GameConfig): GamePlan {
     };
   });
   const cautions: string[] = [];
+  if (players > 1 && sizes.includes(1)) cautions.push('Mindestens eine Gruppe besteht aus nur einem Kind. Gruppeneinteilung und Aufsicht vor Ort prüfen.');
   // Compare scheduled station slots, assuming all teams start at the same time.
   // This is a warning only; real walking and puzzle times may vary.
   for (let slot = 0; slot < stopsPerTeam; slot++) {
