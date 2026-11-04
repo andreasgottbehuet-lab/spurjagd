@@ -183,6 +183,16 @@ test('Chromium PDF audit compares organizer, children and labels to rendered pac
  assert.ok(script.includes('Organizer-only solution or envelope checklist leaked'));
 });
 
+test('A5 PDF audit reconciles packing checklist and label descriptions',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes("page.locator('.print-checklist-row')"));
+ assert.ok(script.includes("page.locator('.print-label span')"));
+ assert.ok(script.includes('checklistRows.length !== envelopeGroups.size'));
+ assert.ok(script.includes('labelDescriptions.length'));
+ assert.ok(script.includes('normalizedOrganizer.includes(row)'));
+ assert.ok(script.includes('printedPage.includes(expectedDescription)'));
+});
+
 test('Chromium acceptance archives visual A5 page previews',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes("spawnSync('pdftoppm'"));
