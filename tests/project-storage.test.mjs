@@ -489,3 +489,9 @@ test('Browserprojekt-Pruefung wartet auf echte Zustandsaenderungen',()=>{
  assert.ok(script.includes('Import fehlgeschlagen'));
  assert.ok(script.includes('waitForTimeout(850)')); // Negative assertion: allow the 650ms autosave debounce to elapse.
 });
+
+test('Deletion confirmation explains irreversible loss in both languages',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(ui.includes('Die Löschung kann nicht rückgängig gemacht werden.'));
+ assert.ok(ui.includes('This cannot be undone.'));
+});
