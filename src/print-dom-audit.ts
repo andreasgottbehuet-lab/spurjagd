@@ -47,6 +47,12 @@ export interface ExpectedEnvelope {
 export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:RenderedEnvelopeSheet[]):string[] {
  const issues:string[]=[];
  const expectedIds=new Set(expected.map(envelope=>envelope.id));
+ if(expectedIds.size!==expected.length) issues.push('Druckmanifest enthält doppelte Umschlagkennungen.');
+ for(const envelope of expected){
+  if(!envelope.id.trim()) issues.push('Druckmanifest enthält eine leere Umschlagkennung.');
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3)
+   issues.push('Umschlag '+(envelope.id||'(leer)')+': ungültige Anzahl Kinderblätter.');
+ }
  for(const sheet of actual){
   if(!expectedIds.has(sheet.envelopeId)) issues.push('Druckblatt ohne gültige Umschlagzuordnung: '+(sheet.envelopeId||'(leer)'));
   if(!['task','answer','route'].includes(sheet.kind)) issues.push('Druckblatt mit ungültiger Blattart: '+(sheet.kind||'(leer)'));
