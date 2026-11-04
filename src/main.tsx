@@ -215,7 +215,7 @@ function App() {
       setStorageMessage('Löschen gesperrt: Die lokale Projektliste ist nicht sicher verfügbar.');
       return;
     }
-    if (!window.confirm(tx('Dieses Projekt wirklich löschen?', 'Delete this project?'))) return;
+    if (!window.confirm(tx('Dieses Projekt wirklich löschen? Vorher bei Bedarf über Sichern eine JSON-Datei herunterladen. Die Löschung kann nicht rückgängig gemacht werden.', 'Delete this project?'))) return;
     try {
       const stored=loadGames();
       if(stored.length===1 && stored[0].id===projectId){
