@@ -153,6 +153,10 @@ try {
     window.__a5PrintCalls = 0;
     window.__a5Alerts = [];
   });
+  await printButton.click();
+  const duplicateRestored = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (duplicateRestored.calls !== 1 || duplicateRestored.alerts.length)
+    failures.push('A5 print action did not recover after duplicate label removal');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
