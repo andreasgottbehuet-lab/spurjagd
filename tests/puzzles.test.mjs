@@ -35,7 +35,7 @@ test('Manipulierte Rätsel und ungültige Codes werden abgewiesen', () => {
   assert.equal(validCode('1234'),false);
   assert.throws(()=>generateStationChallenge('one','12','young',4),/drei Ziffern/);
   const challenge = generateStationChallenge('one','987','older',4);
-  challenge.puzzles[0].question='9 + 9 = ?';
+  challenge.puzzles[0].expectedDigit=(challenge.puzzles[0].expectedDigit+1)%10;
   assert.equal(verifyDigitPuzzle(challenge.puzzles[0]),false);
   assert.throws(()=>codeFromPuzzles(challenge),/Rätselprüfung/);
 });
