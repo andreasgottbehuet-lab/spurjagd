@@ -84,7 +84,7 @@ export function loadGames(): SavedGame[] {
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
   const projects=items as SavedGame[];
   if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
-  return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return [...projects].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
 }
 /** Writes project list and active selection together, restoring both on a partial failure. */
 function persistProjects(next:SavedGame[],active:string|null):void {
