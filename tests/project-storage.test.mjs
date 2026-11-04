@@ -547,3 +547,23 @@ test('Project list sorts timestamps with different UTC offsets correctly',()=>{
   assert.deepEqual(loadGames().map(x=>x.id),['newer','older']);
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Atomic storage rejection preserves original error without unnecessary rollback writes',()=>{
+ const previous=globalThis.localStorage;
+ const memory=new Map();
+ let rejectedWrites=0;
+ globalThis.localStorage={
+  getItem:key=>memory.get(key)??null,
+  setItem:(key,value)=>{
+   if(key==='spurjagd-projects-v1' && memory.has(key)){rejectedWrites++;throw new Error('quota exceeded');}
+   memory.set(key,String(value));
+  },
+  removeItem:key=>memory.delete(key)
+ };
+ try{
+  saveGame(sample());
+  assert.throws(()=>saveGame({...sample(),title:'Updated'}),/quota exceeded/);
+  assert.equal(rejectedWrites,1);
+  assert.equal(loadGames()[0].title,'Geburtstag');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
