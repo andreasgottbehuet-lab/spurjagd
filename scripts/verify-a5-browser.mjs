@@ -32,6 +32,9 @@ try {
     await next.click();
   }
   if (browserErrors.length) throw new Error('Browser JavaScript errors: ' + browserErrors.join(' | '));
+  const printButton = page.locator('button.print');
+  if (await printButton.count() !== 1 || await printButton.isDisabled())
+    throw new Error('A5 print button is missing or disabled after entering valid fixture codes');
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
