@@ -96,6 +96,11 @@ try {
     if (!previewText.includes('Danach:'))
       failures.push('Organizer packing preview is missing next destinations');
   }
+  // Confirm that the printed organizer pages actually contain distinct team routes.
+  const routeLines = await page.locator('.print-organizer-sheet').filter({ hasText: 'Gruppen und Routen' }).locator('p').allTextContents();
+  const routeSequences = routeLines.filter(line => /→/.test(line) && /\(.+\):/.test(line)).map(line => line.split(':').slice(1).join(':').trim());
+  if (routeSequences.length !== 4 || new Set(routeSequences).size < 2)
+    failures.push('A5 reference case must print four team routes with at least two different sequences');
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
