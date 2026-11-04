@@ -190,8 +190,8 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   // Younger children should not need Caesar ciphers to open a lock.
   // Keep three independent digits and the existing deterministic seeds.
   const variants: PuzzleKind[][] = age === 'young'
-    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arrowpath','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath']]
-    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','wordsearch','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols']];
+    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arithmetic','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath']]
+    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','symbols','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols']];
   const kinds=variants[hashSeed(projectSeed+':'+stationId+':types')%variants.length];
   const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
