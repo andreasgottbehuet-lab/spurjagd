@@ -196,6 +196,9 @@ test('A5 PDF audit reconciles packing checklist and label descriptions',()=>{
  assert.ok(script.includes('A5 organizer PDF is missing packing-list lock code'));
  assert.ok(script.includes('A5 organizer PDF is missing packing-list destination'));
  assert.ok(script.includes('labelDescriptions.length'));
+ assert.ok(script.includes('A5 envelope label and organizer packing-list identity differ'));
+ assert.ok(script.includes('labelParts[1] !== checklistParts[1]'));
+ assert.ok(script.includes('labelCount[1] !== packingCount[1]'));
  assert.ok(script.includes('normalizedOrganizer.includes(part.trim())'));
  assert.ok(script.includes('printedPage.includes(expectedDescription)'));
 });
