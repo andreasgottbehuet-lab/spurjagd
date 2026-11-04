@@ -264,3 +264,13 @@ test('Jüngere Kinder lösen dreistellige Codes ohne Buchstabenverschiebung',()=
  const older=generateStationChallenge('station-older','007','middle',2026);
  assert.equal(older.puzzles[2].kind,'cipher');
 });
+
+test('Alle 1000 Schlosskombinationen bleiben für jüngere Kinder lösbar',()=>{
+ for(let number=0;number<1000;number++){
+  const code=String(number).padStart(3,'0');
+  const result=generateStationChallenge('young-station',code,'young',42);
+  assert.equal(codeFromPuzzles(result),code);
+  assert.equal(result.puzzles.some(p=>p.kind==='cipher'),false);
+  assert.ok(result.puzzles.every(verifyDigitPuzzle));
+ }
+});
