@@ -1,4 +1,4 @@
-import { findDigitWords, hashSeed, seededRandom } from './puzzles';
+import { findDigitWords, hashSeed, seededRandom } from './puzzles.ts';
 
 const WORDS = ['NULL','EINS','ZWEI','DREI','VIER','FUENF','SECHS','SIEBEN','ACHT','NEUN'] as const;
 /** One grid contains exactly the three requested number words. Their top-to-bottom order is the lock code. */
