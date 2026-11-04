@@ -259,3 +259,8 @@ test('Wegrätsel-Eingabe erklärt Geheimhaltung des Zielorts',()=>{
  assert.ok(source.includes('Der Ortsname ist die Lösung des Wegrätsels'));
  assert.ok(source.includes('Route clues – preview by destination'));
 });
+
+test('Eigene Wegrätsel sind bereits im Eingabefeld auf 400 Zeichen begrenzt',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('maxLength={400} value={routeClueTexts[location.id]'));
+});
