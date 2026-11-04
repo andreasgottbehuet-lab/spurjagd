@@ -1,3 +1,4 @@
+import { nextProjectRevision } from './project-revision';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
@@ -163,7 +164,7 @@ function App() {
     const timeout = window.setTimeout(() => {
       if (storageConflict.current) return;
       try {
-        const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:new Date().toISOString(), config: { ...config, locations:config.locations.map(x=>({...x})) } };
+        const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null), config: { ...config, locations:config.locations.map(x=>({...x})) } };
         const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
         const saved = saveGame(project,expected);
         savedRevision.current={id:projectId,updatedAt:project.updatedAt};
@@ -180,7 +181,7 @@ function App() {
     const flushOnExit=()=>{
       if(storageConflict.current) return;
       try{
-        const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+        const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
         const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
         saveGame(current,expected);
         savedRevision.current={id:projectId,updatedAt:current.updatedAt};
@@ -202,7 +203,7 @@ function App() {
     if(storageConflict.current){setStorageMessage('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return false;}
     if (!storageReady){setStorageMessage('Projektwechsel gesperrt: Lokale Speicherung ist nicht verfügbar. Bitte zuerst eine JSON-Sicherung exportieren.');return false;}
     try {
-      const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+      const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
       setProjects(saveGame(current,expected));
       savedRevision.current={id:projectId,updatedAt:current.updatedAt};
@@ -215,7 +216,7 @@ function App() {
   const newProject = () => {
     if(!saveCurrentBeforeSwitch()) return;
     const fresh: SavedGame = {
-      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:new Date().toISOString(),
+      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),
       config:createDefaultGameConfig(),
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
@@ -232,7 +233,7 @@ function App() {
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:undefined;
       if(expected===undefined) throw new Error('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.');
       if(stored.length===1 && stored[0].id===projectId){
-        const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};
+        const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:createDefaultGameConfig()};
         const saved=replaceLastGame(projectId,fresh,expected??undefined);
         setProjects(saved);
         applyGame(fresh);
@@ -246,7 +247,7 @@ function App() {
   };
   const exportProject = () => {
     try {
-      const project: SavedGame = {version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
+      const project: SavedGame = {version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
       downloadBackup(project);
       setStorageMessage(tx('Projektdatei wurde zum Download vorbereitet.', 'Project backup prepared for download.'));
     } catch(e){ setStorageMessage('Export fehlgeschlagen: '+String(e)); }
@@ -257,7 +258,7 @@ function App() {
       if (file.size > 200_000) throw new Error('Datei zu groß.');
       const imported = parseGameBackup(await file.text());
       if(!saveCurrentBeforeSwitch()) return;
-      const restored: SavedGame = {...imported,id:newGameId(),title:importedProjectTitle(imported.title),updatedAt:new Date().toISOString()};
+      const restored: SavedGame = {...imported,id:newGameId(),title:importedProjectTitle(imported.title),updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null)};
       const updated = saveGame(restored);
       setProjects(updated);
       applyGame(restored);
