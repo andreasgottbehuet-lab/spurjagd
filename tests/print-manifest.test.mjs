@@ -205,7 +205,7 @@ test('Mehrseitige Wegrätsel bleiben pro Umschlag korrekt zugeordnet',()=>{
  const manifest=createPrintManifest(plan,longConfig);
  assert.deepEqual(auditPrintManifest(plan,manifest,longConfig),[]);
  for(const envelope of manifest.envelopes){
-  const target=plan.teams[envelope.teamIndex].stations[envelope.stationNumber] ?.name ?? plan.teams[envelope.teamIndex].finish;
+  const target=plan.teams[envelope.teamIndex].stations[envelope.stationNumber]?.name ?? plan.teams[envelope.teamIndex].finish;
   assert.equal(envelope.destination,target);
   assert.equal(envelope.sheetCount,2+routeSheetCount(target,longConfig));
  }
