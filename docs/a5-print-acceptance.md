@@ -125,3 +125,6 @@ Das neue Skript `scripts/verify-project-browser.mjs` prüft mit Chromium einen v
 
 ### Robustheit der Projekt-Browserprüfung
 Die Projektprüfung wartet auf tatsächlich gespeicherte und gerenderte Zustände statt auf feste Verzögerungen. Sie prüft zusätzlich den Abbruch einer Löschung und die Erkennung einer konkurrierenden Änderung aus einem zweiten Browser-Tab. Bei einem Fehler wird der Bericht auch dann geschrieben, wenn Chromium nicht gestartet werden konnte. Die Ergebnisse sind erst nach einem realen CI-Durchlauf belastbar.
+
+### Erweiterte Datensicherheits-Abnahme
+Der Browser-Test kontrolliert nach dem JSON-Import ausdrücklich, dass das ursprüngliche Projekt noch vorhanden und unverändert ist. Nach einer Änderung aus einem zweiten Tab wird im veralteten Tab absichtlich erneut editiert; nach Ablauf der Autospeicherverzögerung muss der aktuelle Datenstand im zweiten Tab erhalten bleiben. Der Löschhinweis ist nun in Deutsch und Englisch ausdrücklich als unwiderruflich formuliert. Alle Prüfungen müssen in einem realen Browserlauf erfolgreich sein, bevor die Datensicherheit als abgenommen gelten kann.
