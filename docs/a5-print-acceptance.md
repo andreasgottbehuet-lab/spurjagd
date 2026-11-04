@@ -89,3 +89,6 @@ Der Chromium-Test extrahiert den Text der erzeugten PDF mit `pdftotext` und bean
 
 ## Kontrolle des vollständigen Druckpakets im Browser
 Der Chromium-Test ermittelt die tatsächlichen Kategorien aller logischen Druckseiten und beanstandet nicht zugeordnete oder fehlende Kategorien. Für jeden Umschlag prüft er Aufgabenblatt, Antwortblatt und mindestens ein Wegrätselblatt einschließlich der Reihenfolge und fortlaufender Wegrätselseiten. Die Umschläge müssen als zusammenhängende Blöcke gedruckt werden. Anschließend wird die Reihenfolge der Etiketten mit der Umschlagreihenfolge abgeglichen. Der JSON-Prüfbericht enthält Blattkategorien, Umschlaganzahl und Etikettenanzahl. Die Prüfung ist implementiert, jedoch noch nicht durch einen erfolgreichen Chromium-Lauf bestätigt.
+
+## Visuelle Nachkontrolle anhand von PDF-Vorschauen
+Der Browser-Test erzeugt aus der PDF zusätzlich PNG-Vorschauen für das erste Spielleitungsblatt, das erste Kinderblatt und das erste Etikettenblatt (`verification/a5-preview-*.png`). Diese Dateien werden zusammen mit dem PDF als GitHub-Actions-Artefakt archiviert. Die Seitenpositionsprüfung kontrolliert außerdem, ob Antwort- und Wegrätselseiten an den erwarteten Stellen der PDF stehen. Die Vorschauen dienen der manuellen Sichtkontrolle; die automatischen Textprüfungen erkennen keine sämtlichen typografischen oder gestalterischen Mängel.
