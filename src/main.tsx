@@ -475,7 +475,7 @@ function App() {
                   {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
-                    {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
+                    {challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge})=><p key={location.id}><strong>{location.name}: {challenge.code}</strong> · {challenge.puzzles.some(p=>p.kind==='wordsearch')?'Drei Zahlwörter im gemeinsamen Suchgitter: '+generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+location.id)).words.join(' → '):challenge.puzzles.map(p=>p.explanation).join(' | ')}</p>)}
                   </article>)}
                   {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).flatMap(destination=>{
                     const target=locations.find(l=>l.name.trim()===destination.trim());
@@ -528,8 +528,8 @@ function App() {
                       <article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="answer">
                         <h1>Antwortblatt</h1>
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt 2/{2+routeSheetCount(destination,config)}</p>
-                        <p>Hier könnt ihr rechnen, schreiben und eure Lösungen eintragen.</p>
-                        {[1,2,3].map(n=><div className="answer-space" key={n}><strong>Aufgabe {n}: Ziffer ______</strong><div className="writing-lines">________________________________________________<br/>________________________________________________<br/>________________________________________________</div></div>)}
+                        <p>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Tragt die drei gefundenen Zahlwörter von oben nach unten ein.':'Hier könnt ihr rechnen, schreiben und eure Lösungen eintragen.'}</p>
+                        {[1,2,3].map(n=><div className="answer-space" key={n}><strong>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Zahlwort '+n:'Aufgabe '+n}: Ziffer ______</strong><div className="writing-lines">________________________________________________<br/>________________________________________________<br/>________________________________________________</div></div>)}
                         <p className="print-question">Unser Schloss-Code: __ __ __</p>
                       </article>
                       {Array.from({length:routeSheetCount(destination,config)},(_,routePage)=><article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="route" data-route-page={routePage+1} key={'route-'+routePage}>
