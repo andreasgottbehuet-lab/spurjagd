@@ -309,3 +309,27 @@ test('Druckprüfung erkennt zu lange eigene Rätsel auch nach Änderung',()=>{
  assert.equal(verifyCreativeRouteClue(clue),true);
  assert.equal(verifyCreativeRouteClue({...clue,question:'X'.repeat(401)}),false);
 });
+
+test('Zahlwort-Suchgitter: alle Ziffern, Altersstufen, deterministisch und überprüfbar',()=>{
+ for(const age of ['young','middle','older']) for(const digit of [0,1,2,3,4,5,6,7,8,9]) for(const seed of [0,1,17,999]){
+  const puzzle=generateDigitPuzzle(digit,'wordsearch',age,seed);
+  assert.equal(puzzle.expectedDigit,digit);
+  assert.equal(puzzle.wordGrid.rows.length,age==='young'?8:age==='middle'?10:12);
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  assert.deepEqual(generateDigitPuzzle(digit,'wordsearch',age,seed),puzzle);
+  const tampered=structuredClone(puzzle);
+  const g=tampered.wordGrid;
+  const r=g.startRow,c=g.startCol;
+  g.rows[r]=g.rows[r].slice(0,c)+(g.rows[r][c]==='Z'?'A':'Z')+g.rows[r].slice(c+1);
+  assert.equal(verifyDigitPuzzle(tampered),false);
+ }
+});
+test('Stationsrätsel mischen Zahlwortgitter und bestehende Rätsel ohne falsche Schlossziffern',()=>{
+ let wordsearchCount=0;
+ for(let i=0;i<100;i++){
+  const challenge=generateStationChallenge('s'+i,'007','older',i);
+  wordsearchCount+=challenge.puzzles.filter(p=>p.kind==='wordsearch').length;
+  assert.equal(codeFromPuzzles(challenge),'007');
+ }
+ assert.ok(wordsearchCount>0);
+});
