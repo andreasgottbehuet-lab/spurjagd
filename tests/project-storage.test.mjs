@@ -602,3 +602,19 @@ test('Malformed local project JSON is rejected without being overwritten',()=>{
   assert.equal(entries.get('spurjagd-projects-v1'),'{invalid');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Optimistische Revisionsprüfung verhindert stilles Überschreiben fremder Änderungen',()=>{
+ const memory=new Map();
+ const old=globalThis.localStorage;
+ globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+ try{
+  const initial=sample();
+  saveGame(initial);
+  const changed={...initial,title:'Geändert',updatedAt:'2026-11-03T20:00:00.000Z'};
+  saveGame(changed,initial.updatedAt);
+  assert.throws(()=>saveGame({...initial,title:'Veraltet'},initial.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames()[0].title,'Geändert');
+  assert.throws(()=>saveGame({...initial,id:'neu'},initial.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames().length,1);
+ }finally{globalThis.localStorage=old;}
+});
