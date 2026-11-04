@@ -209,7 +209,8 @@ function App() {
       savedRevision.current={id:projectId,updatedAt:current.updatedAt};
       return true;
     } catch(error) {
-      setStorageMessage('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. '+String(error));
+      if(String(error).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
+      setStorageMessage('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. '+String(error)+' Bitte bei Versionskonflikten zuerst eine JSON-Sicherung exportieren.');
       return false;
     }
   };
@@ -243,7 +244,10 @@ function App() {
         setProjects(remaining);
         if(remaining[0]) { applyGame(remaining[0]); setActiveStep(1); }
       }
-    }catch(e){setStorageMessage('Löschen fehlgeschlagen: '+String(e));}
+    }catch(e){
+      if(String(e).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
+      setStorageMessage('Löschen fehlgeschlagen: '+String(e));
+    }
   };
   const exportProject = () => {
     try {
