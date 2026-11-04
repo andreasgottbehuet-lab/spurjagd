@@ -72,7 +72,9 @@ try {
   for (const id of remainingIds.slice(1)) {
     await page.locator('#savedProjects').selectOption(id);
     page.once('dialog', dialog => dialog.accept());
+    const countBefore = await page.locator('#savedProjects option').count();
     await page.getByRole('button', { name: 'Löschen' }).click();
+    await page.waitForFunction(expected => document.querySelectorAll('#savedProjects option').length === expected, countBefore - 1);
   }
   const lastId = await page.locator('#savedProjects').inputValue();
   page.once('dialog', dialog => dialog.accept());
