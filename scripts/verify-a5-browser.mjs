@@ -5,8 +5,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 mkdirSync('verification', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const failures = [];
+const browserErrors = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.on('pageerror', error => browserErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   for (let step = 0; step < 3; step++) {
     if (step === 2) {
@@ -20,6 +22,7 @@ try {
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
     await next.click();
   }
+  if (browserErrors.length) throw new Error('Browser JavaScript errors: ' + browserErrors.join(' | '));
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
     const warnings = await page.locator('.warnings').allTextContents();
@@ -56,6 +59,7 @@ try {
   if (pages !== expected) failures.push('PDF pages ' + pages + ' do not match logical A5 sheets ' + expected);
   const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
+  if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
   if (failures.length) throw new Error(failures.join('\n'));
   console.log('A5 browser print verified:', expected, 'pages');
 } finally {
