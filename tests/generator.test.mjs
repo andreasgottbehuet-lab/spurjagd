@@ -249,3 +249,13 @@ test('Zeitmodell bleibt über die gesamte zulässige Spieldauer konsistent',()=>
   assert.ok(plan.stopsPerTeam>=1&&plan.stopsPerTeam<=c.locations.length);
  }
 });
+
+test('Maximal 20 Standorte und eindeutige Namen werden erzwungen',()=>{
+ const locations=Array.from({length:20},(_,i)=>({id:'s'+i,name:'Station '+i,description:''}));
+ assert.doesNotThrow(()=>createPlan(config({locations})));
+ assert.throws(()=>createPlan(config({locations:[...locations,{id:'s20',name:'Station 20',description:''}]})),/1 bis 20/);
+ assert.throws(()=>createPlan(config({locations:[]})),/1 bis 20/);
+ const duplicate=locations.map(x=>({...x}));
+ duplicate[1].name=' STATION 0 ';
+ assert.throws(()=>createPlan(config({locations:duplicate})),/eindeutig/);
+});
