@@ -264,3 +264,43 @@ test('Druckmanifest bleibt für alle gültigen Gruppengrößen prüfbar',()=>{
   }
  }
 });
+
+test('Umschlagprüfung erkennt jede beschädigte Route auch bei gleicher Gesamtblattzahl',()=>{
+ const plan=createPlan({...config,routeMode:'varied',startMode:'distributed'});
+ const cases=[
+  ['destination','Falsches Folgeziel','Zielort'],
+  ['stationName','Falscher Stationsname','falsche Station'],
+  ['stationId','falsche-id','falsche Station'],
+  ['teamIndex',999,'Gruppenindex'],
+  ['team','Falsches Team','Umschlagbeschriftung'],
+  ['sheetCount',4,'Anzahl A5-Blätter']
+ ];
+ for(const [field,value,expected] of cases){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0][field]=value;
+  if(field==='sheetCount') manifest.envelopes[1].sheetCount=2;
+  const issues=auditPrintManifest(plan,manifest);
+  assert.ok(issues.some(issue=>issue.includes(expected)),field+': '+issues.join('; '));
+ }
+});
+
+test('Jeder Umschlag einer verteilten Route hat genau eine Position und ein Ziel',()=>{
+ for(const routeMode of ['same','varied']){
+  for(const startMode of ['shared','distributed']){
+   const scenario={...config,routeMode,startMode,players:24,groupSize:3};
+   const plan=createPlan(scenario);
+   const manifest=createPrintManifest(plan,scenario);
+   const positions=new Set();
+   for(const envelope of manifest.envelopes){
+    const key=envelope.teamIndex+':'+envelope.stationNumber;
+    assert.ok(!positions.has(key),'Doppelte Position '+key);
+    positions.add(key);
+    const team=plan.teams[envelope.teamIndex];
+    assert.equal(envelope.stationId,team.stations[envelope.stationNumber-1].id);
+    assert.equal(envelope.destination,team.stations[envelope.stationNumber]?.name??team.finish);
+   }
+   assert.equal(positions.size,manifest.envelopes.length);
+   assert.deepEqual(auditPrintManifest(plan,manifest,scenario),[]);
+  }
+ }
+});
