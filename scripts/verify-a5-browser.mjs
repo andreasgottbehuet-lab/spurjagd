@@ -209,6 +209,18 @@ try {
         failures.push('PDF page ' + pageNumber + ' has incorrect envelope sheet numbering: ' + envelopePages[i].id);
       if (kind === 'answer' && !content.includes('Unser Schloss-Code:'))
         failures.push('PDF answer page ' + pageNumber + ' lacks code entry field');
+      if (kind === 'task') {
+        for (const number of [1, 2, 3]) {
+          if (!content.includes('Aufgabe ' + number))
+            failures.push('PDF task page ' + pageNumber + ' is missing task ' + number);
+        }
+      }
+      if (kind === 'answer') {
+        for (const number of [1, 2, 3]) {
+          if (!content.includes('Aufgabe ' + number + ':'))
+            failures.push('PDF answer page ' + pageNumber + ' is missing response space ' + number);
+        }
+      }
     }
     for (let i = 0; i < categories.labels; i++) {
       const pageNumber = categories.organizer + categories.children + i + 1;
