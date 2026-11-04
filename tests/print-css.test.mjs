@@ -238,3 +238,9 @@ test('Große Gruppenzahlen werden in der Vorschau kompakt angezeigt',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.ok(source.includes('groupDistribution.length <= 12'));
 });
+
+test('Spielleitungs-Hinweise sind auch im sichtbaren Spielplan verfügbar',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('plan.value.cautions.map'));
+ assert.ok(source.includes('Hinweise für die Spielleitung'));
+});
