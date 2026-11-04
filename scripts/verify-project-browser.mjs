@@ -29,6 +29,13 @@ try {
   await page.reload({ waitUntil: 'networkidle' });
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Reload lost data');
   checks.push('Switch and reload');
+  writeFileSync('verification/project-invalid-backup.json', '{invalid');
+  const countBeforeInvalid = await page.locator('#savedProjects option').count();
+  await page.locator('input[type="file"]').setInputFiles('verification/project-invalid-backup.json');
+  await page.waitForTimeout(300);
+  if (await page.locator('#savedProjects option').count() !== countBeforeInvalid) throw new Error('Invalid backup changed projects');
+  if (!(await page.locator('.storage-message').textContent()).includes('Import fehlgeschlagen')) throw new Error('Invalid backup lacks error message');
+  checks.push('Invalid backup rejected');
   await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
   await page.waitForTimeout(900);
   if (!(await page.locator('#projectTitle').inputValue()).includes('Import')) throw new Error('Backup import');
