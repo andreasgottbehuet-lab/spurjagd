@@ -267,3 +267,9 @@ test('Importierte Standortbeschreibungen beachten die Druckgrenze von 400 Zeiche
  valid.locations[0].description='x'.repeat(401);
  assert.throws(()=>createPlan(valid),/Standortbeschreibungen dürfen maximal 400 Zeichen enthalten/);
 });
+
+test('Stations-IDs mit Rand-Leerzeichen werden nicht akzeptiert', () => {
+  const c = config();
+  c.locations[0].id = ' ' + c.locations[0].id;
+  assert.throws(() => createPlan(c), /Stations-IDs enthalten Leerzeichen am Rand/);
+});
