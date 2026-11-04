@@ -142,12 +142,17 @@ export function importedProjectTitle(title:string):string {
   const suffix=' (Import)';
   return title.slice(0,100-suffix.length).trimEnd()+suffix;
 }
+export function backupFilename(project: Pick<SavedGame, 'title' | 'id'>): string {
+  const title = project.title.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'projekt';
+  const id = project.id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8) || 'sicherung';
+  return 'spurjagd-' + title + '-' + id + '.json';
+}
 export function downloadBackup(project: SavedGame): void {
   const blob = new Blob([serializeGameBackup(project)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'spurjagd-' + project.title.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 40) + '-' + project.id.slice(0, 8) + '.json';
+  link.download = backupFilename(project);
   document.body.appendChild(link);
   link.click();
   link.remove();
