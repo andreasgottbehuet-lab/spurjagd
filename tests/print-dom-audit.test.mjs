@@ -186,3 +186,9 @@ test('Doppelte A5-Blattkennungen verhindern die geometrische Freigabe',()=>{
  assert.ok(auditA5PageBounds([sheet,{...sheet}],px).some(issue=>issue.includes('doppelte Blattkennungen')));
  assert.deepEqual(auditA5PageBounds([sheet,{...sheet,id:'B'}],px),[]);
 });
+
+test('Leere A5-Geometriemessung darf nicht als erfolgreich gelten',()=>{
+ const px=96/25.4;
+ assert.ok(auditPrintOverflow([]).some(issue=>issue.includes('Keine A5-Blätter')));
+ assert.ok(auditA5PageBounds([],px).some(issue=>issue.includes('Keine A5-Blätter')));
+});
