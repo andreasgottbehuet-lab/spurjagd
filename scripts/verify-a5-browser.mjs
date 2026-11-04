@@ -120,6 +120,22 @@ try {
     kind: el.getAttribute('data-sheet-kind') ?? '',
     routePage: el.getAttribute('data-route-page') ?? ''
   })));
+  // Match the screen packing overview to the actual child-page allocation.
+  const teamPacking = new Map();
+  const packingLabels = await page.locator('.print-label').evaluateAll(elements => elements.map(el => ({
+    team: el.getAttribute('data-team') ?? '',
+    sheets: Number(el.getAttribute('data-count'))
+  })));
+  for (const item of packingLabels) {
+    const count = teamPacking.get(item.team) ?? {envelopes: 0, sheets: 0};
+    count.envelopes++;
+    count.sheets += item.sheets;
+    teamPacking.set(item.team, count);
+  }
+  for (const [team, count] of teamPacking) {
+    if (!guidanceText.includes(team + ': ' + count.envelopes + ' Umschläge, ' + count.sheets + ' Kinderblätter'))
+      failures.push('A5 screen packing overview does not match printed labels for ' + team);
+  }
   const envelopeGroups = new Map();
   for (const entry of envelopePages) {
     if (!entry.id) failures.push('A5 child sheet without envelope identifier');
