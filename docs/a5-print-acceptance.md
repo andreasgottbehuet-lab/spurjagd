@@ -122,3 +122,6 @@ Vor dem Löschen sollte eine JSON-Sicherung erstellt und deren Wiederherstellung
 
 ## Browserabnahme Projektverwaltung
 Das neue Skript `scripts/verify-project-browser.mjs` prüft mit Chromium einen vollständigen Projektablauf: automatische Speicherung, JSON-Download, neues Projekt, Wechsel und Neuladen, Ablehnung beschädigter JSON-Dateien, Wiederherstellung als separater Import sowie Abbruch und Bestätigung der Löschung. Es wird im Quality-Workflow vor dem A5-Probedruck ausgeführt. Die Belege werden als `verification/project-browser-report.json`, `verification/project-browser-tests.log` und im Fehlerfall als Screenshot archiviert. Der Browserlauf ist noch nicht als erfolgreich nachgewiesen; die Aufnahme in den Workflow ist keine Freigabe.
+
+### Robustheit der Projekt-Browserprüfung
+Die Projektprüfung wartet auf tatsächlich gespeicherte und gerenderte Zustände statt auf feste Verzögerungen. Sie prüft zusätzlich den Abbruch einer Löschung und die Erkennung einer konkurrierenden Änderung aus einem zweiten Browser-Tab. Bei einem Fehler wird der Bericht auch dann geschrieben, wenn Chromium nicht gestartet werden konnte. Die Ergebnisse sind erst nach einem realen CI-Durchlauf belastbar.
