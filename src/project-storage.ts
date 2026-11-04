@@ -90,8 +90,8 @@ export function loadGames(): SavedGame[] {
 function persistProjects(next:SavedGame[],active:string|null):void {
  const oldList=localStorage.getItem(KEY);
  const oldActive=localStorage.getItem(ACTIVE);
- localStorage.setItem(KEY,JSON.stringify(next));
  try{
+  localStorage.setItem(KEY,JSON.stringify(next));
   if(active===null)localStorage.removeItem(ACTIVE);
   else localStorage.setItem(ACTIVE,active);
  }catch(error){
