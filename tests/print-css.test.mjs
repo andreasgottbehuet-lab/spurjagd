@@ -227,3 +227,9 @@ test('Wizard offers explicit next-step navigation and live group summary',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  for(const label of ['Geplante Gruppen','Weiter zu den Spielregeln','Weiter zu den Standorten','Spielplan ansehen'])assert.ok(source.includes(label),label);
 });
+
+test('Standortschritt weist auf Ortsprüfung und fehlende Distanzberechnung hin',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('Die App kennt keine tatsächlichen Wegstrecken'));
+ assert.ok(source.includes('Prüfe jeden Standort vor Ort'));
+});
