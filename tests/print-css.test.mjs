@@ -246,7 +246,9 @@ test('Wizard exposes print errors at station entry and offers a direct correctio
  const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.ok(ui.includes('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:'));
  assert.ok(ui.includes('Alle Angaben für das A5-Druckpaket sind vollständig.'));
- assert.ok(ui.includes('Stationsangaben und Codes korrigieren'));
+ assert.ok(ui.includes('Spielregeln und Zeit prüfen'));
+ assert.ok(ui.includes('Standorte und Codes prüfen'));
+ assert.ok(ui.includes('onClick={()=>setActiveStep(2)}'));
  assert.ok(ui.includes('onClick={()=>setActiveStep(3)}'));
 });
 
