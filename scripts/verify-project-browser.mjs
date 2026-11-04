@@ -10,7 +10,7 @@ page.on('pageerror', error => errors.push(error.message));
 try {
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.locator('#projectTitle').fill('Browser Testprojekt');
-  await page.waitForTimeout(900);
+  await page.waitForFunction(() => document.querySelector('#savedProjects')?.value && [...document.querySelectorAll('#savedProjects option')].some(option => option.value === document.querySelector('#savedProjects').value && option.textContent?.includes('Browser Testprojekt')));
   const originalId = await page.locator('#savedProjects').inputValue();
   if (!originalId) throw new Error('Initial project not saved');
   checks.push('Autosave');
@@ -21,7 +21,7 @@ try {
   await download.saveAs('verification/project-backup.json');
   checks.push('JSON export');
   await page.getByRole('button', { name: 'Neu', exact: true }).click();
-  await page.waitForTimeout(900);
+  await page.waitForFunction(previous => document.querySelector('#savedProjects')?.value !== previous && document.querySelector('#savedProjects')?.value, originalId);
   if (await page.locator('#savedProjects').inputValue() === originalId) throw new Error('New project ID');
   checks.push('New project');
   await page.locator('#savedProjects').selectOption(originalId);
@@ -32,12 +32,12 @@ try {
   writeFileSync('verification/project-invalid-backup.json', '{invalid');
   const countBeforeInvalid = await page.locator('#savedProjects option').count();
   await page.locator('input[type="file"]').setInputFiles('verification/project-invalid-backup.json');
-  await page.waitForTimeout(300);
+  await page.locator('.storage-message').filter({ hasText: 'Import fehlgeschlagen' }).waitFor();
   if (await page.locator('#savedProjects option').count() !== countBeforeInvalid) throw new Error('Invalid backup changed projects');
   if (!(await page.locator('.storage-message').textContent()).includes('Import fehlgeschlagen')) throw new Error('Invalid backup lacks error message');
   checks.push('Invalid backup rejected');
   await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
-  await page.waitForTimeout(900);
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value.includes('Import'));
   if (!(await page.locator('#projectTitle').inputValue()).includes('Import')) throw new Error('Backup import');
   checks.push('JSON import');
   const before = await page.locator('#savedProjects option').count();
@@ -47,7 +47,7 @@ try {
   checks.push('Cancel deletion');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Löschen' }).click();
-  await page.waitForTimeout(900);
+  await page.waitForFunction(expected => document.querySelectorAll('#savedProjects option').length === expected, before - 1);
   if (await page.locator('#savedProjects option').count() !== before - 1) throw new Error('Delete project');
   checks.push('Delete project');
   if (errors.length) throw new Error('Browser JavaScript errors: ' + errors.join(' | '));
