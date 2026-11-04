@@ -199,7 +199,7 @@
 .wordsearch-grid{display:inline-flex;flex-direction:column;gap:0;margin:.45rem 0;max-width:100%;break-inside:avoid;page-break-inside:avoid}
 .wordsearch-row{display:flex;gap:0}
 .wordsearch-cell{display:flex;align-items:center;justify-content:center;width:6mm;height:6mm;box-sizing:border-box;border:1px solid #aeb9bf;font-family:Arial,sans-serif;font-size:10pt;font-weight:700;line-height:1}
-@media print{.wordsearch-grid{margin:2mm 0}.wordsearch-cell{width:4.2mm;height:4.2mm;font-size:7.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{.wordsearch-grid{margin:2mm 0}.wordsearch-cell{width:4.6mm;height:4.6mm;font-size:9pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 
 .route-answer-grid{display:flex;gap:0;margin:.25rem 0 .6rem;break-inside:avoid}
 .route-answer-cell{display:inline-block;width:7mm;height:7mm;border:1px solid #9eacb6;box-sizing:border-box}
