@@ -27,6 +27,14 @@ try {
           throw new Error('Station code lost leading zeroes: ' + fixtureCodes[i]);
       }
     }
+    if (step === 2) {
+      await page.locator('input[pattern="[0-9]{3}"]').last().blur();
+      await page.waitForTimeout(1000);
+      await page.reload({ waitUntil: 'networkidle' });
+      const values = await page.locator('input[pattern="[0-9]{3}"]').evaluateAll(inputs => inputs.map(input => input.value));
+      if (JSON.stringify(values) !== JSON.stringify(['007','000','123','987']))
+        throw new Error('Saved lock codes differ after reload: ' + JSON.stringify(values));
+    }
     const next = page.locator('button.next');
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
     await next.click();
