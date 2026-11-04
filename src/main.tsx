@@ -152,7 +152,7 @@ function App() {
       if(projectListChanged(event.key)){
         storageConflict.current=true;
         setStorageReady(false);
-        setStorageMessage('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte dort eine JSON-Sicherung erstellen und die Seite neu laden.');
+        setStorageMessage('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte hier zunächst eine JSON-Sicherung der offenen Eingaben herunterladen. Danach die Seite neu laden und die aktuelle Projektfassung prüfen.');
       }
     };
     window.addEventListener('storage',onStorageChange);
