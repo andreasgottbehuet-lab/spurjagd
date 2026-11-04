@@ -260,6 +260,34 @@ try {
   const restoredPaddedLabel = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredPaddedLabel.calls !== 1 || restoredPaddedLabel.alerts.length)
     failures.push('A5 print did not recover after correcting whitespace-padded label');
+  // The organizer's lock code and next destination are safety-critical
+  // packing information. Alter each one and verify the print gate.
+  for (const [field,invalid] of [['code','999'],['destination','Falscher Zielort']]) {
+    await page.evaluate(([key,value]) => {
+      const row = document.querySelector('.print-checklist-row');
+      if (!row) throw new Error('Missing organizer checklist for secret integrity test');
+      row.dataset.testOriginal = row.dataset[key] ?? '';
+      row.dataset[key] = value;
+      window.__a5PrintCalls = 0;
+      window.__a5Alerts = [];
+    }, [field,invalid]);
+    await printButton.click();
+    const blockedSecret = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+    if (blockedSecret.calls !== 0 || !blockedSecret.alerts.some(message => message.includes('Schloss-Code oder nächster Zielort')))
+      failures.push('Tampered A5 organizer '+field+' did not block printing');
+    await page.evaluate(key => {
+      const row = document.querySelector('.print-checklist-row');
+      if (!row) throw new Error('Missing organizer checklist for restoration');
+      row.dataset[key] = row.dataset.testOriginal ?? '';
+      delete row.dataset.testOriginal;
+      window.__a5PrintCalls = 0;
+      window.__a5Alerts = [];
+    }, field);
+    await printButton.click();
+    const restoredSecret = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+    if (restoredSecret.calls !== 1 || restoredSecret.alerts.length)
+      failures.push('Corrected A5 organizer '+field+' did not restore printing');
+  }
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
