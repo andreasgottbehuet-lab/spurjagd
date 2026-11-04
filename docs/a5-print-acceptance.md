@@ -116,3 +116,6 @@ Für die Altersgruppen 4–6 und 6–8 verwendet der Generator bei den drei Schl
 
 ## Bedienung für Eltern – Eingaben und Fehlerkorrektur
 Der Assistent kennzeichnet noch nicht unterstützte Spielziele (Wort und Karten) als in Vorbereitung; neue Projekte können diese Optionen nicht auswählen. Für bereits gespeicherte ältere Projekte mit solchem Spielziel gibt es eine Schaltfläche zum Wechsel auf Schloss-Codes. Bei der Stationseingabe erscheinen konkrete Druckhindernisse unmittelbar, statt erst auf der letzten Seite. Ungültige Schloss-Codes werden direkt am jeweiligen Eingabefeld erklärt, einschließlich führender Nullen und `000`. Auf der Abschlussseite führt eine Korrekturschaltfläche direkt zur Stationseingabe zurück. Dies sind implementierte Bedienänderungen, keine bestätigte Browserabnahme.
+
+## Projektsicherung
+Vor dem Löschen sollte eine JSON-Sicherung erstellt und deren Wiederherstellung geprüft werden. Die automatische Browserablage ersetzt keine externe Sicherung.
