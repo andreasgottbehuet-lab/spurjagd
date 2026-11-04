@@ -172,3 +172,8 @@
 @media print {
  .print-caution { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; line-height:1.4; border-bottom:1px solid #bbb; }
 }
+
+/* Screen-only print preparation guidance. */
+.print-guidance{border:1px solid #cad9d1;border-radius:10px;padding:14px 17px;margin:18px 0;background:#f7faf8}
+.print-guidance p{font-size:14px;line-height:1.55;margin:9px 0 0}
+@media print{.print-guidance{display:none!important}}
