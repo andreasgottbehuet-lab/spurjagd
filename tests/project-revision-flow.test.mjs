@@ -48,3 +48,15 @@ test('Veraltete Löschung und Ersatz des letzten Projekts bleiben wirkungslos',(
  assert.equal(loadGames().length,1);
  assert.equal(loadGames()[0].title,'Neu');
 }));
+
+import {readFileSync} from 'node:fs';
+test('UI sperrt weitere Schreibvorgänge nach erkanntem Versionskonflikt beim Projektwechsel oder Löschen',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const switching=source.slice(source.indexOf('const saveCurrentBeforeSwitch ='),source.indexOf('const newProject ='));
+ const deleting=source.slice(source.indexOf('const removeProject ='),source.indexOf('const exportProject ='));
+ for(const segment of [switching,deleting]){
+  assert.ok(segment.includes("String(error).includes('zwischenzeitlich verändert')") || segment.includes("String(e).includes('zwischenzeitlich verändert')"));
+  assert.ok(segment.includes('storageConflict.current=true'));
+  assert.ok(segment.includes('setStorageReady(false)'));
+ }
+});
