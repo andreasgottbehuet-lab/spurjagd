@@ -88,3 +88,6 @@ Der letzte gespeicherte Entwurf wird durch einen neutralen Ersatzentwurf in eine
 - Das Löschen einer nicht vorhandenen Projektkennung wird abgelehnt statt unbemerkt als erfolgreicher Löschvorgang gemeldet.
 - Die Stations-ID-Vergabe lehnt ungültige Startwerte (NaN, unendliche Werte, Bruchzahlen und Werte außerhalb des zulässigen Bereichs) ab. Damit kann aus fehlerhaften Startwerten keine endlose Vergabeschleife entstehen.
 - GitHub-Statusabfragen für den vorherigen Commit lieferten weder Commit-Statusmeldungen noch Pull-Request-Workflowläufe. Dies belegt weder erfolgreiche noch fehlgeschlagene Push-Workflows. Ein tatsächlich ausgeführter Test- und Buildlauf ist weiterhin offen.
+
+## CI-Prüfablauf (04.11.2026)
+Die GitHub-Actions-Qualitätsprüfung installiert die im Lockfile festgelegten Abhängigkeiten mit `npm ci`, führt einen separaten A5-Regressionslauf, die gesamte Testsuite und anschließend den TypeScript-/Produktions-Build aus. Die Protokolle werden als Workflow-Artefakt gespeichert (`a5-print-tests.log`, `tests.log`, `build.log`). Diese Festlegung ist keine Bestätigung, dass der Workflow bereits erfolgreich gelaufen ist. Vor Freigabe sind die tatsächlichen GitHub-Actions-Ergebnisse und ein Browser-Probedruck mit A5-Hochformat zu prüfen.
