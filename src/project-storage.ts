@@ -143,7 +143,7 @@ export function importedProjectTitle(title:string):string {
   return title.slice(0,100-suffix.length).trimEnd()+suffix;
 }
 export function backupFilename(project: Pick<SavedGame, 'title' | 'id'>): string {
-  const title = project.title.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'projekt';
+  const title = project.title.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss').replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'projekt';
   const id = project.id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8) || 'sicherung';
   return 'spurjagd-' + title + '-' + id + '.json';
 }
