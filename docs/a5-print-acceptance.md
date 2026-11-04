@@ -83,3 +83,6 @@ Die DOM-Prüfung darf bei beschädigten Manifestdaten keine unbegrenzte Seitenli
 
 ## Automatisierter Chromium-Probedruck (Entwicklungszweig)
 `scripts/verify-a5-browser.mjs` startet die vorbereitete Webanwendung im Browser, navigiert zum Druckpaket, aktiviert die Druckdarstellung und erzeugt `verification/a5-browser-print.pdf`. Das Skript vergleicht die PDF-Seitenzahl mit der Anzahl der gerenderten A5-Blätter, kontrolliert A5-Hochformat und meldet zu große DOM-Blätter. Der Workflow installiert Chromium und `pdfinfo`, startet Vites Vorschau und archiviert PDF, Prüfbericht und Protokoll. **Noch nicht als erfolgreich ausgeführt bestätigt.** Ein echter Papierausdruck mit Druckertreiber und die Prüfung wechselnder Eingabedaten bleiben zusätzliche Abnahmepunkte. Die DOM-Höhenmessung ist ein konservativer Hinweis, keine Garantie für alle Browser-Umbrüche.
+
+## PDF-Inhaltsprüfung
+Der Chromium-Test extrahiert den Text der erzeugten PDF mit `pdftotext` und beanstandet leere Seiten sowie fehlende Kennzeichnungen für Spielleitung und Umschläge. Die Textprüfung ergänzt den Abgleich der PDF-Seitenzahl mit dem Druckmanifest. Sie ersetzt keine visuelle Prüfung von Schriftgrößen, abgeschnittenen Zeichen oder tatsächlichen Druckerrändern. Bei Fehlern werden nach Möglichkeit Screenshot, PDF und JSON-Bericht als Workflow-Artefakte bereitgestellt.
