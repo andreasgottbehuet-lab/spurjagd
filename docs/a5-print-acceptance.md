@@ -86,3 +86,6 @@ Die DOM-Prüfung darf bei beschädigten Manifestdaten keine unbegrenzte Seitenli
 
 ## PDF-Inhaltsprüfung
 Der Chromium-Test extrahiert den Text der erzeugten PDF mit `pdftotext` und beanstandet leere Seiten sowie fehlende Kennzeichnungen für Spielleitung und Umschläge. Die Textprüfung ergänzt den Abgleich der PDF-Seitenzahl mit dem Druckmanifest. Sie ersetzt keine visuelle Prüfung von Schriftgrößen, abgeschnittenen Zeichen oder tatsächlichen Druckerrändern. Bei Fehlern werden nach Möglichkeit Screenshot, PDF und JSON-Bericht als Workflow-Artefakte bereitgestellt.
+
+## Kontrolle des vollständigen Druckpakets im Browser
+Der Chromium-Test ermittelt die tatsächlichen Kategorien aller logischen Druckseiten und beanstandet nicht zugeordnete oder fehlende Kategorien. Für jeden Umschlag prüft er Aufgabenblatt, Antwortblatt und mindestens ein Wegrätselblatt einschließlich der Reihenfolge und fortlaufender Wegrätselseiten. Die Umschläge müssen als zusammenhängende Blöcke gedruckt werden. Anschließend wird die Reihenfolge der Etiketten mit der Umschlagreihenfolge abgeglichen. Der JSON-Prüfbericht enthält Blattkategorien, Umschlaganzahl und Etikettenanzahl. Die Prüfung ist implementiert, jedoch noch nicht durch einen erfolgreichen Chromium-Lauf bestätigt.
