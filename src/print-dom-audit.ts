@@ -87,8 +87,11 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
 /** Label order must match the envelope list so printed labels can be packed without guesswork. */
 export function auditRenderedLabels(expected:ExpectedEnvelope[],actualIds:string[]):string[] {
  const expectedIds=expected.map(envelope=>envelope.id);
- if(expectedIds.length===actualIds.length && expectedIds.every((id,index)=>id===actualIds[index])) return [];
- const issues=['Stationsetiketten fehlen, sind doppelt oder entsprechen nicht der Umschlag-Reihenfolge.'];
+ const issues:string[]=[];
+ if(expectedIds.some(id=>!id.trim())) issues.push('Druckmanifest enthält eine leere Umschlagkennung.');
+ if(new Set(expectedIds).size!==expectedIds.length) issues.push('Druckmanifest enthält doppelte Umschlagkennungen.');
+ if(expectedIds.length===actualIds.length && expectedIds.every((id,index)=>id===actualIds[index]) && issues.length===0) return [];
+ issues.push('Stationsetiketten fehlen, sind doppelt oder entsprechen nicht der Umschlag-Reihenfolge.');
  const allowed=new Set(expectedIds);
  for(const id of actualIds) if(!allowed.has(id)) issues.push('Stationsetikett mit unbekanntem Umschlag: '+(id||'(leer)'));
  return [...new Set(issues)];
