@@ -126,8 +126,9 @@ export function saveGame(project: SavedGame, expectedUpdatedAt?:string|null): Sa
  persistProjects(next,project.id);
  return next;
 }
-export function deleteGame(id:string):SavedGame[] {
+export function deleteGame(id:string,expectedUpdatedAt?:string):SavedGame[] {
  const existing=loadGames();
+ if(expectedUpdatedAt!==undefined && existing.find(p=>p.id===id)?.updatedAt!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Löschen abgebrochen.');
  const remaining=existing.filter(p=>p.id!==id);
  if(remaining.length===existing.length)throw new Error('Projekt nicht gefunden.');
  const active=localStorage.getItem(ACTIVE);
@@ -136,10 +137,11 @@ export function deleteGame(id:string):SavedGame[] {
  return remaining;
 }
 /** Replace the final saved project without ever writing an empty project list. */
-export function replaceLastGame(oldId:string,replacement:SavedGame):SavedGame[] {
+export function replaceLastGame(oldId:string,replacement:SavedGame,expectedUpdatedAt?:string):SavedGame[] {
  if(!isSavedGame(replacement)||replacement.id===oldId) throw new Error('Ersatzprojekt ungültig.');
  const existing=loadGames();
  if(existing.length!==1||existing[0].id!==oldId) throw new Error('Das Projekt ist nicht das letzte gespeicherte Projekt.');
+ if(expectedUpdatedAt!==undefined && existing[0].updatedAt!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Ersetzen abgebrochen.');
  persistProjects([replacement],replacement.id);
  return [replacement];
 }
