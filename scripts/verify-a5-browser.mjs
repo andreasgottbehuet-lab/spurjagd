@@ -175,8 +175,10 @@ try {
     if (!extracted.stdout.includes(code)) failures.push('PDF text is missing configured three-digit code ' + code);
   }
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
+  const codeOccurrences = Object.fromEntries(['007','000','123','987'].map(code => [code, pdfPageTexts.filter(pageText => pageText.includes(code)).length]));
+  if (Object.values(codeOccurrences).some(count => count === 0)) failures.push('Not every configured lock code is present in the PDF');
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
-  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, envelopeCount: envelopeGroups.size, labelCount: labelIds.length, blankPages, measurements: measured, failures };
+  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, envelopeCount: envelopeGroups.size, labelCount: labelIds.length, blankPages, codeOccurrences, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
   if (failures.length) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
