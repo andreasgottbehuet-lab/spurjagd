@@ -318,6 +318,24 @@ try {
     if (!expectedDescription || !printedPage.includes(expectedDescription))
       failures.push('A5 envelope label ' + (index + 1) + ' lost its sheet count or sequence');
   }
+  // Every label must identify the same team, station and sheet quantity as
+  // its corresponding organizer packing-list row, not merely a matching count.
+  for (let index = 0; index < labelNames.length; index++) {
+    const label = labelNames[index]?.replace(/\s+/g, ' ').trim() ?? '';
+    const checklist = checklistRows[index]?.replace(/\s+/g, ' ').trim() ?? '';
+    const labelDetail = labelDescriptions[index]?.replace(/\s+/g, ' ').trim() ?? '';
+    const packingDetail = checklistDetails[index]?.replace(/\s+/g, ' ').trim() ?? '';
+    const labelParts = label.match(/^Team (.+) · (.+)$/);
+    const checklistParts = checklist.match(/^Team (.+) · Station (\d+): (.+)$/);
+    const labelSequence = labelDetail.match(/Umschlag (\d+) von (\d+)/);
+    const labelCount = labelDetail.match(/(\d+) Blätter/);
+    const packingCount = packingDetail.match(/(\d+) Kinderblätter/);
+    if (!labelParts || !checklistParts || !labelSequence ||
+        labelParts[1] !== checklistParts[1] || labelParts[2] !== checklistParts[3] ||
+        labelSequence[1] !== checklistParts[2] ||
+        !labelCount || !packingCount || labelCount[1] !== packingCount[1])
+      failures.push('A5 envelope label and organizer packing-list identity differ at envelope ' + (index + 1));
+  }
   const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
   if (childText.includes('Codes und Lösungen') || childText.includes('Umschlagkontrolle'))
     failures.push('Organizer-only solution or envelope checklist leaked onto child pages');
