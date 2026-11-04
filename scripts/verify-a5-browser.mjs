@@ -157,6 +157,31 @@ try {
   const duplicateRestored = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (duplicateRestored.calls !== 1 || duplicateRestored.alerts.length)
     failures.push('A5 print action did not recover after duplicate label removal');
+  // A child sheet moved into the wrong envelope must be rejected even
+  // though the overall sheet count stays unchanged.
+  await page.evaluate(() => {
+    const first = document.querySelector('.print-child-sheet');
+    if (!first) throw new Error('Missing A5 child sheet for ownership test');
+    first.dataset.envelopeId = 'wrong-envelope';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const wrongChild = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (wrongChild.calls !== 0 || wrongChild.alerts.length === 0)
+    failures.push('A5 child sheet with wrong envelope identity did not block printing');
+  await page.evaluate(() => {
+    const first = document.querySelector('.print-child-sheet');
+    const second = document.querySelectorAll('.print-child-sheet')[1];
+    if (!first || !second) throw new Error('Missing child sheet for ownership restoration');
+    first.dataset.envelopeId = second.dataset.envelopeId ?? '';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredChild = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredChild.calls !== 1 || restoredChild.alerts.length)
+    failures.push('A5 print did not recover after child envelope restoration');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
