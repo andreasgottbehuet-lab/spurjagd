@@ -263,7 +263,7 @@ try {
       failures.push('A5 PDF page ' + pageNumber + ' differs from the team/station/sheet header in the browser');
   }
   // The organizer's packing checklist must include every envelope line.
-  const checklistRows = await page.locator('.print-checklist-row strong:first-of-type').allTextContents();
+  const checklistRows = await page.locator('.print-checklist-row > strong').allTextContents();
   const normalizedOrganizer = organizerText.replace(/\s+/g, ' ');
   for (let index = 0; index < checklistRows.length; index++) {
     const row = checklistRows[index].replace(/\s+/g, ' ').trim();
