@@ -217,3 +217,12 @@ test('A5 Packdaten ohne gueltige Nummern oder Namen verhindern Druck',()=>{
   assert.ok(auditRenderedPackingItems([good],[changed],[good]).some(issue=>issue.includes('ungültige Packdaten')),field);
  }
 });
+
+test('Ungueltige erwartete A5 Packdaten duerfen nicht durch identische Druckdaten durchrutschen',()=>{
+ const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',''],['stationNumber',0],['stationNumber',NaN],['sheetCount',2],['sheetCount',Infinity]]){
+  const corrupt={...good,[field]:value};
+  assert.ok(auditRenderedPackingItems([corrupt],[corrupt],[corrupt]).some(issue=>issue.includes('Druckmanifest: Umschlag 1 enthält ungültige Packdaten')),field);
+ }
+ assert.ok(auditRenderedPackingItems([good,good],[good,good],[good,good]).some(issue=>issue.includes('Druckmanifest: doppelte Umschlagkennung')));
+});
