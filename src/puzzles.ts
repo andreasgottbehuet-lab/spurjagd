@@ -61,6 +61,7 @@ export function findDigitWords(rows: string[]): {digit:number;row:number;col:num
 }
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
+  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
