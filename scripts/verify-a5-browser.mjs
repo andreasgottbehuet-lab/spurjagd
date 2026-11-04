@@ -275,7 +275,7 @@ try {
   if (labelIds.length !== checklistRows.length)
     failures.push('A5 packing checklist and printed envelope labels have different counts');
   // The packing list must show the sheet count and next destination for every envelope.
-  const checklistDetails = await page.locator('.print-checklist-row span').allTextContents();
+  const checklistDetails = await page.locator('.print-checklist-row > span').allTextContents();
   if (checklistDetails.length !== checklistRows.length)
     failures.push('A5 packing checklist is missing envelope details');
   for (let index = 0; index < checklistDetails.length; index++) {
