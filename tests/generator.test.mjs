@@ -229,3 +229,23 @@ test('Stationsreihenfolge stimmt für alle Start- und Richtungsvarianten',()=>{
   }
  }
 });
+
+test('Ungültige Zeitwerte und Routenoptionen werden konsequent abgewiesen',()=>{
+ for(const [field,values] of Object.entries({players:[-1,101,1.5,NaN],groupSize:[-1,11,1.5],durationMinutes:[14,481,30.5],puzzleMinutes:[0,61,1.5],walkingMinutes:[-1,61,0.5],startFinishMinutes:[-1,121,0.5]})){
+  for(const value of values) assert.throws(()=>createPlan(config({[field]:value})),/ungültiger Wert/);
+ }
+ for(const [field,value] of [['startMode','unknown'],['routeMode','unknown'],['finishMode','unknown']]){
+  assert.throws(()=>createPlan(config({[field]:value})),/Ungültige Routenoption/);
+ }
+});
+
+test('Zeitmodell bleibt über die gesamte zulässige Spieldauer konsistent',()=>{
+ for(let durationMinutes=15;durationMinutes<=480;durationMinutes+=5){
+  const c=config({durationMinutes,puzzleMinutes:1,walkingMinutes:0,startFinishMinutes:0});
+  const plan=createPlan(c);
+  assert.equal(plan.estimatedMinutes,plan.stopsPerTeam);
+  assert.equal(plan.remainderMinutes,durationMinutes-plan.estimatedMinutes);
+  assert.ok(plan.estimatedMinutes<=durationMinutes);
+  assert.ok(plan.stopsPerTeam>=1&&plan.stopsPerTeam<=c.locations.length);
+ }
+});
