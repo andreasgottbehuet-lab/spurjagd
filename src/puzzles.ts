@@ -200,16 +200,19 @@ export function verifyRouteQuestions(clue:RouteClue):boolean {
 }
 function maskDestination(description:string, destination:string):string {
  const source=description.trim();
+ // Match literal occurrences first. A separate folded-name check below rejects
+ // disguised spellings that could otherwise disclose the destination.
  const lower=source.toLocaleLowerCase('de');
  const needle=destination.toLocaleLowerCase('de');
  let start=0;
  let result='';
  while(true){
   const index=lower.indexOf(needle,start);
-  if(index<0) return result+source.slice(start);
+  if(index<0) break;
   result+=source.slice(start,index)+'________';
   start=index+destination.length;
  }
+ return result+source.slice(start);
 }
 export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
  const answer=destination.trim();
@@ -221,6 +224,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
  if(mode==='description') {
    const safe=maskDestination(description,answer);
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
+   if(clueRevealsDestination(safe,answer)) throw new Error('Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.');
    return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
  }
  if(mode==='questions') {
