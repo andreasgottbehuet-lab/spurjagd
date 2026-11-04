@@ -111,3 +111,21 @@ export function auditPrintOverflow(sheets:PrintSheetGeometry[],tolerance=2):stri
  }
  return issues;
 }
+
+/** Check content against the A5 portrait content area (148×210 mm, 10 mm margins).
+ * Geometry must be collected with print styles active; screen measurements are not equivalent.
+ */
+export function auditA5PageBounds(sheets:PrintSheetGeometry[],pixelsPerMillimeter:number):string[] {
+ if(!Number.isFinite(pixelsPerMillimeter)||pixelsPerMillimeter<=0)
+  return ['A5-Druckskalierung konnte nicht bestimmt werden.'];
+ const maxWidth=128*pixelsPerMillimeter;
+ const maxHeight=190*pixelsPerMillimeter;
+ const issues=auditPrintOverflow(sheets);
+ for(const sheet of sheets){
+  if(sheet.contentWidth>maxWidth+2 || sheet.scrollWidth>maxWidth+2)
+   issues.push('A5-Blatt '+sheet.id+': Breite überschreitet den bedruckbaren Bereich (128 mm).');
+  if(sheet.contentHeight>maxHeight+2 || sheet.scrollHeight>maxHeight+2)
+   issues.push('A5-Blatt '+sheet.id+': Höhe überschreitet den bedruckbaren Bereich (190 mm).');
+ }
+ return [...new Set(issues)];
+}
