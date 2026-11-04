@@ -149,3 +149,10 @@ test('Chromium A5 acceptance validates categories, envelopes and label order',()
   assert.ok(script.includes(marker),marker);
  }
 });
+
+test('Default browser A5 fixture checks 12 envelopes and 36 child sheets',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('envelopeGroups.size !== 12'));
+ assert.ok(script.includes('categories.children !== 36'));
+ assert.ok(script.includes('categories.labels !== 3'));
+});
