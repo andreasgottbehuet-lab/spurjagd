@@ -36,3 +36,9 @@ test('Dependency installation matches repository lockfile availability',()=>{
  // npm install generates a local lockfile during CI; this is not a committed lockfile.
  assert.ok(workflow.includes('npm install --no-audit --no-fund'));
 });
+
+test('CI archives generated lockfile and dependency tree for later reproducible builds',()=>{
+ assert.match(workflow,/cp package-lock\.json verification\/generated-package-lock\.json/);
+ assert.match(workflow,/npm ls --depth=0 > verification\/dependencies\.txt/);
+ assert.match(workflow,/path: verification\//);
+});
