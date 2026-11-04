@@ -429,7 +429,8 @@ try {
   const envelopePages = await page.locator('.print-child-sheet').evaluateAll(elements => elements.map(el => ({
     id: el.getAttribute('data-envelope-id') ?? '',
     kind: el.getAttribute('data-sheet-kind') ?? '',
-    routePage: el.getAttribute('data-route-page') ?? ''
+    routePage: el.getAttribute('data-route-page') ?? '',
+    combinedWordGrid: !!el.querySelector('.print-three-word-grid')
   })));
   // Match the screen packing overview to the actual child-page allocation.
   const teamPacking = new Map();
@@ -553,15 +554,21 @@ try {
         failures.push('PDF page ' + pageNumber + ' has incorrect envelope sheet numbering: ' + envelopePages[i].id);
       if (kind === 'answer' && !content.includes('Unser Schloss-Code:'))
         failures.push('PDF answer page ' + pageNumber + ' lacks code entry field');
+      const combinedWordGrid = envelopeSheets.some(entry => entry.kind === 'task' && entry.combinedWordGrid);
       if (kind === 'task') {
-        for (const number of [1, 2, 3]) {
-          if (!content.includes('Aufgabe ' + number))
-            failures.push('PDF task page ' + pageNumber + ' is missing task ' + number);
+        if (combinedWordGrid) {
+          if (!content.includes('Geheimcode im Buchstabengitter') || !content.includes('Reihenfolge:'))
+            failures.push('PDF task page ' + pageNumber + ' lacks combined word-search and ordering rule');
+        } else {
+          for (const number of [1, 2, 3]) {
+            if (!content.includes('Aufgabe ' + number))
+              failures.push('PDF task page ' + pageNumber + ' is missing task ' + number);
+          }
         }
       }
       if (kind === 'answer') {
         for (const number of [1, 2, 3]) {
-          if (!content.includes('Aufgabe ' + number + ':'))
+          if (!content.includes((combinedWordGrid ? 'Zahlwort ' : 'Aufgabe ') + number + ':'))
             failures.push('PDF answer page ' + pageNumber + ' is missing response space ' + number);
         }
       }
