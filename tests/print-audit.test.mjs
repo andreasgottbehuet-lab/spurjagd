@@ -224,3 +224,11 @@ test('Druckprüfung entdeckt abweichende Gruppengrößen und Zielorte',()=>{
  assert.ok(issues.some(issue=>issue.includes('Gruppenroute Rot')));
  assert.ok(issues.some(issue=>issue.includes('Gruppenroute Blau')));
 });
+
+test('Druckprüfung erkennt veränderte Stationsbeschreibungen',()=>{
+ const c=config();
+ const plan=createPlan(c);
+ plan.teams[0].stations[0].description='Nachträglich geändert';
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Gruppenroute Rot')));
+});
