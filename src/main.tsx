@@ -248,6 +248,7 @@ function App() {
       const updated = saveGame(restored);
       setProjects(updated);
       applyGame(restored);
+      setActiveStep(1);
       setStorageMessage(tx('Projekt aus Sicherung wiederhergestellt.', 'Project restored from backup.'));
     } catch(e){ setStorageMessage('Import fehlgeschlagen: '+String(e)); }
     finally { if (importRef.current) importRef.current.value=''; }
