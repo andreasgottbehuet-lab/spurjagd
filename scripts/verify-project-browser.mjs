@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 
 mkdirSync('verification', { recursive: true });
 let browser;
@@ -21,6 +21,9 @@ try {
   const download = await pending;
   if (!download.suggestedFilename().includes('Browser-Testprojekt')) throw new Error('Backup filename');
   await download.saveAs('verification/project-backup.json');
+  const backup = JSON.parse(readFileSync('verification/project-backup.json', 'utf8'));
+  if (backup.format !== 'spurjagd-backup-1' || backup.project?.id !== originalId || backup.project?.title !== 'Browser Testprojekt')
+    throw new Error('Downloaded JSON does not contain the expected project');
   checks.push('JSON export');
   await page.getByRole('button', { name: 'Neu', exact: true }).click();
   await page.waitForFunction(previous => document.querySelector('#savedProjects')?.value !== previous && document.querySelector('#savedProjects')?.value, originalId);
