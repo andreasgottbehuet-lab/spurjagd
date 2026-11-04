@@ -147,7 +147,7 @@ export function downloadBackup(project: SavedGame): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'spurjagd-' + project.id.slice(0, 8) + '.json';
+  link.download = 'spurjagd-' + project.title.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 40) + '-' + project.id.slice(0, 8) + '.json';
   document.body.appendChild(link);
   link.click();
   link.remove();
