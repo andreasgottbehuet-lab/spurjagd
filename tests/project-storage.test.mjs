@@ -456,3 +456,11 @@ test('JSON-Sicherungen erhalten lesbare und sichere Dateinamen',()=>{
  assert.equal(backupFilename({title:'///',id:'!'}),'spurjagd-projekt-sicherung.json');
  assert.ok(backupFilename({title:'A'.repeat(200),id:'12345678'}).length<80);
 });
+
+test('Projektwechsel behandelt Fehler der aktiven Projektauswahl',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const start=source.indexOf('id="savedProjects"');
+ const select=source.slice(start,source.indexOf('</select>',start));
+ assert.ok(select.includes('try { setActiveGameId(project.id); applyGame(project);'));
+ assert.ok(select.includes('Projektwechsel fehlgeschlagen:'));
+});
