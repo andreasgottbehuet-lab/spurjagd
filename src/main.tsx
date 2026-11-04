@@ -325,6 +325,7 @@ function App() {
             {activeStep === 3 && <>
               <div className="section-line"><span className="step">03</span><h2>{t.locations}</h2></div>
               <p className="helper">{tx('Trage die Orte ein und beschreibe, was dort zu sehen ist. Später erzeugen wir daraus passende Rätsel.','Name each stop and describe what can be seen there. This will later be used to generate puzzles.')}</p>
+              <p className="helper">{tx("Prüfe jeden Standort vor Ort: sichere Wege, erlaubter Zugang und eine geeignete Aufsicht. Die App kennt keine tatsächlichen Wegstrecken.", "Check every stop on site: safe routes, permitted access and suitable supervision. The app does not know actual walking distances.")}</p>
               <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>changeStationCount(Number(e.target.value))}/></label>
               <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
               <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
@@ -340,8 +341,8 @@ function App() {
                 </div>
               )}</div>
               {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
-              <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
+              <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
               {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}</div>}
               {printIssues.length===0 && <p className="helper" role="status">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
             </>}
