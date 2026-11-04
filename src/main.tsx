@@ -228,7 +228,7 @@ function App() {
       }else{
         const remaining=deleteGame(projectId);
         setProjects(remaining);
-        if(remaining[0])applyGame(remaining[0]);
+        if(remaining[0]) { applyGame(remaining[0]); setActiveStep(1); }
       }
     }catch(e){setStorageMessage('Löschen fehlgeschlagen: '+String(e));}
   };
