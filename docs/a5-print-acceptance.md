@@ -143,3 +143,11 @@ Die Projektverwaltung setzt nach dem Löschen eines aktiven Projekts den Planer 
 
 ### Sofortaktionen ohne Wartezeit
 Die Browserabnahme prüft zwei weitere Datenverlust-Szenarien: Ein JSON-Export unmittelbar nach der Änderung des Projekttitels muss bereits den neuen Titel enthalten, ohne auf die 650-ms-Autospeicherung zu warten. Beim direkten Anlegen eines weiteren Projekts nach einer Änderung muss der vorherige Entwurf vollständig gespeichert bleiben. Beide Fälle sind als eigenständige Prüfungen im Browser-Skript enthalten; ein erfolgreicher Lauf steht noch aus.
+
+## Praktische Freigabeprüfung (noch offen)
+- A5-Blätter auf dem vorgesehenen Drucker ausgeben und auf Lesbarkeit, Beschnitt und Seitenfolge prüfen.
+- Codes einschließlich führender Null am echten dreistelligen Schloss testen.
+- Die gedruckten Teamrouten und Umschläge gegen die Spielleitungsübersicht abgleichen.
+- Mit einem Kind der vorgesehenen Altersgruppe mindestens eine vollständige Route probeweise lösen.
+- Gehzeiten, Zugänglichkeit, Straßenquerungen und Aufsicht vor Ort prüfen.
+- Ergebnisse und notwendige Korrekturen dokumentieren; keine Veröffentlichung allein aufgrund grüner CI-Prüfungen.
