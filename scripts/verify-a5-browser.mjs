@@ -262,6 +262,16 @@ try {
     if (!expectedHeader || !pdfText.includes(expectedHeader))
       failures.push('A5 PDF page ' + pageNumber + ' differs from the team/station/sheet header in the browser');
   }
+  // The organizer's packing checklist must include every envelope line.
+  const checklistRows = await page.locator('.print-checklist-row').allTextContents();
+  const normalizedOrganizer = organizerText.replace(/\\s+/g, ' ');
+  for (let index = 0; index < checklistRows.length; index++) {
+    const row = checklistRows[index].replace(/\\s+/g, ' ').trim();
+    if (!row || !normalizedOrganizer.includes(row))
+      failures.push('A5 organizer checklist is missing envelope row ' + (index + 1));
+  }
+  if (checklistRows.length !== envelopeGroups.size)
+    failures.push('A5 organizer checklist has ' + checklistRows.length + ' rows for ' + envelopeGroups.size + ' envelopes');
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.
   const labelNames = await page.locator('.print-label strong').allTextContents();
