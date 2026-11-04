@@ -216,7 +216,7 @@ function App() {
   const newProject = () => {
     if(!saveCurrentBeforeSwitch()) return;
     const fresh: SavedGame = {
-      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),
+      version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:nextProjectRevision(),
       config:createDefaultGameConfig(),
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
@@ -233,7 +233,7 @@ function App() {
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:undefined;
       if(expected===undefined) throw new Error('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.');
       if(stored.length===1 && stored[0].id===projectId){
-        const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:createDefaultGameConfig()};
+        const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:nextProjectRevision(),config:createDefaultGameConfig()};
         const saved=replaceLastGame(projectId,fresh,expected??undefined);
         setProjects(saved);
         applyGame(fresh);
@@ -258,7 +258,7 @@ function App() {
       if (file.size > 200_000) throw new Error('Datei zu groß.');
       const imported = parseGameBackup(await file.text());
       if(!saveCurrentBeforeSwitch()) return;
-      const restored: SavedGame = {...imported,id:newGameId(),title:importedProjectTitle(imported.title),updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null)};
+      const restored: SavedGame = {...imported,id:newGameId(),title:importedProjectTitle(imported.title),updatedAt:nextProjectRevision()};
       const updated = saveGame(restored);
       setProjects(updated);
       applyGame(restored);
