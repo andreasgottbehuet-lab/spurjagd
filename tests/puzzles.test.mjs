@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination } from '../src/puzzles.ts';
+import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination, findDigitWords } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
@@ -361,4 +361,25 @@ test('Zahlenfolgen sind für jede Codeziffer und Altersstufe eindeutig prüfbar'
   const invalid={...p,question:p.question.replace('  ·  ?', '  ·  5')};
   assert.equal(verifyDigitPuzzle(invalid),false);
  }
+});
+
+test('Suchgitter enthalten genau ein Zahlwort und keine unbeabsichtigten Alternativziffern',()=>{
+ for(const age of ['young','middle','older']) for(let digit=0;digit<10;digit++) for(let seed=0;seed<100;seed++){
+  const p=generateDigitPuzzle(digit,'wordsearch',age,seed);
+  const found=findDigitWords(p.wordGrid.rows);
+  assert.equal(found.length,1,age+':'+digit+':'+seed);
+  assert.equal(found[0].digit,digit);
+  assert.equal(verifyDigitPuzzle(p),true);
+ }
+});
+test('Referenzspiel deckt alle sechs Schlossrätselarten mit gültigen Codes ab',()=>{
+ const kinds=new Set();
+ const codes=['007','000','123','987'];
+ for(let station=0;station<120;station++){
+  const challenge=generateStationChallenge('reference-'+station,codes[station%4],station%3===0?'young':station%3===1?'middle':'older',314159);
+  assert.equal(codeFromPuzzles(challenge),codes[station%4]);
+  assert.equal(challenge.puzzles.length,3);
+  challenge.puzzles.forEach(p=>kinds.add(p.kind));
+ }
+ assert.deepEqual([...kinds].sort(),['arithmetic','arrowpath','cipher','sequence','symbols','wordsearch']);
 });
