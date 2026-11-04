@@ -266,7 +266,7 @@ try {
   const checklistRows = await page.locator('.print-checklist-row').allTextContents();
   const normalizedOrganizer = organizerText.replace(/\s+/g, ' ');
   for (let index = 0; index < checklistRows.length; index++) {
-    const row = checklistRows[index].replace(/\s+/g, ' ').trim();
+    const row = checklistRows[index].replace(/^\s*□\s*/, '').replace(/\s+/g, ' ').trim();
     if (!row || !normalizedOrganizer.includes(row))
       failures.push('A5 organizer checklist is missing envelope row ' + (index + 1));
   }
