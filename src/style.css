@@ -177,3 +177,13 @@
 .print-guidance{border:1px solid #cad9d1;border-radius:10px;padding:14px 17px;margin:18px 0;background:#f7faf8}
 .print-guidance p{font-size:14px;line-height:1.55;margin:9px 0 0}
 @media print{.print-guidance{display:none!important}}
+
+/* Screen-only organizer packing preview. Never include secret codes in child printouts. */
+.packing-preview{margin:16px 0 8px;border:1px solid #c8d8ce;border-radius:9px;background:#fff;padding:12px 15px}
+.packing-preview summary{cursor:pointer;font-weight:700;line-height:1.5}
+.packing-preview-team{margin-top:14px}
+.packing-preview-team h4{margin:0 0 7px;font-size:15px}
+.packing-preview-team ol{margin:0;padding-left:25px}
+.packing-preview-team li{padding:7px 0;border-bottom:1px solid #e6ece7;line-height:1.5}
+.packing-preview-team li>span{display:block;font-size:13px}
+@media print{.packing-preview{display:none!important}}
