@@ -44,6 +44,7 @@ try {
   await page.locator('input[type="file"]').setInputFiles('verification/project-invalid-backup.json');
   await page.locator('.storage-message').filter({ hasText: 'Import fehlgeschlagen' }).waitFor();
   if (await page.locator('#savedProjects option').count() !== countBeforeInvalid) throw new Error('Invalid backup changed projects');
+  if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Invalid backup changed active project');
   if (!(await page.locator('.storage-message').textContent()).includes('Import fehlgeschlagen')) throw new Error('Invalid backup lacks error message');
   checks.push('Invalid backup rejected');
   await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
