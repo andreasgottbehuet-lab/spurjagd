@@ -22,7 +22,11 @@ jobs:
           node --version | tee -a verification/revision.txt
           npm --version | tee -a verification/revision.txt
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+      - name: Verify A5 print invariants
+        run: |
+          set -o pipefail
+          node --experimental-strip-types --test tests/print-dom-audit.test.mjs tests/print-css.test.mjs 2>&1 | tee verification/a5-print-tests.log
       - name: Unit and integration tests
         run: |
           set -o pipefail
@@ -46,4 +50,5 @@ jobs:
           echo "- Commit: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
           echo '- Testlauf: siehe Schritt Unit and integration tests und Artefakt tests.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- TypeScript und Build: siehe Schritt TypeScript and production build und Artefakt build.log' >> "$GITHUB_STEP_SUMMARY"
+          echo '- A5-Drucklogik: siehe Schritt Verify A5 print invariants und Artefakt a5-print-tests.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- A5-Druckbild: manuelle Browserprüfung weiterhin erforderlich' >> "$GITHUB_STEP_SUMMARY"
