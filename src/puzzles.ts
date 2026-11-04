@@ -74,8 +74,9 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
       }
       explanation=question.replace('?',String(target));
     } else {
-      const factor = chooseInt(rng, 2, 5);
-      const extra = chooseInt(rng, 1, 5);
+      // The product must be at least the target: avoid confusing 'minus -3' expressions.
+      const factor = chooseInt(rng, 3, 5);
+      const extra = chooseInt(rng, 3, 5);
       question = factor + ' × ' + extra + ' − ' + (factor * extra - target) + ' = ?';
       explanation = factor + ' × ' + extra + ' − (' + (factor * extra - target) + ') = ' + target;
     }
