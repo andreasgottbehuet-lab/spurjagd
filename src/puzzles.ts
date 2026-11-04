@@ -96,7 +96,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
 export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   if (!Number.isInteger(puzzle.expectedDigit) || puzzle.expectedDigit < 0 || puzzle.expectedDigit > 9) return false;
   const target = puzzle.expectedDigit;
-  if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0;
+  if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0 && puzzle.render.symbol.length <= 4 && puzzle.render.symbol.trim().length > 0;
   if (puzzle.kind === 'arithmetic') {
     const q = puzzle.question.match(/^(-?\d+)\s*([+−×])\s*(-?\d+)(?:\s*−\s*\((-?\d+)\)|\s*−\s*(-?\d+))?\s*=\s*\?$/);
     if (!q) return false;
