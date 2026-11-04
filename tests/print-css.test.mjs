@@ -170,3 +170,13 @@ test('Chromium acceptance archives visual A5 page previews',()=>{
  assert.ok(script.includes("spawnSync('pdftoppm'"));
  for(const name of ["['organizer', 1]","['child', categories.organizer + 1]","['labels', categories.organizer + categories.children + 1]"]) assert.ok(script.includes(name),name);
 });
+
+test('A5 CI retains evidence when the browser or preview fails early',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ assert.ok(script.includes('a5-browser-error.json'));
+ assert.ok(script.includes('activePage.screenshot'));
+ assert.ok(workflow.includes('READY=0'));
+ assert.ok(workflow.includes('Vite preview failed to start'));
+ assert.ok(workflow.includes('if: always()'));
+});
