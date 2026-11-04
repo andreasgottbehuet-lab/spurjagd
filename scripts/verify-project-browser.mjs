@@ -177,7 +177,7 @@ try {
     checks.push('Stale tab blocks writes but permits emergency JSON export');
     const staleCount=await page.locator('#savedProjects option').count();
     await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
-    await page.waitForTimeout(100);
+    await page.locator('.storage-message').filter({ hasText: 'Projektwechsel gesperrt' }).waitFor();
     if (await page.locator('#savedProjects option').count() !== staleCount ||
         await page.locator('#savedProjects').inputValue() !== staleProjectId)
       throw new Error('Stale editor imported a project despite storage conflict');
