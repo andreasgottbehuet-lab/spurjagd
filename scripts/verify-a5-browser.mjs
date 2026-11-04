@@ -31,6 +31,11 @@ try {
       await page.locator('input[pattern="[0-9]{3}"]').last().blur();
       await page.waitForTimeout(1000);
       await page.reload({ waitUntil: 'networkidle' });
+      // The wizard starts on its first screen after reload. Return to the
+      // station editor before inspecting persisted values.
+      for (let navigation = 0; navigation < 2; navigation++) {
+        await page.locator('button.next').click();
+      }
       const values = await page.locator('input[pattern="[0-9]{3}"]').evaluateAll(inputs => inputs.map(input => input.value));
       if (JSON.stringify(values) !== JSON.stringify(['007','000','123','987']))
         throw new Error('Saved lock codes differ after reload: ' + JSON.stringify(values));
