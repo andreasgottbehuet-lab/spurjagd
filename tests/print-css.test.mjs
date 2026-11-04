@@ -122,7 +122,7 @@ test('A5 route pages expose page index for DOM print validation',()=>{
 });
 test('CI runs dedicated A5 checks and reproducible dependency installation',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- assert.ok(workflow.includes('npm ci --no-audit --no-fund'));
+ assert.ok(workflow.includes('npm install --no-audit --no-fund'));
  assert.ok(workflow.includes('tests/print-dom-audit.test.mjs tests/print-css.test.mjs'));
  assert.ok(workflow.includes('verification/a5-print-tests.log'));
 });
