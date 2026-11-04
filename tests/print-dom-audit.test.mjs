@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditPrintOverflow} from '../src/print-dom-audit.ts';
+import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditPrintOverflow,auditA5PageBounds} from '../src/print-dom-audit.ts';
 
 test('Vollständig gerendertes A5-Paket wird freigegeben',()=>{
  for(const count of [1,3,53,200,1000]) assert.deepEqual(auditRenderedPrintSheets(count,count),[]);
