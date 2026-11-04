@@ -244,3 +244,12 @@ test('Spielleitungs-Hinweise sind auch im sichtbaren Spielplan verfügbar',()=>{
  assert.ok(source.includes('plan.value.cautions.map'));
  assert.ok(source.includes('Hinweise für die Spielleitung'));
 });
+
+test('Gruppenobergrenze und aktueller Produktstatus sind verständlich beschriftet',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const labels=readFileSync(new URL('../src/i18n.ts',import.meta.url),'utf8');
+ assert.ok(ui.includes('Die maximale Gruppengröße ist eine Obergrenze'));
+ assert.ok(labels.includes('Maximale Kinder pro Team'));
+ assert.ok(labels.includes('Maximum children per team'));
+ assert.ok(!labels.includes('Rätsel, echte Wege und Codes werden in der nächsten Ausbaustufe ergänzt'));
+});
