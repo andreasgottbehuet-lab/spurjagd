@@ -114,6 +114,23 @@ try {
   await page.waitForFunction(expected => document.querySelector('#savedProjects')?.value === expected, freshId);
   if (await page.locator('#projectTitle').inputValue() !== 'Meine Schnitzeljagd') throw new Error('Fresh draft was not persisted after reload');
   checks.push('Last project replacement');
+  // Simulate an external edit without dispatching a storage event in this tab.
+  // The revision check must reject destructive actions even without event notification.
+  await page.evaluate(() => {
+    const key='spurjagd-projects-v1';
+    const projects=JSON.parse(localStorage.getItem(key));
+    projects[0].title='Extern aktualisierter Entwurf';
+    projects[0].updatedAt=new Date(Date.parse(projects[0].updatedAt)+1000).toISOString();
+    localStorage.setItem(key,JSON.stringify(projects));
+  });
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Löschen' }).click();
+  await page.locator('.storage-message').filter({ hasText: 'zwischenzeitlich verändert' }).waitFor();
+  if (await page.locator('#savedProjects option').count() !== 1)
+    throw new Error('Stale deletion removed a newer project');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Extern aktualisierter Entwurf');
+  checks.push('Stale deletion blocked without storage event');
   const otherTab = await page.context().newPage();
   try {
     await otherTab.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
