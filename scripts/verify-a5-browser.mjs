@@ -21,6 +21,10 @@ try {
     await next.click();
   }
   const packet = page.locator('.print-packet');
+  if (await packet.count() !== 1) {
+    const warnings = await page.locator('.warnings').allTextContents();
+    throw new Error('Printable packet unavailable: ' + warnings.join(' | '));
+  }
   await packet.waitFor({ state: 'attached', timeout: 10000 });
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
