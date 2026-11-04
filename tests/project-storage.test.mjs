@@ -477,7 +477,7 @@ test('Sicherung bleibt auch nach dem Loeschen eines Projekts importierbar',()=>{
 test('Browser acceptance exercises the complete local project lifecycle',()=>{
  const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
  const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- for(const marker of ['Autosave','JSON export','New project','Switch and reload','JSON import','Invalid backup rejected','Cancel deletion','Delete project','Last project replacement','Concurrent tab change detected']) assert.ok(script.includes(marker),marker);
+ for(const marker of ['Autosave','JSON export','Immediate export includes unsaved edits','New project','Save before project switch','Switch and reload','JSON import','Invalid backup rejected','Cancel deletion','Delete project','Last project replacement','Concurrent tab change detected']) assert.ok(script.includes(marker),marker);
  assert.ok(script.includes('project-browser-report.json'));
  assert.ok(script.includes('project-browser-failure.png'));
  assert.ok(workflow.includes('node scripts/verify-project-browser.mjs'));
