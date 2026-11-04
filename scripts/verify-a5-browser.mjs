@@ -45,6 +45,18 @@ try {
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
+  const renderedOrder = await sheets.evaluateAll(elements => elements.map(el =>
+    el.classList.contains('print-organizer-sheet') ? 'organizer' :
+    el.classList.contains('print-child-sheet') ? 'child' :
+    el.classList.contains('print-label-sheet') ? 'label' : 'unknown'
+  ));
+  const firstChild = renderedOrder.indexOf('child');
+  const firstLabel = renderedOrder.indexOf('label');
+  if (firstChild < 1 || firstLabel <= firstChild ||
+      renderedOrder.slice(0, firstChild).some(kind => kind !== 'organizer') ||
+      renderedOrder.slice(firstChild, firstLabel).some(kind => kind !== 'child') ||
+      renderedOrder.slice(firstLabel).some(kind => kind !== 'label'))
+    failures.push('A5 sheet category order must be organizer, child, labels');
   const categories = await sheets.evaluateAll(elements => ({
     organizer: elements.filter(el => el.classList.contains('print-organizer-sheet')).length,
     children: elements.filter(el => el.classList.contains('print-child-sheet')).length,
