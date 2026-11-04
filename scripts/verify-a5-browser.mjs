@@ -199,7 +199,7 @@ try {
       const pageNumber = categories.organizer + i + 1;
       const content = pdfPageTexts[pageNumber - 1] ?? '';
       const kind = envelopePages[i].kind;
-      const marker = kind === 'task' ? 'Stationsaufgaben:' : kind === 'answer' ? 'Antwortblatt' : 'Wegrätsel';
+      const marker = kind === 'route' ? 'Wegrätsel' : kind === 'answer' ? 'Antwortblatt' : 'Stationsaufgaben:';
       if (marker && !content.includes(marker))
         failures.push('PDF page ' + pageNumber + ' does not contain expected ' + kind + ' sheet heading');
       // Check actual PDF sheet numbering against the DOM envelope sequence.
