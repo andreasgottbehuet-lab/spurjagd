@@ -164,3 +164,9 @@ test('Chromium acceptance checks PDF content at individual page positions',()=>{
  assert.ok(script.includes("kind === 'route' ? 'Wegrätsel'"));
  assert.ok(script.includes('categories.organizer + categories.children + i + 1'));
 });
+
+test('Chromium acceptance archives visual A5 page previews',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes("spawnSync('pdftoppm'"));
+ for(const name of ["['organizer', 1]","['child', categories.organizer + 1]","['labels', categories.organizer + categories.children + 1]"]) assert.ok(script.includes(name),name);
+});
