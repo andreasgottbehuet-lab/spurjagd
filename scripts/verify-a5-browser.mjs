@@ -253,6 +253,15 @@ try {
       failures.push('A5 PDF page ' + pageNumber + ' has no matching team identification');
   }
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
+  // Label text must preserve each envelope's group and station assignment.
+  const labelNames = await page.locator('.print-label strong').allTextContents();
+  const labelPages = pdfPageTexts.slice(categories.organizer + categories.children);
+  for (let index = 0; index < labelNames.length; index++) {
+    const labelPage = Math.floor(index / 4);
+    const expectedLabel = labelNames[index].trim();
+    if (!expectedLabel || !(labelPages[labelPage] ?? '').includes(expectedLabel))
+      failures.push('A5 label ' + (index + 1) + ' missing from its expected PDF sheet');
+  }
   const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
   if (childText.includes('Codes und Lösungen') || childText.includes('Umschlagkontrolle'))
     failures.push('Organizer-only solution or envelope checklist leaked onto child pages');
