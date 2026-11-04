@@ -29,3 +29,11 @@ test('Autospeichern, Verlassen und Projektwechsel erzeugen neue Revisionen',()=>
   assert.match(part,/saveGame\((?:project|current),expected\)/);
  }
 });
+
+test('Zukunftsrevision wird bei wiederholten Sicherungen nicht rückwärts gesetzt',()=>{
+ const future='2030-01-01T00:00:00.000Z';
+ assert.equal(nextProjectRevision(future,Date.parse('2026-11-04T00:00:00.000Z')),'2030-01-01T00:00:00.001Z');
+});
+test('Zeitstempel an der maximalen Datumsgrenze wird sicher abgewiesen',()=>{
+ assert.throws(()=>nextProjectRevision('275760-09-13T00:00:00.000Z',Date.parse('2026-11-04T00:00:00.000Z')),/gültigen Zeitbereichs/);
+});
