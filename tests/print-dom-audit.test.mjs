@@ -145,3 +145,8 @@ test('Doppelte Umschlagkennungen und ungültige Blattzahlen sperren den Druck',(
  }
  assert.ok(auditRenderedEnvelopes([{id:'',sheetCount:3}],[]).some(x=>x.includes('leere Umschlagkennung')));
 });
+
+test('Etikettenprüfung akzeptiert keine doppelten oder leeren Manifestkennungen',()=>{
+ assert.ok(auditRenderedLabels([{id:'A',sheetCount:3},{id:'A',sheetCount:3}],['A','A']).some(x=>x.includes('doppelte Umschlagkennungen')));
+ assert.ok(auditRenderedLabels([{id:'',sheetCount:3}],['']).some(x=>x.includes('leere Umschlagkennung')));
+});
