@@ -3,11 +3,12 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 mkdirSync('verification', { recursive: true });
-const browser = await chromium.launch({ headless: true });
+let browser;
 const failures = [];
 const browserErrors = [];
 let activePage;
 try {
+  browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   activePage = page;
   page.on('pageerror', error => browserErrors.push(error.message));
@@ -160,5 +161,5 @@ try {
   }
   throw error;
 } finally {
-  await browser.close();
+  if (browser) await browser.close();
 }
