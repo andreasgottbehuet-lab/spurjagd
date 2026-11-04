@@ -194,3 +194,18 @@ test('A5 Chromium fixture checks leading zeroes and printable category order',()
  assert.ok(script.includes('printButton.isDisabled()'));
  assert.ok(script.includes('A5 sheet category order must be organizer, child, labels'));
 });
+
+test('Wizard does not offer unsupported paid game goals as printable options',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.match(ui,/checked={goal==='word'} disabled/);
+ assert.match(ui,/checked={goal==='cards'} disabled/);
+ assert.ok(ui.includes("Auf unterstütztes Spielziel wechseln"));
+});
+
+test('Wizard exposes print errors at station entry and offers a direct correction path',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(ui.includes('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:'));
+ assert.ok(ui.includes('Alle Angaben für das A5-Druckpaket sind vollständig.'));
+ assert.ok(ui.includes('Stationsangaben und Codes korrigieren'));
+ assert.ok(ui.includes('onClick={()=>setActiveStep(3)}'));
+});
