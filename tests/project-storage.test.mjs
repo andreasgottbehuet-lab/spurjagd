@@ -482,3 +482,10 @@ test('Browser acceptance exercises the complete local project lifecycle',()=>{
  assert.ok(script.includes('project-browser-failure.png'));
  assert.ok(workflow.includes('node scripts/verify-project-browser.mjs'));
 });
+
+test('Browserprojekt-Pruefung wartet auf echte Zustandsaenderungen',()=>{
+ const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('waitForFunction'));
+ assert.ok(script.includes('Import fehlgeschlagen'));
+ assert.ok(!script.includes('waitForTimeout('));
+});
