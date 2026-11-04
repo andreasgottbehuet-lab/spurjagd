@@ -126,3 +126,12 @@ test('Hidden print packets with zero geometry cannot pass overflow checks',()=>{
  assert.ok(auditPrintOverflow([sheet]).some(issue=>issue.includes('nicht geprüft')));
  assert.ok(auditPrintOverflow([{...sheet,contentWidth:480,contentHeight:700,scrollWidth:480,scrollHeight:700}],-1).some(issue=>issue.includes('Messtoleranz')));
 });
+
+test('A5 printable area catches over-wide and over-tall sheets',()=>{
+ const px=96/25.4;
+ const valid={id:'A',contentWidth:127*px,contentHeight:189*px,scrollWidth:127*px,scrollHeight:189*px};
+ assert.deepEqual(auditA5PageBounds([valid],px),[]);
+ assert.ok(auditA5PageBounds([{...valid,id:'B',scrollWidth:130*px}],px).some(x=>x.includes('128 mm')));
+ assert.ok(auditA5PageBounds([{...valid,id:'C',scrollHeight:192*px}],px).some(x=>x.includes('190 mm')));
+ assert.ok(auditA5PageBounds([valid],0).some(x=>x.includes('Skalierung')));
+});
