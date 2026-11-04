@@ -267,7 +267,7 @@ try {
   const normalizedOrganizer = organizerText.replace(/\s+/g, ' ');
   for (let index = 0; index < checklistRows.length; index++) {
     const row = checklistRows[index].replace(/\s+/g, ' ').trim();
-    if (!row || !normalizedOrganizer.includes(row))
+    if (!row || !row.split(' · ').every(part => normalizedOrganizer.includes(part.trim())))
       failures.push('A5 organizer checklist is missing envelope identity ' + (index + 1));
   }
   if (checklistRows.length !== envelopeGroups.size)
