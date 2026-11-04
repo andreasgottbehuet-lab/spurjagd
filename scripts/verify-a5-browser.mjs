@@ -235,6 +235,31 @@ try {
   const restoredSheet = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredSheet.calls !== 1 || restoredSheet.alerts.length)
     failures.push('A5 print did not recover after restoring missing child sheet');
+  // A visually similar label with a stray space is still a different
+  // packing identity and must be rejected before opening the print dialog.
+  await page.evaluate(() => {
+    const label = document.querySelector('.print-label');
+    if (!label) throw new Error('Missing label for whitespace identity test');
+    label.dataset.team = ' ' + (label.dataset.team ?? '');
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const paddedLabel = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (paddedLabel.calls !== 0 || paddedLabel.alerts.length === 0)
+    failures.push('Whitespace-padded A5 envelope label did not block printing');
+  await page.evaluate(() => {
+    const label = document.querySelector('.print-label');
+    const row = document.querySelector('.print-checklist-row');
+    if (!label || !row) throw new Error('Missing label for whitespace identity restoration');
+    label.dataset.team = row.dataset.team ?? '';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredPaddedLabel = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredPaddedLabel.calls !== 1 || restoredPaddedLabel.alerts.length)
+    failures.push('A5 print did not recover after correcting whitespace-padded label');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
