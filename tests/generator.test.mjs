@@ -175,3 +175,11 @@ test('Gruppenvorschau stimmt bei jeder Kinderzahl mit dem Spielplan überein',()
   }
  }
 });
+
+test('Einzelkind-Gruppe erscheint als Hinweis für die Spielleitung',()=>{
+ const result=createPlan(config({players:5,groupSize:2}));
+ assert.deepEqual(result.teams.map(team=>team.memberCount),[2,2,1]);
+ assert.ok(result.cautions.some(w=>w.includes('nur einem Kind')));
+ const balanced=createPlan(config({players:13,groupSize:3}));
+ assert.equal(balanced.cautions.some(w=>w.includes('nur einem Kind')),false);
+});
