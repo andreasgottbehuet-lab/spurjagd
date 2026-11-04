@@ -50,6 +50,16 @@ try {
   await page.waitForFunction(expected => document.querySelectorAll('#savedProjects option').length === expected, before - 1);
   if (await page.locator('#savedProjects option').count() !== before - 1) throw new Error('Delete project');
   checks.push('Delete project');
+  const otherTab = await page.context().newPage();
+  try {
+    await otherTab.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+    await otherTab.locator('#projectTitle').fill('Aenderung aus zweitem Tab');
+    await otherTab.waitForFunction(() => [...document.querySelectorAll('#savedProjects option')].some(option => option.textContent?.includes('Aenderung aus zweitem Tab')));
+    await page.locator('.storage-message').filter({ hasText: 'anderen Tab' }).waitFor();
+    checks.push('Concurrent tab change detected');
+  } finally {
+    await otherTab.close();
+  }
   if (errors.length) throw new Error('Browser JavaScript errors: ' + errors.join(' | '));
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
