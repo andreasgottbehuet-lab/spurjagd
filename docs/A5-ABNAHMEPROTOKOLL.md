@@ -1,6 +1,18 @@
 # SPURJAGD – A5-Abnahmeprotokoll (Vorlage)
 
-**Status:** Nicht abgenommen. Dieses Dokument bestätigt keinen durchgeführten Probedruck.
+**Status:** Automatische A5-Prüfung bestanden; physischer Probedruck und praktische Abnahme offen. Dieses Dokument bestätigt keinen vor Ort durchgeführten Probedruck.
+
+## Verifizierter technischer Stand (04.11.2026)
+
+- Branch: `feature/print-preflight-hardening-20261104`
+- Geprüfter Commit: `71276b8acef87e38b5e0a1c0731db8ba1288f7b9`
+- GitHub Actions: [Quality checks #1231](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41887991524) – **success**
+- Automatische Tests: **329 bestanden, 0 fehlgeschlagen**
+- Chromium-PDF-Probedruck: **53 A5-Seiten**, automatische PDF-Prüfung bestanden
+- [Prüfartefakt mit PDF und Browser-Nachweisen](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41887991524/artifacts/13350699792)
+- Neu geprüft: gemeinsames Drei-Zahlwörter-Gitter mit eindeutigem Code von oben nach unten; rote und blaue Teamkennzeichnung; Antwortblatt und Spielleiterlösung
+- **Nicht nachgewiesen:** physischer Druck, echte Schlossmechanik, Lesbarkeit auf konkretem Drucker, praktische Verständlichkeit mit Kindern.
+
 
 ## Prüfumgebung (vor Ort ausfüllen)
 
@@ -11,7 +23,7 @@
 - Druckeinstellung: 100 % / tatsächliche Größe; kein „An Seite anpassen“
 - Testfall: 12 Kinder, vier Dreiergruppen, vier Stationen, zwölf dreistellige Schlösser
 - Codes des Referenzfalls: 007 / 000 / 123 / 987
-- Automatischer CI-Lauf / Commit: ______________________
+- Automatischer CI-Lauf / Commit: #1231 / `71276b8` (technisch bestanden)
 
 ## Abnahmekriterien
 
@@ -20,9 +32,9 @@
 | 1 | PDF-Eigenschaften öffnen | Alle Seiten A5 Hochformat (148 × 210 mm) | ☐ OK ☐ Fehler |
 | 2 | Gesamtes PDF prüfen | Referenzfall: 53 A5-Seiten; keine Leerseiten | ☐ OK ☐ Fehler |
 | 3 | Erste und letzte Seite drucken | Keine abgeschnittenen Texte, Linien oder Ränder | ☐ OK ☐ Fehler |
-| 4 | Kinderblätter vollständig drucken | Jede Aufgabe lesbar; ausreichend Platz zum Schreiben | ☐ OK ☐ Fehler |
+| 4 | Kinderblätter vollständig drucken | Jede Aufgabe lesbar; ausreichend Platz zum Schreiben; Drei-Zahlwörter-Gitter mit Reihenfolge verständlich | ☐ OK ☐ Fehler |
 | 5 | Organisatorblätter prüfen | Lösungen, Zuordnung, Routen und Packliste vollständig | ☐ OK ☐ Fehler |
-| 6 | Umschlagetiketten ausschneiden | Gruppen-/Stationskennung und Blattanzahl eindeutig | ☐ OK ☐ Fehler |
+| 6 | Umschlagetiketten ausschneiden | Gruppen-/Stationskennung, Teamfarbe und Blattanzahl eindeutig | ☐ OK ☐ Fehler |
 | 7 | Zwölf Umschläge packen | Jedes Kind erhält die vorgesehene Blattfolge | ☐ OK ☐ Fehler |
 | 8 | Zwölf reale Schlösser einstellen | Alle Codes dreistellig; führende Nullen funktionieren | ☐ OK ☐ Fehler |
 | 9 | Laufweg der Gruppen vergleichen | Unterschiedliche Routen stimmen mit Spielleiterübersicht überein | ☐ OK ☐ Fehler |
