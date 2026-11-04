@@ -58,6 +58,6 @@
 
 ## 5. Technische Prüftiefe und Grenzen
 
-Die CI kontrolliert TypeScript/Build, Unit-/Integrationstests, Projektverwaltung im Chromium-Browser, Druckfreigabe bei beschädigten Etiketten/Packlisten, logische Seitenzahlen, Umschlagreihenfolge, Codes und Inhalte des erzeugten A5-PDFs. Die Bildschirm-Packanleitung darf nicht im PDF erscheinen. Automatische Geometrie-, Text- und PDF-Seitenprüfungen können **nicht** alle Druckertreiberränder, ungünstige Zeilenumbrüche, physische Blattreihenfolgen, reale Schlossmechanik oder die Verständlichkeit für Kinder nachweisen.
+Die CI kontrolliert TypeScript/Build, Unit-/Integrationstests, Projektverwaltung im Chromium-Browser, Druckfreigabe bei beschädigten Etiketten/Packlisten, logische Seitenzahlen, Umschlagreihenfolge, Codes und Inhalte des erzeugten A5-PDFs. Die Packliste wird zusätzlich auf die je Umschlag geplanten dreistelligen Codes und nächsten Zielorte abgeglichen; manipulierte Angaben sperren den Druck. Die Prüfung der DOM-Datenattribute ersetzt nicht den Sichtabgleich des tatsächlich gedruckten Texts. Die Bildschirm-Packanleitung darf nicht im PDF erscheinen. Automatische Geometrie-, Text- und PDF-Seitenprüfungen können **nicht** alle Druckertreiberränder, ungünstige Zeilenumbrüche, physische Blattreihenfolgen, reale Schlossmechanik oder die Verständlichkeit für Kinder nachweisen.
 
 Die eigentliche Abnahme erfolgt anhand dieses Protokolls und des ausgedruckten Spielpakets. Offene Prüfpunkte dürfen nicht als bestanden markiert werden.
