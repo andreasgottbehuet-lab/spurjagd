@@ -219,3 +219,11 @@ test('Zielort bleibt bei Bindestrichen, Zusammenschreibung und getrennten Wörte
  const clue=generateCreativeRouteClue('Feuerwehrplatz','','custom',12,'Zur Feuerwehr-Platz-Ecke gehen');
  assert.equal(verifyCreativeRouteClue(clue),false);
 });
+
+test('Beschreibungsrätsel sperren getarnte Zielnamen vor dem Drucken',()=>{
+ for(const disguised of ['Feuer-Wehr','FEUER WEHR','Feuer…Wehr']){
+  assert.throws(()=>generateCreativeRouteClue('Feuerwehr',disguised+' neben dem großen Parkplatz','description',1),/verrät den Zielnamen/);
+ }
+ const valid=generateCreativeRouteClue('Feuerwehr','Platz mit Kies und einem roten Tor','description',1);
+ assert.equal(verifyCreativeRouteClue(valid),true);
+});
