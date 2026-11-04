@@ -68,6 +68,8 @@ try {
   const labelIds = await page.locator('.print-label').evaluateAll(elements => elements.map(el => el.getAttribute('data-envelope-id') ?? ''));
   if (labelIds.length !== envelopeGroups.size || labelIds.some((id,index) => id !== [...envelopeGroups.keys()][index]))
     failures.push('A5 envelope labels do not match child packet order');
+  if (envelopeGroups.size !== 12 || categories.children !== 36 || categories.labels !== 3)
+    failures.push('Default 12-child A5 fixture differs from 12 envelopes / 36 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
