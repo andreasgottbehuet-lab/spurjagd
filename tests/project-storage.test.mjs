@@ -567,3 +567,13 @@ test('Atomic storage rejection preserves original error without unnecessary roll
   assert.equal(loadGames()[0].title,'Geburtstag');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Windows browser acceptance is optional and checks real browser plus A5 tools',()=>{
+ const script=readFileSync(new URL('../scripts/verify-windows-browser.ps1',import.meta.url),'utf8');
+ assert.ok(script.includes('verify-project-browser.mjs'));
+ assert.ok(script.includes('verify-a5-browser.mjs'));
+ assert.ok(script.includes('Get-Command pdfinfo'));
+ assert.ok(script.includes('Start-Process'));
+ assert.ok(script.includes('taskkill.exe'));
+ assert.ok(script.includes('strictPort'));
+});
