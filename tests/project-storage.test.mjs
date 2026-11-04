@@ -495,3 +495,13 @@ test('Deletion confirmation explains irreversible loss in both languages',()=>{
  assert.ok(ui.includes('Die Löschung kann nicht rückgängig gemacht werden.'));
  assert.ok(ui.includes('This cannot be undone.'));
 });
+
+test('Import starts planning at step one without changing the original project',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const begin=ui.indexOf('const importProject = async');
+ const end=ui.indexOf('return (',begin);
+ const handler=ui.slice(begin,end);
+ assert.ok(handler.includes('id:newGameId()'));
+ assert.ok(handler.includes('setActiveStep(1)'));
+ assert.ok(handler.includes('importedProjectTitle(imported.title)'));
+});
