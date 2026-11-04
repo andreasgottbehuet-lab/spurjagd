@@ -286,6 +286,18 @@ try {
     if (!details.includes('Danach:') || !details.includes('Schloss-Code:'))
       failures.push('A5 packing checklist lacks route or lock code for envelope ' + (index + 1));
   }
+  // Compare each printed packing-list detail to the actual organizer PDF.
+  for (let index = 0; index < checklistDetails.length; index++) {
+    const detail = checklistDetails[index].replace(/\s+/g, ' ').trim();
+    const code = detail.match(/Schloss-Code:\s*(\d{3})/)?.[1];
+    const destination = detail.split('Danach:').at(-1)?.trim();
+    if (!code || !destination)
+      failures.push('A5 packing checklist has an invalid code or destination for envelope ' + (index + 1));
+    if (code && !normalizedOrganizer.includes(code))
+      failures.push('A5 organizer PDF is missing packing-list lock code for envelope ' + (index + 1));
+    if (destination && !normalizedOrganizer.includes(destination))
+      failures.push('A5 organizer PDF is missing packing-list destination for envelope ' + (index + 1));
+  }
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.
   const labelNames = await page.locator('.print-label strong').allTextContents();
