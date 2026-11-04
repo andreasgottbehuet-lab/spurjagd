@@ -68,6 +68,11 @@ try {
     await otherTab.locator('#projectTitle').fill('Aenderung aus zweitem Tab');
     await otherTab.waitForFunction(() => [...document.querySelectorAll('#savedProjects option')].some(option => option.textContent?.includes('Aenderung aus zweitem Tab')));
     await page.locator('.storage-message').filter({ hasText: 'anderen Tab' }).waitFor();
+    await page.locator('#projectTitle').fill('Veraltete Eingabe');
+    await page.waitForTimeout(850);
+    await otherTab.reload({ waitUntil: 'networkidle' });
+    if (await otherTab.locator('#projectTitle').inputValue() !== 'Aenderung aus zweitem Tab')
+      throw new Error('Stale tab overwrote newer project changes');
     checks.push('Concurrent tab change detected');
   } finally {
     await otherTab.close();
