@@ -129,7 +129,7 @@ test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen V
 test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwurfs',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const helper=source.slice(source.indexOf('const saveCurrentBeforeSwitch ='),source.indexOf('const newProject ='));
- assert.ok(helper.includes('saveGame(current)'));
+ assert.ok(helper.includes('saveGame(current,expected)'));
  assert.ok(helper.includes('return false'));
  const selector=source.slice(source.indexOf('id="savedProjects"'),source.indexOf('</select>',source.indexOf('id="savedProjects"')));
  assert.ok(selector.includes('saveCurrentBeforeSwitch()'));
@@ -289,7 +289,7 @@ test('Pending edits are saved on pagehide and tab backgrounding',()=>{
  assert.ok(source.includes("window.addEventListener('pagehide',flushOnExit)"));
  assert.ok(source.includes("document.addEventListener('visibilitychange',onVisibilityChange)"));
  assert.ok(source.includes("document.visibilityState==='hidden'"));
- assert.ok(source.includes('saveGame(current)'));
+ assert.ok(source.includes('saveGame(current,expected)'));
  assert.ok(source.includes('if(!storageReady || storageConflict.current) return;'));
 });
 
@@ -513,7 +513,7 @@ test('Queued autosave checks cross-tab conflict before writing',()=>{
  const end=ui.indexOf('}, 650);',start);
  const callback=ui.slice(start,end);
  assert.ok(callback.includes('if (storageConflict.current) return;'));
- assert.ok(callback.indexOf('if (storageConflict.current) return;') < callback.indexOf('saveGame(project)'));
+ assert.ok(callback.indexOf('if (storageConflict.current) return;') < callback.indexOf('saveGame(project,expected)'));
 });
 
 test('Partial project-list write is rolled back when storage throws',()=>{
