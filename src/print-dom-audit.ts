@@ -186,3 +186,28 @@ export function auditRenderedPackingItems(expected:RenderedPackingItem[],labels:
  }
  return [...new Set(issues)];
 }
+
+/** Confirms the organizer-only lock code and next destination are printed
+ * against the planned envelope, without exposing either on child labels.
+ */
+export interface RenderedOrganizerSecret {
+ envelopeId:string;
+ code:string;
+ destination:string;
+}
+export function auditRenderedOrganizerSecrets(expected:RenderedOrganizerSecret[],actual:RenderedOrganizerSecret[]):string[] {
+ const issues:string[]=[];
+ if(actual.length!==expected.length)
+  issues.push('Spielleitungs-Packliste: Anzahl der Schloss-Codes und Zielorte stimmt nicht.');
+ if(new Set(actual.map(item=>item.envelopeId)).size!==actual.length)
+  issues.push('Spielleitungs-Packliste: doppelte Umschlagkennung bei Codes und Zielorten.');
+ actual.forEach((item,index)=>{
+  const planned=expected[index];
+  if(!planned || item.envelopeId!==planned.envelopeId ||
+     item.code!==planned.code || item.destination!==planned.destination)
+   issues.push('Spielleitungs-Packliste: Schloss-Code oder nächster Zielort für Umschlag '+(index+1)+' ist falsch.');
+  if(!/^\\d{3}$/.test(item.code)||!item.destination.trim()||item.destination!==item.destination.trim())
+   issues.push('Spielleitungs-Packliste: ungültiger Schloss-Code oder Zielort in Umschlag '+(index+1)+'.');
+ });
+ return [...new Set(issues)];
+}
