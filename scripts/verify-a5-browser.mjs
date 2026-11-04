@@ -19,7 +19,13 @@ try {
       const codeInputs = page.locator('input[pattern="[0-9]{3}"]');
       const codeCount = await codeInputs.count();
       if (codeCount < 1) throw new Error('No station code inputs on wizard step 3');
-      for (let i = 0; i < codeCount; i++) await codeInputs.nth(i).fill(String(100 + i % 900));
+      const fixtureCodes = ['007', '000', '123', '987'];
+      if (codeCount !== fixtureCodes.length) throw new Error('Expected four station code inputs, got ' + codeCount);
+      for (let i = 0; i < codeCount; i++) {
+        await codeInputs.nth(i).fill(fixtureCodes[i]);
+        if (await codeInputs.nth(i).inputValue() !== fixtureCodes[i])
+          throw new Error('Station code lost leading zeroes: ' + fixtureCodes[i]);
+      }
     }
     const next = page.locator('button.next');
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
