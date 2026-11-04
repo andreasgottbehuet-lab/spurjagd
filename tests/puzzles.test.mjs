@@ -227,3 +227,24 @@ test('Beschreibungsrätsel sperren getarnte Zielnamen vor dem Drucken',()=>{
  const valid=generateCreativeRouteClue('Feuerwehr','Platz mit Kies und einem roten Tor','description',1);
  assert.equal(verifyCreativeRouteClue(valid),true);
 });
+
+test('Alle 26 Buchstaben ergeben für viele Seeds korrekte Ziel-Fragen',()=>{
+ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ for(let seed=0;seed<100;seed++){
+  for(const letter of alphabet){
+   const clue=generateCreativeRouteClue(letter,'','questions',seed);
+   assert.equal(verifyCreativeRouteClue(clue),true,letter+' seed '+seed);
+   assert.equal(clue.rows[0].solution[clue.rows[0].letterIndex].toUpperCase(),letter);
+  }
+ }
+});
+
+test('Lange Zielnamen bleiben reproduzierbar und in korrekter Reihenfolge',()=>{
+ for(const destination of ['Wiese über der Sabine','Schotterplatz neben der Feuerwehr','Graswald Schlittenhang','Äußere Höhle am Bach']){
+  for(const mode of ['questions','letters']){
+   const clue=generateCreativeRouteClue(destination,'',mode,123);
+   assert.equal(verifyCreativeRouteClue(clue),true,destination+' '+mode);
+   assert.deepEqual(generateCreativeRouteClue(destination,'',mode,123),clue);
+  }
+ }
+});
