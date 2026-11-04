@@ -33,6 +33,7 @@ jobs:
           set -o pipefail
           npm test 2>&1 | tee verification/tests.log
       - name: TypeScript and production build
+        if: success() || failure()
         run: |
           set -o pipefail
           npm run build 2>&1 | tee verification/build.log
