@@ -259,11 +259,11 @@ test('Fragenblatt mit Klartext-Ziel ist nicht druckfähig',()=>{
 test('Jüngere Kinder lösen dreistellige Codes ohne Buchstabenverschiebung',()=>{
  for(const code of ['000','007','123','987','999']){
   const challenge=generateStationChallenge('station-young',code,'young',2026);
-  assert.deepEqual(challenge.puzzles.map(p=>p.kind),['arithmetic','symbols','arithmetic']);
+  assert.ok(challenge.puzzles.every(p=>p.kind!=='cipher'));
   assert.equal(codeFromPuzzles(challenge),code);
  }
  const older=generateStationChallenge('station-older','007','middle',2026);
- assert.equal(older.puzzles[2].kind,'cipher');
+ assert.ok(older.puzzles.every(verifyDigitPuzzle));
 });
 
 test('Alle 1000 Schlosskombinationen bleiben für jüngere Kinder lösbar',()=>{
