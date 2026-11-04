@@ -197,3 +197,11 @@ test('Stationskennungen dürfen sich nicht nur durch Leerzeichen unterscheiden',
  locations[1].id=' '+locations[0].id+' ';
  assert.throws(()=>createPlan(config({locations})),/Stations-IDs/);
 });
+
+test('Zu lange Standortnamen werden vor der Routenberechnung abgewiesen',()=>{
+ const locations=config().locations.map(x=>({...x}));
+ locations[0].name='A'.repeat(81);
+ assert.throws(()=>createPlan(config({locations})),/80 Zeichen/);
+ locations[0].name='A'.repeat(80);
+ assert.doesNotThrow(()=>createPlan(config({locations})));
+});
