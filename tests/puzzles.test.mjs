@@ -383,3 +383,14 @@ test('Referenzspiel deckt alle sechs Schlossrätselarten mit gültigen Codes ab'
  }
  assert.deepEqual([...kinds].sort(),['arithmetic','arrowpath','cipher','sequence','symbols','wordsearch']);
 });
+
+test('Pfeilpfade haben auch bei schwierigen Seeds immer die volle altersgerechte Länge',()=>{
+ for(const [age,length] of [['young',3],['middle',5],['older',7]]) for(let digit=0;digit<10;digit++) for(let seed=0;seed<120;seed++){
+  const p=generateDigitPuzzle(digit,'arrowpath',age,seed);
+  assert.equal([...p.arrowGrid.arrows].length,length);
+  assert.equal(verifyDigitPuzzle(p),true);
+ }
+});
+test('Unbekannte Rätselarten werden nicht stillschweigend als Geheimschrift erzeugt',()=>{
+ assert.throws(()=>generateDigitPuzzle(5,'unknown','middle',12),/Unbekannte Rätselart/);
+});
