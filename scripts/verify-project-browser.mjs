@@ -41,6 +41,10 @@ try {
   if (!(await page.locator('#projectTitle').inputValue()).includes('Import')) throw new Error('Backup import');
   checks.push('JSON import');
   const before = await page.locator('#savedProjects option').count();
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.getByRole('button', { name: 'Löschen' }).click();
+  if (await page.locator('#savedProjects option').count() !== before) throw new Error('Cancelled deletion changed projects');
+  checks.push('Cancel deletion');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Löschen' }).click();
   await page.waitForTimeout(900);
