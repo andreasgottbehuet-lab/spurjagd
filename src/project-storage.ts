@@ -86,21 +86,41 @@ export function loadGames(): SavedGame[] {
   if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
   return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
-export function saveGame(project: SavedGame): SavedGame[] {
-  if (!isSavedGame(project)) throw new Error('Projekt ungültig.');
-  const existing = loadGames();
-  const next = [project, ...existing.filter(p => p.id !== project.id)];
-  if (next.length > MAX_PROJECTS) throw new Error('Maximal 40 Projekte. Bitte alte Projekte löschen.');
-  // Persist the project list first: failure must not point ACTIVE to an unsaved project.
-  localStorage.setItem(KEY, JSON.stringify(next));
-  localStorage.setItem(ACTIVE, project.id);
-  return next;
+/** Writes project list and active selection together, restoring both on a partial failure. */
+function persistProjects(next:SavedGame[],active:string|null):void {
+ const oldList=localStorage.getItem(KEY);
+ const oldActive=localStorage.getItem(ACTIVE);
+ localStorage.setItem(KEY,JSON.stringify(next));
+ try{
+  if(active===null)localStorage.removeItem(ACTIVE);
+  else localStorage.setItem(ACTIVE,active);
+ }catch(error){
+  try{
+   if(oldList===null)localStorage.removeItem(KEY);
+   else localStorage.setItem(KEY,oldList);
+   if(oldActive===null)localStorage.removeItem(ACTIVE);
+   else localStorage.setItem(ACTIVE,oldActive);
+  }catch{
+   throw new Error('Speichern fehlgeschlagen; Wiederherstellung der Projektdaten ist nicht bestätigt.');
+  }
+  throw error;
+ }
 }
-export function deleteGame(id: string): SavedGame[] {
-  const remaining = loadGames().filter(p => p.id !== id);
-  localStorage.setItem(KEY, JSON.stringify(remaining));
-  if (localStorage.getItem(ACTIVE) === id) localStorage.removeItem(ACTIVE);
-  return remaining;
+export function saveGame(project: SavedGame): SavedGame[] {
+ if(!isSavedGame(project))throw new Error('Projekt ungültig.');
+ const existing=loadGames();
+ const next=[project,...existing.filter(p=>p.id!==project.id)];
+ if(next.length>MAX_PROJECTS)throw new Error('Maximal 40 Projekte. Bitte alte Projekte löschen.');
+ persistProjects(next,project.id);
+ return next;
+}
+export function deleteGame(id:string):SavedGame[] {
+ const existing=loadGames();
+ const remaining=existing.filter(p=>p.id!==id);
+ if(remaining.length===existing.length)throw new Error('Projekt nicht gefunden.');
+ const active=localStorage.getItem(ACTIVE);
+ persistProjects(remaining,active===id?null:active);
+ return remaining;
 }
 /** Replace the final saved project without ever writing an empty project list. */
 export function replaceLastGame(oldId:string,replacement:SavedGame):SavedGame[] {
