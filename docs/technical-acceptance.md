@@ -82,3 +82,9 @@ Der letzte gespeicherte Entwurf wird durch einen neutralen Ersatzentwurf in eine
 - Die Browser-Speicherung muss auch dann einen Fehler anzeigen und den bisherigen Projektstand schützen, wenn nach dem Schreiben der Ersatz-Projektliste das Speichern der aktiven Projektkennung fehlschlägt. Der Wiederherstellungsversuch ist im Code vorgesehen, aber bei einem generell defekten Speicher nicht garantiert.
 - Jedes Wegrätselblatt muss eine fortlaufende Teilseitennummer besitzen; fehlende Kennungen sind nicht als gültiger Druck zu behandeln. Bestehende Testdaten müssen dieselbe Vorgabe erfüllen.
 - Ein nicht sichtbares Druckpaket kann geometrische Nullmaße liefern. Solche Messwerte dürfen nicht als erfolgreicher A5-Überlauftest gewertet werden. Ein echter Browser-Drucktest mit sichtbarer Druckdarstellung bleibt vor Veröffentlichung erforderlich.
+
+## Speichertransaktionen und Stationskennungen – Prüfstand 04.11.2026
+- Speichern, Löschen und Ersetzen des letzten Projekts verwenden denselben lokalen Schreibpfad. Scheitert nach dem Schreiben der Projektliste die Aktualisierung der aktiven Projektkennung, wird die vorherige Liste wiederherzustellen versucht. Bei einer vollständig ausgefallenen Browser-Speicherung ist die Wiederherstellung nicht garantiert; entsprechende Fehler müssen sichtbar bleiben.
+- Das Löschen einer nicht vorhandenen Projektkennung wird abgelehnt statt unbemerkt als erfolgreicher Löschvorgang gemeldet.
+- Die Stations-ID-Vergabe lehnt ungültige Startwerte (NaN, unendliche Werte, Bruchzahlen und Werte außerhalb des zulässigen Bereichs) ab. Damit kann aus fehlerhaften Startwerten keine endlose Vergabeschleife entstehen.
+- GitHub-Statusabfragen für den vorherigen Commit lieferten weder Commit-Statusmeldungen noch Pull-Request-Workflowläufe. Dies belegt weder erfolgreiche noch fehlgeschlagene Push-Workflows. Ein tatsächlich ausgeführter Test- und Buildlauf ist weiterhin offen.
