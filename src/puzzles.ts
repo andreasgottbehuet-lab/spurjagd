@@ -1,5 +1,5 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence';
 export type AgeLevel = 'young' | 'middle' | 'older';
 export interface Puzzle {
   id: string;
@@ -48,6 +48,13 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
+  if (kind === 'sequence') {
+    // The missing final number is always the exact target digit.
+    const step=age==='young'?1:chooseInt(rng,1,age==='middle'?3:5);
+    const ascending=rng()<0.5;
+    const values=Array.from({length:4},(_,i)=>ascending?target-(3-i)*step:target+(3-i)*step);
+    return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,3).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
+  }
   if (kind === 'arrowpath') {
     const size=age==='young'?5:age==='middle'?6:7;
     const length=age==='young'?3:age==='middle'?5:7;
@@ -134,6 +141,14 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
 export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   if (!Number.isInteger(puzzle.expectedDigit) || puzzle.expectedDigit < 0 || puzzle.expectedDigit > 9) return false;
   const target = puzzle.expectedDigit;
+  if (puzzle.kind === 'sequence') {
+    const parts=puzzle.question.split('  ·  ');
+    if(parts.length!==4||parts[3]!=='?') return false;
+    const nums=parts.slice(0,3).map(Number);
+    if(nums.some(n=>!Number.isInteger(n))) return false;
+    const delta=nums[1]-nums[0];
+    return delta!==0 && nums[2]-nums[1]===delta && nums[2]+delta===target;
+  }
   if (puzzle.kind === 'arrowpath') {
     const g=puzzle.arrowGrid;
     if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||!g.arrows.length||puzzle.question!==[...g.arrows].join(' ')) return false;
@@ -175,8 +190,8 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   // Younger children should not need Caesar ciphers to open a lock.
   // Keep three independent digits and the existing deterministic seeds.
   const variants: PuzzleKind[][] = age === 'young'
-    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arrowpath','symbols'],['arrowpath','arithmetic','symbols']]
-    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','wordsearch','arithmetic'],['arithmetic','arrowpath','cipher']];
+    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arrowpath','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath']]
+    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','wordsearch','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols']];
   const kinds=variants[hashSeed(projectSeed+':'+stationId+':types')%variants.length];
   const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
