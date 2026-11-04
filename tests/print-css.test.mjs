@@ -209,3 +209,11 @@ test('Wizard exposes print errors at station entry and offers a direct correctio
  assert.ok(ui.includes('Stationsangaben und Codes korrigieren'));
  assert.ok(ui.includes('onClick={()=>setActiveStep(3)}'));
 });
+
+test('Lock-code input identifies invalid values and preserves three-digit text entry',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(ui.includes("aria-invalid={visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'')}"));
+ assert.ok(ui.includes("aria-describedby={'code-help-'+location.id}"));
+ assert.ok(ui.includes('Bitte genau drei Ziffern eingeben; 000 und führende Nullen sind erlaubt.'));
+ assert.ok(ui.includes('pattern="[0-9]{3}"'));
+});
