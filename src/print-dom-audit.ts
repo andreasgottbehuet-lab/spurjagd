@@ -28,8 +28,11 @@ export function auditRenderedPrintCategories(expected:ExpectedSheetCounts,actual
   ['Etikettenblätter',expected.labelSheets,actual.labels]
  ];
  for(const [name,wanted,found] of checks){
+  if(!Number.isSafeInteger(wanted)||wanted<0) issues.push(name+': ungültige erwartete A5-Blattzahl.');
   if(!Number.isSafeInteger(found)||found<0||found!==wanted) issues.push(name+': '+found+' von '+wanted+' vorgesehenen A5-Blättern vorhanden.');
  }
+ if(Number.isSafeInteger(expected.minimumSheets)&&expected.organizerSheets+expected.taskSheets+expected.labelSheets!==expected.minimumSheets)
+  issues.push('Druckmanifest: Blattkategorien stimmen nicht mit der Gesamtzahl überein.');
  if(actual.organizer+actual.children+actual.labels!==actual.total) issues.push('Druckpaket enthält nicht zugeordnete A5-Blätter.');
  return [...new Set(issues)];
 }
