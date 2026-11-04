@@ -331,6 +331,8 @@ try {
     if (!expectedDescription || !printedPage.includes(expectedDescription))
       failures.push('A5 envelope label ' + (index + 1) + ' lost its sheet count or sequence');
   }
+  if (labelNames.length !== checklistRows.length || labelDescriptions.length !== checklistDetails.length)
+    failures.push('A5 label and packing-list item counts differ');
   // Every label must identify the same team, station and sheet quantity as
   // its corresponding organizer packing-list row, not merely a matching count.
   for (let index = 0; index < labelNames.length; index++) {
