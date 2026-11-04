@@ -44,6 +44,14 @@ const COLORS = ['Rot', 'Blau', 'Grün', 'Gelb', 'Orange', 'Lila', 'Türkis', 'Si
 function checkInt(value: number, min: number, max: number, description: string) {
   if (!Number.isInteger(value) || value < min || value > max) throw new Error(description + ': ungültiger Wert');
 }
+export function teamSizes(players: number, groupSize: number): number[] {
+  checkInt(players, 1, 100, 'Teilnehmerzahl');
+  checkInt(groupSize, 1, 10, 'Gruppengröße');
+  const count = Math.ceil(players / groupSize);
+  const base = Math.floor(players / count);
+  const extra = players % count;
+  return Array.from({length:count},(_,i)=>base+(i<extra?1:0));
+}
 export function createPlan(config: GameConfig): GamePlan {
   const { players, groupSize, durationMinutes, locations, puzzleMinutes, walkingMinutes, startFinishMinutes } = config;
   const startMode = config.startMode ?? 'distributed';
@@ -64,9 +72,8 @@ export function createPlan(config: GameConfig): GamePlan {
   if (places.some(place => !place.name)) throw new Error('Jeder Standort benötigt einen Namen');
   if (new Set(places.map(place => place.name.toLocaleLowerCase('de'))).size !== places.length) throw new Error('Standortnamen müssen eindeutig sein');
   if (new Set(places.map(place => place.id)).size !== places.length || places.some(place=>!place.id.trim())) throw new Error('Stations-IDs müssen eindeutig und ausgefüllt sein');
-  const teamCount = Math.ceil(players / groupSize);
-  const base = Math.floor(players / teamCount);
-  const extra = players % teamCount;
+  const sizes = teamSizes(players,groupSize);
+  const teamCount = sizes.length;
   // One travel leg to each station, plus one leg back to the finish.
   // These are manually provided average assumptions, not calculated distances.
   const timeFor = (stops: number) => startFinishMinutes + stops * puzzleMinutes + (stops + 1) * walkingMinutes;
@@ -85,7 +92,7 @@ export function createPlan(config: GameConfig): GamePlan {
       ({...places[(startIndex + direction * j + places.length * j) % places.length]}));
     return {
       name: COLORS[i] ?? String(i + 1),
-      memberCount: base + (i < extra ? 1 : 0),
+      memberCount: sizes[i],
       ...(config.teamProfiles?.[String(i)] ? {profile:{...config.teamProfiles[String(i)]}} : {}),
       stations,
       finish: finishMode === 'start' ? stations[0].name : finishMode === 'origin' ? startPoint : meetingPoint,
