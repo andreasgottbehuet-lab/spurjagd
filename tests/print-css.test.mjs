@@ -126,3 +126,11 @@ test('CI runs dedicated A5 checks and reproducible dependency installation',()=>
  assert.ok(workflow.includes('tests/print-dom-audit.test.mjs tests/print-css.test.mjs'));
  assert.ok(workflow.includes('verification/a5-print-tests.log'));
 });
+
+test('Browser A5 smoke test is connected to CI',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ assert.ok(script.includes('page.pdf('));
+ assert.ok(script.includes('pages !== expected'));
+ assert.ok(workflow.includes('node scripts/verify-a5-browser.mjs'));
+});
