@@ -354,3 +354,13 @@ test('Druckfreigabe weist ungueltige Gesamtsummen fuer jede Seitenkategorie zuru
   }
  }
 });
+
+test('Umschlagkennzeichnungen mit versehentlichen Rand-Leerzeichen sperren den Druck',()=>{
+ const plan=createPlan(config);
+ for(const field of ['id','team','stationId','stationName','destination']){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0][field]=' '+manifest.envelopes[0][field];
+  assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes('Leerzeichen')),
+   'Nicht erkannte Rand-Leerzeichen in '+field);
+ }
+});
