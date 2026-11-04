@@ -26,3 +26,14 @@ test('A5-Druck, Antwortblatt und Spielleiterlösung verwenden dasselbe Drei-Zahl
  assert.ok(source.includes('Drei Zahlwörter im gemeinsamen Suchgitter'));
  assert.ok(source.includes('Tragt die drei gefundenen Zahlwörter von oben nach unten ein'));
 });
+
+test('Drei-Zahlwörter-Gitter bleibt bei verschiedenen Codes und Seeds eindeutig',()=>{
+ for(let n=0;n<100;n++){
+  const code=String((n*7919)%1000).padStart(3,'0');
+  const grid=generateThreeDigitWordGrid(code,n*104729);
+  const found=findDigitWords(grid.rows).sort((a,b)=>a.row-b.row);
+  assert.equal(found.length,3,'Unerwartete Zahlwörter in Code '+code+' bei Seed '+n);
+  assert.equal(found.map(x=>x.digit).join(''),code);
+  assert.ok(found.every((x,i)=>x.row===[1,5,9][i]));
+ }
+});
