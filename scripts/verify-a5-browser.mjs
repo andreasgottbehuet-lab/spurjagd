@@ -84,6 +84,15 @@ try {
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
+  // The preparation guidance is available to organizers on screen, but is
+  // deliberately excluded from the children's printable A5 packet.
+  const guidance = page.locator('.print-guidance');
+  if (await guidance.count() !== 1 || !(await guidance.isVisible()))
+    failures.push('A5 organizer print guidance is missing from the screen');
+  const guidanceText = await guidance.innerText();
+  for (const term of ['A5 Hochformat', 'Packübersicht nach Team:', 'Schloss-Codes am echten Schloss']) {
+    if (!guidanceText.includes(term)) failures.push('A5 organizer guidance missing: ' + term);
+  }
   const renderedOrder = await sheets.evaluateAll(elements => elements.map(el =>
     el.classList.contains('print-organizer-sheet') ? 'organizer' :
     el.classList.contains('print-child-sheet') ? 'child' :
