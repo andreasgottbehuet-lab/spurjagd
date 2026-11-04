@@ -56,10 +56,16 @@ jobs:
           npm run preview -- --host 127.0.0.1 --port 4173 > verification/vite-preview.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then READY=1; break; fi
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then break; fi
             sleep 1
           done
+          if [ "$READY" -ne 1 ]; then
+            echo 'Vite preview failed to start; see verification/vite-preview.log' | tee verification/a5-browser-tests.log
+            exit 1
+          fi
           node scripts/verify-a5-browser.mjs 2>&1 | tee verification/a5-browser-tests.log
       - name: Upload verification evidence
         if: always()
