@@ -1,7 +1,7 @@
 name: Quality checks
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/print-preflight-hardening-20261104']
   pull_request:
   workflow_dispatch:
 permissions:
