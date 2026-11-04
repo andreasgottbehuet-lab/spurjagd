@@ -9,7 +9,8 @@ const startedAt = new Date().toISOString();
 const errors = [];
 try {
   browser = await chromium.launch({ headless: true });
-  page = await browser.newPage({ acceptDownloads: true });
+  const context = await browser.newContext({ acceptDownloads: true });
+  page = await context.newPage();
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.locator('#projectTitle').fill('Browser Testprojekt');
