@@ -514,3 +514,25 @@ test('Queued autosave checks cross-tab conflict before writing',()=>{
  assert.ok(callback.includes('if (storageConflict.current) return;'));
  assert.ok(callback.indexOf('if (storageConflict.current) return;') < callback.indexOf('saveGame(project)'));
 });
+
+test('Partial project-list write is rolled back when storage throws',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let fail=false;
+ globalThis.localStorage={
+  getItem:key=>entries.get(key)??null,
+  setItem:(key,value)=>{
+   entries.set(key,String(value));
+   if(fail&&key==='spurjagd-projects-v1'){fail=false;throw new Error('partial write');}
+  },
+  removeItem:key=>entries.delete(key)
+ };
+ try{
+  saveGame(sample());
+  const before=globalThis.localStorage.getItem('spurjagd-projects-v1');
+  fail=true;
+  assert.throws(()=>saveGame({...sample(),title:'Not saved'}),/partial write/);
+  assert.equal(globalThis.localStorage.getItem('spurjagd-projects-v1'),before);
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
