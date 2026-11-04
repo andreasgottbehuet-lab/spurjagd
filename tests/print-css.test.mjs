@@ -113,3 +113,16 @@ test('A5-Etiketten besitzen eine eindeutige Umschlagkennung und werden vor Druck
  assert.ok(source.includes("packet?.querySelectorAll<HTMLElement>('.print-label')"));
  assert.ok(source.includes('auditRenderedLabels(printManifest?.envelopes??[],labelIds)'));
 });
+
+test('A5 route pages expose page index for DOM print validation',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('data-route-page={routePage+1}'));
+ assert.ok(source.includes('routePage:sheet.dataset.routePage?Number(sheet.dataset.routePage):undefined'));
+ assert.ok(source.includes('auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes)'));
+});
+test('CI runs dedicated A5 checks and reproducible dependency installation',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ assert.ok(workflow.includes('npm ci --no-audit --no-fund'));
+ assert.ok(workflow.includes('tests/print-dom-audit.test.mjs tests/print-css.test.mjs'));
+ assert.ok(workflow.includes('verification/a5-print-tests.log'));
+});
