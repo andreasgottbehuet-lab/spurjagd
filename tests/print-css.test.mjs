@@ -345,3 +345,11 @@ test('Browser actually blocks printing on wrong labels and checklist counts',()=
  assert.ok(script.includes('Valid A5 envelope labels did not restore the print action'));
  assert.ok(script.includes('Valid A5 organizer packing count did not restore printing'));
 });
+
+test('Browser rejects misassigned child sheets and mislabelled route pages',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('A5 child sheet with wrong envelope identity did not block printing'));
+ assert.ok(script.includes('A5 route page mislabelled as answer did not block printing'));
+ assert.ok(script.includes('A5 print did not recover after child envelope restoration'));
+ assert.ok(script.includes('A5 print did not recover after route page kind restoration'));
+});
