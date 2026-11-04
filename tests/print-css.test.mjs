@@ -361,3 +361,13 @@ test('Browser rejects whitespace-padded packing labels and restores printing',()
  assert.ok(script.includes('Whitespace-padded A5 envelope label did not block printing'));
  assert.ok(script.includes('A5 print did not recover after correcting whitespace-padded label'));
 });
+
+test('Browser validates organizer-only lock codes and destinations before printing',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(main.includes('auditRenderedOrganizerSecrets'));
+ assert.ok(main.includes('data-code={stationCodes[envelope.stationId]'));
+ assert.ok(main.includes('data-destination={envelope.destination}'));
+ assert.ok(script.includes('Tampered A5 organizer'));
+ assert.ok(script.includes('Corrected A5 organizer'));
+});
