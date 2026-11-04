@@ -519,7 +519,7 @@ function App() {
                         <p><strong>Team {team.name}</strong> · {location.name} · Blatt {3+routePage}/{2+routeSheetCount(destination,config)}</p>
                         <p>Löst das Wegrätsel, um euren nächsten Ort herauszufinden. Ihr dürft die Blätter gleichzeitig bearbeiten.</p>
                         <p className="print-question">{routePuzzle.instruction}</p>
-                        {routePuzzle.rows ? <div>{routePuzzle.rows.slice(routePage*ROUTE_QUESTIONS_PER_A5_SHEET,(routePage+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((r,i)=><p className="print-route-question" key={i}>{routePage*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {r.question} (Buchstabe {r.letterIndex+1}) ______</p>)}</div> : <p className="route-letters">{routePuzzle.question}</p>}
+                        {routePuzzle.rows ? <div>{routePuzzle.rows.slice(routePage*ROUTE_QUESTIONS_PER_A5_SHEET,(routePage+1)*ROUTE_QUESTIONS_PER_A5_SHEET).map((r,i)=><div className="print-route-question" key={i}><p>{routePage*ROUTE_QUESTIONS_PER_A5_SHEET+i+1}. {r.question}</p><div className="route-answer-grid" aria-label={"Antwort mit "+r.solution.length+" Buchstaben"}>{[...r.solution].map((_,index)=><span key={index} className={index===r.letterIndex?"route-answer-cell route-answer-highlight":"route-answer-cell"}></span>)}</div></div>)}</div> : <p className="route-letters">{routePuzzle.question}</p>}
                         {routePage===routeSheetCount(destination,config)-1 && <p>Unser nächster Ort: __________________________________</p>}
                         <p className="helper">Tipp: {routePuzzle.hint}</p>
                       </article>)}
