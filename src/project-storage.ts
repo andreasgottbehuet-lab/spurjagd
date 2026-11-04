@@ -114,9 +114,13 @@ function persistProjects(next:SavedGame[],active:string|null):void {
   throw error;
  }
 }
-export function saveGame(project: SavedGame): SavedGame[] {
+export function saveGame(project: SavedGame, expectedUpdatedAt?:string|null): SavedGame[] {
  if(!isSavedGame(project))throw new Error('Projekt ungültig.');
  const existing=loadGames();
+ if(expectedUpdatedAt!==undefined){
+  const stored=existing.find(p=>p.id===project.id);
+  if((stored?.updatedAt??null)!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Bitte die aktuelle Fassung prüfen und eine JSON-Sicherung exportieren.');
+ }
  const next=[project,...existing.filter(p=>p.id!==project.id)];
  if(next.length>MAX_PROJECTS)throw new Error('Maximal 40 Projekte. Bitte alte Projekte löschen.');
  persistProjects(next,project.id);
