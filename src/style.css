@@ -218,3 +218,10 @@
  .print-child-sheet[data-sheet-kind="task"] .print-task .symbols{font-size:16pt;line-height:1.1}
  .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid{margin:1mm 0}
 }
+
+/* Inline correction controls for blocked print packets (screen only). */
+.preflight-issue{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #d8c9c1}
+.preflight-issue span{flex:1;min-width:0;overflow-wrap:anywhere}
+.preflight-issue button{flex-shrink:0}
+@media(max-width:600px){.preflight-issue{align-items:flex-start;flex-direction:column}}
+@media print{.preflight-issue button{display:none!important}}
