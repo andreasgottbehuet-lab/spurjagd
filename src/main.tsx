@@ -469,7 +469,7 @@ function App() {
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
                     <p>Alle Gruppen erhalten Aufgaben für die gemeinsam ausgewählte Altersklasse.</p>
-                    {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
+                    {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p className="team-route-line" data-team-color={team.name.toLowerCase()} key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
                   {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
@@ -516,12 +516,12 @@ function App() {
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
-                      <article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
+                      <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name}</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{2+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
-                        <p>Löst die Aufgaben. Die Ergebnisse ergeben euren Schloss-Code in der richtigen Reihenfolge.</p>
-                        {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)||'□ (leeres Feld)'}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label="Buchstabengitter">{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid" aria-label="Pfeilpfad-Zahlengitter">{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className="wordsearch-cell" key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'S':digit}</span>)}</div>)}</div>}</div>)}
+                        <p><strong>Schloss-Code:</strong> Aufgabe 1 = erste Ziffer · Aufgabe 2 = zweite Ziffer · Aufgabe 3 = dritte Ziffer. Tragt die drei Ergebnisse von links nach rechts ein.</p>
+                        {challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count)}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label="Buchstabengitter">{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid" aria-label="Pfeilpfad-Zahlengitter">{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className="wordsearch-cell" key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'S':digit}</span>)}</div>)}</div>}</div>)}
                       </article>
                       <article className="print-sheet print-child-sheet" data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="answer">
                         <h1>Antwortblatt</h1>
@@ -544,7 +544,7 @@ function App() {
                   {printManifest && Array.from({length:printManifest.labelSheets},(_,page)=>(
                     <article className="print-sheet print-label-sheet" key={'labels-'+page}>
                       <h1>Stationsetiketten – Blatt {page+1}/{printManifest.labelSheets}</h1>
-                      <div className="print-label-grid">{printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" data-envelope-id={envelope.id} data-team={envelope.team} data-station={envelope.stationName} data-number={envelope.stationNumber} data-count={envelope.sheetCount} key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · {envelope.sheetCount} Blätter: Aufgaben, Antworten, Wegrätsel</span></p>)}</div>
+                      <div className="print-label-grid">{printManifest.envelopes.slice(page*LABELS_PER_A5_SHEET,(page+1)*LABELS_PER_A5_SHEET).map(envelope=><p className="print-label" data-team-color={envelope.team.toLowerCase()} data-envelope-id={envelope.id} data-team={envelope.team} data-station={envelope.stationName} data-number={envelope.stationNumber} data-count={envelope.sheetCount} key={envelope.id}><strong>Team {envelope.team} · {envelope.stationName}</strong><span>Umschlag {envelope.stationNumber} von {envelope.stationTotal} · {envelope.sheetCount} Blätter: Aufgaben, Antworten, Wegrätsel</span></p>)}</div>
                     </article>
                   ))}
                 </section>}
