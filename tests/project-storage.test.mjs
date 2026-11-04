@@ -577,3 +577,16 @@ test('Windows browser acceptance is optional and checks real browser plus A5 too
  assert.ok(script.includes('taskkill.exe'));
  assert.ok(script.includes('strictPort'));
 });
+
+test('Deleting a project resets the planner before editing another saved project',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const deletion=ui.slice(ui.indexOf('const removeProject = () =>'),ui.indexOf('const exportProject = () =>'));
+ assert.ok(deletion.includes('applyGame(remaining[0]); setActiveStep(1);'));
+});
+
+test('Browser report records an explicit result and timestamps',()=>{
+ const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('startedAt'));
+ assert.ok(script.includes('finishedAt'));
+ assert.ok(script.includes('passed: errors.length === 0'));
+});
