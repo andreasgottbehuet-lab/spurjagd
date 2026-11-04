@@ -33,6 +33,16 @@ try {
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
+  const categories = await sheets.evaluateAll(elements => ({
+    organizer: elements.filter(el => el.classList.contains('print-organizer-sheet')).length,
+    children: elements.filter(el => el.classList.contains('print-child-sheet')).length,
+    labels: elements.filter(el => el.classList.contains('print-label-sheet')).length,
+    unknown: elements.filter(el => !['print-organizer-sheet','print-child-sheet','print-label-sheet'].some(name => el.classList.contains(name))).length
+  }));
+  if (categories.unknown || categories.organizer + categories.children + categories.labels !== expected)
+    failures.push('A5 pages without a valid category: ' + JSON.stringify(categories));
+  if (!categories.organizer || !categories.children || !categories.labels)
+    failures.push('A5 packet is missing a required page category: ' + JSON.stringify(categories));
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
@@ -71,7 +81,7 @@ try {
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
-  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, blankPages, measurements: measured, failures };
+  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, blankPages, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
   if (failures.length) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
