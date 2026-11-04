@@ -177,6 +177,9 @@ test('Chromium PDF audit compares organizer, children and labels to rendered pac
  assert.ok(script.includes('printedHeaders[index]'));
  assert.ok(script.includes("page.locator('.print-label strong')"));
  assert.ok(script.includes('expectedLabel.replace'));
+ assert.ok(script.includes('childHeadersChecked: printedHeaders.length'));
+ assert.ok(script.includes('teamIdentitiesChecked: printedTeams.length'));
+ assert.ok(script.includes('labelTextsChecked: labelNames.length'));
  assert.ok(script.includes('Organizer-only solution or envelope checklist leaked'));
 });
 
