@@ -283,3 +283,12 @@ test('Manipulierte Symbolrätsel ohne sichtbares Zählzeichen werden abgelehnt',
  puzzle.render.symbol='ABCDE';
  assert.equal(verifyDigitPuzzle(puzzle),false);
 });
+
+test('Ältere Kinder erhalten keine Rechnung mit negativer Subtraktionszahl',()=>{
+ for(let digit=0;digit<=9;digit++) for(let seed=0;seed<300;seed++){
+  const puzzle=generateDigitPuzzle(digit,'arithmetic','older',seed);
+  assert.ok(verifyDigitPuzzle(puzzle));
+  assert.match(puzzle.question,/^\d+ × \d+ − \d+ = \?$/);
+  assert.doesNotMatch(puzzle.question,/− -/);
+ }
+});
