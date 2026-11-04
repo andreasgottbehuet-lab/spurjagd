@@ -3,9 +3,10 @@ import type {Location} from './generator.ts';
 /** Allocate IDs without reusing any currently visible or temporarily hidden station. */
 export function allocateLocationIds(visible:readonly Location[],hidden:readonly Location[],count:number,start=5):string[] {
  if(!Number.isSafeInteger(count)||count<0||count>20) throw new Error('Ungültige Anzahl neuer Stationen.');
+ if(!Number.isSafeInteger(start)||start<1||start>1_000_000) throw new Error('Ungültiger Startwert für Stationskennungen.');
  const used=new Set([...visible,...hidden].map(location=>location.id));
  const result:string[]=[];
- let next=Math.max(1,Math.floor(start));
+ let next=start;
  while(result.length<count){
   const id='loc-'+next++;
   if(!used.has(id)){used.add(id);result.push(id);}
