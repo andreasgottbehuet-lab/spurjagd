@@ -209,3 +209,11 @@ test('Packliste und Etiketten müssen exakt zum Umschlagplan passen',()=>{
  assert.ok(auditRenderedPackingItems(expected,expected.slice(1),expected).some(issue=>issue.includes('von 2')));
  assert.ok(auditRenderedPackingItems(expected,[...expected].reverse(),expected).some(issue=>issue.includes('einsortiert')));
 });
+
+test('A5 Packdaten ohne gueltige Nummern oder Namen verhindern Druck',()=>{
+ const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',' '],['stationNumber',NaN],['stationNumber',1.5],['sheetCount',2],['sheetCount',Infinity]]){
+  const changed={...good,[field]:value};
+  assert.ok(auditRenderedPackingItems([good],[changed],[good]).some(issue=>issue.includes('ungültige Packdaten')),field);
+ }
+});
