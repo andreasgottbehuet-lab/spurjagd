@@ -183,3 +183,11 @@ test('Einzelkind-Gruppe erscheint als Hinweis für die Spielleitung',()=>{
  const balanced=createPlan(config({players:13,groupSize:3}));
  assert.equal(balanced.cautions.some(w=>w.includes('nur einem Kind')),false);
 });
+
+test('Unterschiedliche Routen mit nur einem Stopp werden als wirkungslos erklärt',()=>{
+ const one=createPlan(config({durationMinutes:30,routeMode:'varied'}));
+ assert.equal(one.stopsPerTeam,1);
+ assert.ok(one.cautions.some(message=>message.includes('keine unterschiedlichen Stationsfolgen')));
+ const several=createPlan(config({durationMinutes:60,routeMode:'varied'}));
+ assert.equal(several.cautions.some(message=>message.includes('keine unterschiedlichen Stationsfolgen')),false);
+});
