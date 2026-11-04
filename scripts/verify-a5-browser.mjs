@@ -54,6 +54,22 @@ try {
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
     await next.click();
   }
+  // End-to-end print gate: invalid input must suppress the complete packet,
+  // and correcting the input must rebuild it without restarting the project.
+  await page.locator('.wizard-actions button.secondary').click();
+  const editedCode = page.locator('input[pattern="[0-9]{3}"]').first();
+  await editedCode.fill('07');
+  await page.locator('button.next').click();
+  if (await page.locator('.print-packet').count() !== 0)
+    throw new Error('Printable packet remains visible with an invalid lock code');
+  if (await page.locator('button.print').count() && !(await page.locator('button.print').isDisabled()))
+    throw new Error('Print action remains enabled with an invalid lock code');
+  await page.locator('.wizard-actions button.secondary').click();
+  await page.locator('input[pattern="[0-9]{3}"]').first().fill('007');
+  await page.locator('button.next').click();
+  await page.locator('.print-packet').waitFor({ state: 'attached' });
+  if (await page.locator('button.print').isDisabled())
+    throw new Error('Print action did not recover after correcting lock code');
   if (browserErrors.length) throw new Error('Browser JavaScript errors: ' + browserErrors.join(' | '));
   const printButton = page.locator('button.print');
   if (await printButton.count() !== 1 || await printButton.isDisabled())
