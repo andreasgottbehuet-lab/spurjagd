@@ -230,6 +230,7 @@ function App() {
     try {
       const stored=loadGames();
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:undefined;
+      if(expected===undefined) throw new Error('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.');
       if(stored.length===1 && stored[0].id===projectId){
         const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};
         const saved=replaceLastGame(projectId,fresh,expected??undefined);
