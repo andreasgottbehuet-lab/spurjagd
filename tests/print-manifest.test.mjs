@@ -323,3 +323,22 @@ test('Jeder Umschlag einer verteilten Route hat genau eine Position und ein Ziel
   }
  }
 });
+
+test('A5-Druckfreigabe lehnt nichtganzzahlige und negative Blattzahlen ab',()=>{
+ const plan=createPlan(config);
+ for(const sheetCount of [0,-1,2,3.5,NaN,Infinity]){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0].sheetCount=sheetCount;
+  assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes('ungültige Blattzahl')),
+   'Ungültige Blattzahl '+sheetCount+' wurde nicht abgewiesen');
+ }
+});
+
+test('Die Mindestblattzahl bleibt bei jeder beschädigten Teilmenge gesperrt',()=>{
+ const plan=createPlan(config);
+ for(const field of ['organizerSheets','labelSheets','taskSheets','minimumSheets']){
+  const manifest=createPrintManifest(plan);
+  manifest[field]+=1;
+  assert.ok(auditPrintManifest(plan,manifest).length>0,'Unbemerkte Abweichung: '+field);
+ }
+});
