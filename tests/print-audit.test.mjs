@@ -192,3 +192,11 @@ test('Ortsbeschreibung mit verstecktem Zielnamen wird bei der Druckprüfung abge
  c.routeClueModes.b='description';
  assert.ok(auditPrintPacket(c,createPlan(c),'projekt-1').some(issue=>issue.includes('verrät den Zielnamen') || issue.includes('Wegrätsel')));
 });
+
+test('Druckfreigabe weist zu lange benutzerdefinierte Wegrätsel zurück',()=>{
+ const c=config();
+ c.routeClueModes.a='custom';
+ c.routeClueTexts.a='X'.repeat(401);
+ const issues=auditPrintPacket(c,createPlan(c),'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('400 Zeichen')));
+});
