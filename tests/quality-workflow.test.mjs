@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 
 const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
 const windows=readFileSync(new URL('../scripts/verify-windows.ps1',import.meta.url),'utf8');
@@ -15,7 +15,7 @@ test('CI prueft Push, Pull Request und manuellen Start mit Node 22',()=>{
 test('CI fuehrt Tests und Produktions-Build mit Fehlerweitergabe aus',()=>{
  assert.match(workflow,/npm test 2>&1 \| tee verification\/tests\.log/);
  assert.match(workflow,/npm run build 2>&1 \| tee verification\/build\.log/);
- assert.equal((workflow.match(/set -o pipefail/g)??[]).length,2);
+ assert.equal((workflow.match(/set -o pipefail/g)??[]).length,3);
 });
 
 test('CI archiviert auch bei Fehlern die vorhandenen Pruefprotokolle',()=>{
@@ -29,4 +29,10 @@ test('Windows-Pruefung protokolliert Testversion, Commit und Build',()=>{
  for(const marker of ['node --version','npm --version','git rev-parse HEAD','npm test','npm run build','Start-Transcript']){
   assert.ok(windows.includes(marker),marker);
  }
+});
+
+
+test('Dependency installation matches repository lockfile availability',()=>{
+ const lockExists=existsSync(new URL('../package-lock.json',import.meta.url));
+ assert.ok(workflow.includes(lockExists?'npm ci --no-audit --no-fund':'npm install --no-audit --no-fund'));
 });
