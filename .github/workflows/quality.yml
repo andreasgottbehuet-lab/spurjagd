@@ -9,7 +9,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,10 +45,13 @@ jobs:
       - name: Install Chromium browser test tooling
         if: success()
         run: |
-          npm install --no-save --no-audit --no-fund playwright
-          npx playwright install --with-deps chromium
-          sudo apt-get update -qq
-          sudo apt-get install -y poppler-utils
+          set -o pipefail
+          {
+            npm install --no-save --no-audit --no-fund playwright
+            npx playwright install --with-deps chromium
+            sudo apt-get update -qq
+            sudo apt-get install -y poppler-utils
+          } 2>&1 | tee verification/a5-browser-setup.log
       - name: Verify generated A5 PDF in Chromium
         if: success()
         run: |
@@ -84,4 +87,5 @@ jobs:
           echo '- Testlauf: siehe Schritt Unit and integration tests und Artefakt tests.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- TypeScript und Build: siehe Schritt TypeScript and production build und Artefakt build.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- A5-Drucklogik: siehe Schritt Verify A5 print invariants und Artefakt a5-print-tests.log' >> "$GITHUB_STEP_SUMMARY"
-          echo '- A5-Druckbild: manuelle Browserprüfung weiterhin erforderlich' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Chromium-Probedruck: siehe a5-browser-tests.log, a5-browser-report.json und PDF/PNG-Vorschauen im Artefakt' >> "$GITHUB_STEP_SUMMARY"
+          echo '- A5-Druckbild: visueller A5-Probedruck weiterhin erforderlich' >> "$GITHUB_STEP_SUMMARY"
