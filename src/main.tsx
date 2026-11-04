@@ -336,8 +336,10 @@ function App() {
               <div className="section-line"><span className="step">02</span><h2>{tx('Spielziel und Zeitansätze','Game rules and timing')}</h2></div>
               <fieldset><legend>{t.outcome}</legend>
                 <label className="radio"><input type="radio" checked={goal==='locks'} onChange={()=>setGoal('locks')}/>{t.locks}</label>
-                <label className="radio"><input type="radio" checked={goal==='word'} onChange={()=>setGoal('word')}/>{t.word}</label>
-                <label className="radio"><input type="radio" checked={goal==='cards'} onChange={()=>setGoal('cards')}/>{t.cards}</label>
+                <label className="radio"><input type="radio" checked={goal==='word'} disabled onChange={()=>setGoal('word')}/>{t.word} ({tx('in Vorbereitung','coming later')})</label>
+                <label className="radio"><input type="radio" checked={goal==='cards'} disabled onChange={()=>setGoal('cards')}/>{t.cards} ({tx('in Vorbereitung','coming later')})</label>
+                <p className="helper">{tx('Aktuell lassen sich vollständige A5-Druckpakete nur für dreistellige Schlösser erstellen. Weitere Spielziele sind noch nicht freigegeben.','Currently, complete A5 print packets are available only for three-digit locks. Other game goals are not yet available.')}</p>
+                {goal!=='locks' && <button type="button" className="secondary" onClick={()=>setGoal('locks')}>{tx('Auf unterstütztes Spielziel wechseln','Switch to supported game goal')}</button>}
               </fieldset>
               <div className="route-options">
                 <h3>{tx('Start, Strecke und Ziel festlegen', 'Configure start, route and finish')}</h3>
