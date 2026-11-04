@@ -93,6 +93,11 @@ try {
   const labelIds = await page.locator('.print-label').evaluateAll(elements => elements.map(el => el.getAttribute('data-envelope-id') ?? ''));
   if (labelIds.length !== envelopeGroups.size || labelIds.some((id,index) => id !== [...envelopeGroups.keys()][index]))
     failures.push('A5 envelope labels do not match child packet order');
+  const taskIds = envelopePages.filter(entry => entry.kind === 'task').map(entry => entry.id);
+  const answerIds = envelopePages.filter(entry => entry.kind === 'answer').map(entry => entry.id);
+  if (new Set(taskIds).size !== taskIds.length || new Set(answerIds).size !== answerIds.length)
+    failures.push('Duplicate task or answer sheets for an envelope');
+  if (taskIds.join('|') !== answerIds.join('|')) failures.push('Task and answer envelope sequence differs');
   if (envelopeGroups.size !== 12 || categories.children !== 36 || categories.labels !== 3)
     failures.push('Default 12-child A5 fixture differs from 12 envelopes / 36 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
