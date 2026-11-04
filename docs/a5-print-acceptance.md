@@ -151,3 +151,11 @@ Die Browserabnahme prüft zwei weitere Datenverlust-Szenarien: Ein JSON-Export u
 - Mit einem Kind der vorgesehenen Altersgruppe mindestens eine vollständige Route probeweise lösen.
 - Gehzeiten, Zugänglichkeit, Straßenquerungen und Aufsicht vor Ort prüfen.
 - Ergebnisse und notwendige Korrekturen dokumentieren; keine Veröffentlichung allein aufgrund grüner CI-Prüfungen.
+
+## Abnahmefall: vollständiges Beispielspiel
+
+Für die abschließende Funktionsabnahme wird ein vollständiger Durchlauf mit 12 Kindern, 4 Teams und 4 Stationen durchgeführt. Die Stationen erhalten unterschiedliche dreistellige Schloss-Codes, darunter `007` und `000`. Alle Teamrouten werden mit dem tatsächlich ausgegebenen Umschlagpaket abgeglichen.
+
+Die Abnahme ist nur bestanden, wenn jede Gruppe ihre eigene Reihenfolge nachvollziehen kann, die Kinderblätter keine vorweggenommenen Zielorte oder Lösungen enthalten, sämtliche Codes mit den vorgesehenen Schlössern übereinstimmen und die Spielleitung jeden Umschlag eindeutig zuordnen kann. Die A5-Ausgabe ist physisch auf Lesbarkeit, Seitenumbrüche, Schwarz-Weiß-Druck und vollständige Beschriftung zu prüfen.
+
+**Abnahmestatus: offen.** Automatisierte Chromium- und PDF-Tests ersetzen weder den realen Druck noch den Test der Zahlenschlösser.
