@@ -62,6 +62,9 @@ try {
     if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'answer' || entries.slice(2).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
       failures.push('Incorrect A5 envelope page order: ' + id);
   }
+  const expectedEnvelopeOrder = [...envelopeGroups.entries()].flatMap(([id, entries]) => entries.map(() => id));
+  if (envelopePages.some((entry, index) => entry.id !== expectedEnvelopeOrder[index]))
+    failures.push('A5 child sheets are interleaved between envelopes');
   const labelIds = await page.locator('.print-label').evaluateAll(elements => elements.map(el => el.getAttribute('data-envelope-id') ?? ''));
   if (labelIds.length !== envelopeGroups.size || labelIds.some((id,index) => id !== [...envelopeGroups.keys()][index]))
     failures.push('A5 envelope labels do not match child packet order');
