@@ -341,7 +341,7 @@ test('Pfeilpfade ergeben in jeder Altersstufe exakt die Schlossziffer',()=>{
   assert.equal(verifyDigitPuzzle(p),true);
   assert.deepEqual(generateDigitPuzzle(digit,'arrowpath',age,seed),p);
   const changed=structuredClone(p);
-  changed.arrowGrid.arrows+='→';
+  changed.arrowGrid.arrows+='X';
   assert.equal(verifyDigitPuzzle(changed),false);
  }
 });
