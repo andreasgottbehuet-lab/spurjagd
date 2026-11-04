@@ -160,8 +160,11 @@ test('Default browser A5 fixture checks 12 envelopes and 36 child sheets',()=>{
 test('Chromium acceptance checks PDF content at individual page positions',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes('pdfPageTexts.length === expected'));
- assert.ok(script.includes("kind === 'answer' ? 'Antwortblatt'"));
- assert.ok(script.includes("kind === 'route' ? 'Wegrätsel'"));
+ assert.match(script,/kind === 'answer'[^;]*'Antwortblatt'/);
+ assert.match(script,/kind === 'route'[^;]*'Wegrätsel'/);
+ assert.ok(script.includes("'Stationsaufgaben:'"));
+ assert.ok(script.includes("'Unser Schloss-Code:'"));
+ assert.ok(script.includes("'Aufgabe ' + number"));
  assert.ok(script.includes('categories.organizer + categories.children + i + 1'));
 });
 
