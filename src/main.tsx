@@ -277,7 +277,10 @@ function App() {
             <label htmlFor="savedProjects">{tx('Gespeicherte Projekte','Saved projects')}</label>
             <select id="savedProjects" value={selectedProject} onChange={e=>{
               const project=projects.find(p=>p.id===e.target.value);
-              if(project && project.id!==projectId && saveCurrentBeforeSwitch()){setActiveGameId(project.id);applyGame(project);setActiveStep(1);}
+              if(project && project.id!==projectId && saveCurrentBeforeSwitch()){
+                try { setActiveGameId(project.id); applyGame(project); setActiveStep(1); }
+                catch(error) { setStorageMessage('Projektwechsel fehlgeschlagen: '+String(error)); }
+              }
             }}>
               {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}
               {projects.map(p=><option value={p.id} key={p.id}>{p.title}</option>)}
