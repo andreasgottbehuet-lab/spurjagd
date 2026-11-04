@@ -259,3 +259,11 @@ test('Maximal 20 Standorte und eindeutige Namen werden erzwungen',()=>{
  duplicate[1].name=' STATION 0 ';
  assert.throws(()=>createPlan(config({locations:duplicate})),/eindeutig/);
 });
+
+test('Importierte Standortbeschreibungen beachten die Druckgrenze von 400 Zeichen',()=>{
+ const valid=config();
+ valid.locations[0].description='x'.repeat(400);
+ assert.doesNotThrow(()=>createPlan(valid));
+ valid.locations[0].description='x'.repeat(401);
+ assert.throws(()=>createPlan(valid),/Standortbeschreibungen dürfen maximal 400 Zeichen enthalten/);
+});
