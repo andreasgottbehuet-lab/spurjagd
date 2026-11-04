@@ -274,6 +274,18 @@ try {
     failures.push('A5 organizer checklist has ' + checklistRows.length + ' rows for ' + envelopeGroups.size + ' envelopes');
   if (labelIds.length !== checklistRows.length)
     failures.push('A5 packing checklist and printed envelope labels have different counts');
+  // The packing list must show the sheet count and next destination for every envelope.
+  const checklistDetails = await page.locator('.print-checklist-row span').allTextContents();
+  if (checklistDetails.length !== checklistRows.length)
+    failures.push('A5 packing checklist is missing envelope details');
+  for (let index = 0; index < checklistDetails.length; index++) {
+    const details = checklistDetails[index].replace(/\s+/g, ' ').trim();
+    const sheetCount = details.match(/(\d+) Kinderblätter/)?.[1];
+    if (!sheetCount || Number(sheetCount) !== envelopeGroups.get([...envelopeGroups.keys()][index])?.length)
+      failures.push('A5 packing checklist has incorrect child sheet count for envelope ' + (index + 1));
+    if (!details.includes('Danach:') || !details.includes('Schloss-Code:'))
+      failures.push('A5 packing checklist lacks route or lock code for envelope ' + (index + 1));
+  }
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.
   const labelNames = await page.locator('.print-label strong').allTextContents();
