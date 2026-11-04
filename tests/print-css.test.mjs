@@ -312,3 +312,12 @@ test('A5 print button validates rendered packing labels against organizer rows',
  assert.ok(source.includes("readPacking('.print-checklist-row')"));
  assert.ok(source.includes('data-count={envelope.sheetCount}'));
 });
+
+test('A5 print instructions are visible on screen and absent from the physical packet',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.ok(source.includes('className="print-guidance"'));
+ assert.ok(source.includes('A5 Hochformat'));
+ assert.ok(source.includes('Schloss-Codes am echten Schloss prüfen'));
+ assert.ok(css.includes('.print-guidance{display:none!important}'));
+});
