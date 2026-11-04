@@ -157,6 +157,7 @@ function App() {
     if (!storageReady || storageConflict.current) return;
     if (skipSave.current) { skipSave.current = false; return; }
     const timeout = window.setTimeout(() => {
+      if (storageConflict.current) return;
       try {
         const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:new Date().toISOString(), config: { ...config, locations:config.locations.map(x=>({...x})) } };
         const saved = saveGame(project);
