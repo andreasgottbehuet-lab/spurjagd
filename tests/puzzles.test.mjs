@@ -298,3 +298,8 @@ test('Buchstabe C ist ohne englische Vorkenntnisse lösbar',()=>{
  assert.equal(clue.answer,'Clown');
  assert.ok(verifyCreativeRouteClue(clue));
 });
+
+test('Eigene Wegrätsel haben eine maximale Länge',()=>{
+ assert.throws(()=>generateCreativeRouteClue('Spielplatz','','custom',1,'A'.repeat(401)),/400 Zeichen/);
+ assert.equal(generateCreativeRouteClue('Spielplatz','','custom',1,'A'.repeat(400)).question.length,400);
+});
