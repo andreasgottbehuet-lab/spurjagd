@@ -20,8 +20,7 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest,config?:
  if(manifest.envelopes.some(e=>!e.stationId.trim()||!e.stationName.trim()||!e.team.trim()||!e.destination.trim())) errors.push('Umschlag enthält eine leere Gruppen-, Stations- oder Zielangabe.');
  if(manifest.envelopes.some(e=>e.id!==e.teamIndex+'-'+e.stationId)) errors.push('Umschlagkennung passt nicht zur Gruppe und Station.');
  if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.teamIndex)||e.teamIndex<0||e.teamIndex>=plan.teams.length)) errors.push('Umschlag hat einen ungültigen Gruppenindex.');
- if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.stationNumber)||e.stationNumber<1)) errors.push('Umschlag hat eine ungültige Stationsnummer.');
- if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.stationTotal)||e.stationTotal<1)) errors.push('Umschlag hat eine ungültige Gesamtzahl an Stationen.');
+
  const expectedIds=plan.teams.flatMap((team,teamIndex)=>team.stations.map(station=>teamIndex+'-'+station.id));
  if(manifest.envelopes.some((envelope,index)=>envelope.id!==expectedIds[index])) errors.push('Umschlagreihenfolge weicht vom Gruppenplan ab.');
  if(manifest.envelopes.some(envelope=>envelope.teamIndex!==plan.teams.findIndex(team=>team.name===envelope.team) || envelope.stationNumber<1 || !Number.isInteger(envelope.stationNumber))) errors.push('Umschlagreihenfolge oder Gruppenzuordnung ist ungültig.');
