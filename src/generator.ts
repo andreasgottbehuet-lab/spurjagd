@@ -121,6 +121,7 @@ export function createPlan(config: GameConfig): GamePlan {
   if (routeMode === 'varied' && stopsPerTeam === 1) cautions.push('Bei nur einer Station pro Team entstehen trotz unterschiedlicher Umlaufrichtung keine unterschiedlichen Stationsfolgen.');
   if (finishMode === 'origin' && startMode === 'distributed') cautions.push('Die Teams starten verteilt an Rätselstationen und kehren zum gemeinsamen Startort zurück.');
   if (finishMode === 'start') cautions.push('Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.');
+  if (finishMode === 'start' && stopsPerTeam === 1) cautions.push('Bei nur einer Station ist das Ziel identisch mit der einzigen Rätselstation. Für einen echten Rückweg ein anderes Ziel wählen oder mehr Stationen einplanen.');
   if (stopsPerTeam < places.length) cautions.push('Zeitbudget: Nicht alle Standorte werden pro Team besucht.');
   cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.');
   return {
