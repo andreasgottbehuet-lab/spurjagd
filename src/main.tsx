@@ -312,13 +312,13 @@ function App() {
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
               <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {Math.ceil(players/groupSize)}. {tx("Kinder in der letzten Gruppe", "Children in the final team")}: {players%groupSize||groupSize}.</p>
-              <button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx("Weiter zu den Spielregeln", "Continue to game rules")}</button>
               <div className="form-grid">
                 <label className="range-field"><span>{t.children}: <strong>{players}</strong></span><input min="1" max="100" type="range" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
                 <label className="range-field"><span>{t.size}: <strong>{groupSize}</strong></span><input min="1" max="10" type="range" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))}/></label>
                 <label>{t.age}<select value={age} onChange={e => setAge(e.target.value)}><option>4–6</option><option>6–8</option><option>8–10</option><option>11–13</option><option>14+</option></select></label>
                 <label>{t.duration}<select value={duration} onChange={e => setDuration(Number(e.target.value))}><option value={30}>30 min</option><option value={45}>45 min</option><option value={60}>60 min</option><option value={90}>90 min</option><option value={120}>120 min</option><option value={180}>180 min</option></select></label>
               </div>
+              <button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx("Weiter zu den Spielregeln", "Continue to game rules")}</button>
             </>}
             {activeStep === 3 && <>
               <div className="section-line"><span className="step">03</span><h2>{t.locations}</h2></div>
