@@ -154,3 +154,27 @@ export function auditA5PageBounds(sheets:PrintSheetGeometry[],pixelsPerMillimete
  }
  return [...new Set(issues)];
 }
+
+/** Reconciles the physical packing checklist with the printable envelope labels. */
+export interface RenderedPackingItem {
+ envelopeId:string;
+ team:string;
+ stationName:string;
+ stationNumber:number;
+ sheetCount:number;
+}
+export function auditRenderedPackingItems(expected:RenderedPackingItem[],labels:RenderedPackingItem[],checklist:RenderedPackingItem[]):string[] {
+ const issues:string[]=[];
+ for(const [name,items] of [['Etiketten',labels],['Packliste',checklist]] as const){
+  if(items.length!==expected.length) issues.push(name+': '+items.length+' von '+expected.length+' Umschlägen vorhanden.');
+  if(new Set(items.map(item=>item.envelopeId)).size!==items.length) issues.push(name+': doppelte Umschlagkennung.');
+  items.forEach((item,index)=>{
+   const reference=expected[index];
+   if(!reference || item.envelopeId!==reference.envelopeId ||
+      item.team!==reference.team || item.stationName!==reference.stationName ||
+      item.stationNumber!==reference.stationNumber || item.sheetCount!==reference.sheetCount)
+    issues.push(name+': Umschlag '+(index+1)+' ist falsch beschriftet oder einsortiert.');
+  });
+ }
+ return [...new Set(issues)];
+}
