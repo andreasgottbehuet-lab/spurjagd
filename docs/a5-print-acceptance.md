@@ -159,3 +159,19 @@ Für die abschließende Funktionsabnahme wird ein vollständiger Durchlauf mit 1
 Die Abnahme ist nur bestanden, wenn jede Gruppe ihre eigene Reihenfolge nachvollziehen kann, die Kinderblätter keine vorweggenommenen Zielorte oder Lösungen enthalten, sämtliche Codes mit den vorgesehenen Schlössern übereinstimmen und die Spielleitung jeden Umschlag eindeutig zuordnen kann. Die A5-Ausgabe ist physisch auf Lesbarkeit, Seitenumbrüche, Schwarz-Weiß-Druck und vollständige Beschriftung zu prüfen.
 
 **Abnahmestatus: offen.** Automatisierte Chromium- und PDF-Tests ersetzen weder den realen Druck noch den Test der Zahlenschlösser.
+
+
+## Prüfnachweis für Umschlagzuordnung (vor Freigabe)
+
+Für jeden Stationsbesuch wird genau ein Umschlag gepackt. Die Spielleitung prüft unmittelbar am gedruckten Satz:
+
+1. Team und Stationsnummer auf dem Etikett stimmen mit der Gruppenroute überein.
+2. Die Kontrollliste enthält dieselbe Station, die korrekte Anzahl Kinderblätter und den zugehörigen Schloss-Code.
+3. Die Kinderblätter liegen vollständig in der Reihenfolge **Aufgaben – Antworten – Wegrätsel**; mehrseitige Wegrätsel sind aufsteigend nummeriert.
+4. Der nächste Ort ist auf Kinderblättern nicht als ausgeschriebene Lösung vorweggenommen. Die Kontrollliste mit Code und Zielort bleibt bei der Spielleitung.
+5. Der dreistellige Code wird **am realen Schloss** geprüft, insbesondere mit führenden Nullen wie `007` und `000`.
+6. Für jede Gruppe wird die gesamte Abfolge mit ihren eigenen Umschlägen durchgespielt. Kein Team darf auf die Lösung einer anderen Gruppe angewiesen sein.
+
+**Abweichungen dokumentieren:** Team / Station / Umschlagnummer / Blattnummer / Fehlerbild / Korrektur / Nachprüfung. Ein fehlerhafter Umschlag darf nicht ausgegeben werden. Der automatisierte PDF-Test ersetzt diese physische Kontrolle nicht.
+
+**CI-Nachweis:** Der Prüfbericht `verification/a5-browser-report.json` und die gerenderten Beispielseiten werden im GitHub-Actions-Artefakt des jeweiligen Commits abgelegt. Nur der erfolgreiche CI-Lauf des tatsächlich geprüften Commits gilt als automatisierter Nachweis; ältere erfolgreiche Läufe reichen nicht aus.
