@@ -74,16 +74,21 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     const size=age==='young'?5:age==='middle'?6:7;
     const length=age==='young'?3:age==='middle'?5:7;
     const moves=[{dr:0,dc:1,s:'→'},{dr:0,dc:-1,s:'←'},{dr:1,dc:0,s:'↓'},{dr:-1,dc:0,s:'↑'}];
-    const startRow=chooseInt(rng,0,size-1),startCol=chooseInt(rng,0,size-1);
-    let r=startRow,c=startCol;
-    const visited=new Set([r+':'+c]);
-    let arrows='';
-    for(let i=0;i<length;i++){
-      const options=moves.filter(m=>r+m.dr>=0&&r+m.dr<size&&c+m.dc>=0&&c+m.dc<size&&!visited.has((r+m.dr)+':'+(c+m.dc)));
-      if(!options.length) break;
-      const move=options[chooseInt(rng,0,options.length-1)];
-      r+=move.dr;c+=move.dc;visited.add(r+':'+c);arrows+=move.s;
+    let startRow=0,startCol=0,r=0,c=0,arrows='';
+    let completed=false;
+    for(let attempt=0;attempt<100&&!completed;attempt++){
+      startRow=chooseInt(rng,0,size-1);startCol=chooseInt(rng,0,size-1);
+      r=startRow;c=startCol;arrows='';
+      const visited=new Set([r+':'+c]);
+      for(let i=0;i<length;i++){
+        const options=moves.filter(m=>r+m.dr>=0&&r+m.dr<size&&c+m.dc>=0&&c+m.dc<size&&!visited.has((r+m.dr)+':'+(c+m.dc)));
+        if(!options.length) break;
+        const move=options[chooseInt(rng,0,options.length-1)];
+        r+=move.dr;c+=move.dc;visited.add(r+':'+c);arrows+=move.s;
+      }
+      completed=[...arrows].length===length;
     }
+    if(!completed) throw new Error('Kein vollständiger Pfeilpfad erzeugbar');
     const grid=Array.from({length:size},()=>Array.from({length:size},()=>String(chooseInt(rng,0,9))));
     grid[r][c]=String(target);
     return {id,kind,instruction:'Starte bei S und folge jedem Pfeil genau ein Kästchen. Die letzte Ziffer ist dein Code.',question:arrows.split('').join(' '),hint:'Jeder Pfeil bedeutet genau einen Schritt. Gehe nicht diagonal.',explanation:'Pfeilfolge '+arrows+' endet bei '+target+'.',expectedDigit:target,arrowGrid:{rows:grid.map(row=>row.join('')),startRow,startCol,arrows}};
@@ -171,7 +176,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   }
   if (puzzle.kind === 'arrowpath') {
     const g=puzzle.arrowGrid;
-    if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||!g.arrows.length||puzzle.question!==[...g.arrows].join(' ')) return false;
+    if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||![3,5,7].includes([...g.arrows].length)||puzzle.question!==[...g.arrows].join(' ')) return false;
     let r=g.startRow,c=g.startCol;
     if(!Number.isInteger(r)||!Number.isInteger(c)) return false;
     for(const arrow of g.arrows){
