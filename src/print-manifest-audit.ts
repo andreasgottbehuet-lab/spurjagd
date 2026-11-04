@@ -13,6 +13,9 @@ export function auditPrintManifest(plan:GamePlan,manifest:PrintManifest,config?:
  if(manifest.minimumSheets!==expectedTasks+organizerSheetCount(plan,config)+Math.ceil(expected/LABELS_PER_A5_SHEET)) errors.push('Mindestumfang der Druckseiten ist falsch.');
  if(manifest.minimumSheets!==manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets) errors.push('Die angezeigte Gesamtblattzahl stimmt nicht mit den ausgewiesenen Teilmengen überein.');
  if(new Set(manifest.envelopes.map(e=>e.id)).size!==manifest.envelopes.length) errors.push('Umschlagkennungen sind nicht eindeutig.');
+ if(manifest.envelopes.some(e=>!e.id.trim())) errors.push('Leere Umschlagkennung ist nicht zulässig.');
+ if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.sheetCount)||e.sheetCount<3)) errors.push('Umschlag enthält eine ungültige Blattzahl.');
+ if(manifest.envelopes.some(e=>!Number.isSafeInteger(e.teamIndex)||e.teamIndex<0||e.teamIndex>=plan.teams.length)) errors.push('Umschlag hat einen ungültigen Gruppenindex.');
  const expectedIds=plan.teams.flatMap((team,teamIndex)=>team.stations.map(station=>teamIndex+'-'+station.id));
  if(manifest.envelopes.some((envelope,index)=>envelope.id!==expectedIds[index])) errors.push('Umschlagreihenfolge weicht vom Gruppenplan ab.');
  if(manifest.envelopes.some(envelope=>envelope.teamIndex!==plan.teams.findIndex(team=>team.name===envelope.team) || envelope.stationNumber<1 || !Number.isInteger(envelope.stationNumber))) errors.push('Umschlagreihenfolge oder Gruppenzuordnung ist ungültig.');
