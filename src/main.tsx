@@ -229,14 +229,15 @@ function App() {
     if (!window.confirm(tx('Dieses Projekt wirklich löschen? Vorher bei Bedarf über Sichern eine JSON-Datei herunterladen. Die Löschung kann nicht rückgängig gemacht werden.', 'Delete this project? Export a JSON backup first if needed. This cannot be undone.'))) return;
     try {
       const stored=loadGames();
+      const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:undefined;
       if(stored.length===1 && stored[0].id===projectId){
         const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:new Date().toISOString(),config:createDefaultGameConfig()};
-        const saved=replaceLastGame(projectId,fresh);
+        const saved=replaceLastGame(projectId,fresh,expected??undefined);
         setProjects(saved);
         applyGame(fresh);
         setActiveStep(1);
       }else{
-        const remaining=deleteGame(projectId);
+        const remaining=deleteGame(projectId,expected??undefined);
         setProjects(remaining);
         if(remaining[0]) { applyGame(remaining[0]); setActiveStep(1); }
       }
