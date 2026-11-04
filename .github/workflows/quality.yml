@@ -21,6 +21,8 @@ jobs:
           echo "commit=$GITHUB_SHA" | tee verification/revision.txt
           node --version | tee -a verification/revision.txt
           npm --version | tee -a verification/revision.txt
+      - name: Check browser scripts
+        run: node --check scripts/verify-project-browser.mjs && node --check scripts/verify-a5-browser.mjs
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       # No package-lock.json is committed yet. Capture the resolved dependency tree for review.
