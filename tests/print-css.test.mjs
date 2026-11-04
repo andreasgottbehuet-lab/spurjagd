@@ -142,3 +142,10 @@ test('Browser PDF validation rejects blank pages and missing print content',()=>
  assert.ok(script.includes("includes('Spielleitung')"));
  assert.ok(script.includes("includes('Umschlag')"));
 });
+
+test('Chromium A5 acceptance validates categories, envelopes and label order',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ for(const marker of ['categories.unknown','envelopeGroups','Incomplete A5 envelope','Incorrect A5 envelope page order','A5 child sheets are interleaved','labelIds.length !== envelopeGroups.size']){
+  assert.ok(script.includes(marker),marker);
+ }
+});
