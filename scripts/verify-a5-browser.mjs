@@ -272,6 +272,16 @@ try {
     if (!expectedLabel || !(labelPages[labelPage] ?? '').replace(/\s+/g, ' ').includes(expectedLabel.replace(/\s+/g, ' ')))
       failures.push('A5 label ' + (index + 1) + ' missing from its expected PDF sheet');
   }
+  // Compare the complete envelope-label description, including the number
+  // of sheets to pack, rather than checking the group name alone.
+  const labelDescriptions = await page.locator('.print-label span').allTextContents();
+  for (let index = 0; index < labelDescriptions.length; index++) {
+    const pageNumber = Math.floor(index / 4);
+    const expectedDescription = labelDescriptions[index].replace(/\\s+/g, ' ').trim();
+    const printedPage = (labelPages[pageNumber] ?? '').replace(/\\s+/g, ' ');
+    if (!expectedDescription || !printedPage.includes(expectedDescription))
+      failures.push('A5 envelope label ' + (index + 1) + ' lost its sheet count or sequence');
+  }
   const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
   if (childText.includes('Codes und Lösungen') || childText.includes('Umschlagkontrolle'))
     failures.push('Organizer-only solution or envelope checklist leaked onto child pages');
