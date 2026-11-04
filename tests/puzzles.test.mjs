@@ -254,3 +254,13 @@ test('Fragenblatt mit Klartext-Ziel ist nicht druckfähig',()=>{
  clue.rows[0].question='Feuerwehr';
  assert.equal(verifyCreativeRouteClue(clue),false);
 });
+
+test('Jüngere Kinder lösen dreistellige Codes ohne Buchstabenverschiebung',()=>{
+ for(const code of ['000','007','123','987','999']){
+  const challenge=generateStationChallenge('station-young',code,'young',2026);
+  assert.deepEqual(challenge.puzzles.map(p=>p.kind),['arithmetic','symbols','arithmetic']);
+  assert.equal(codeFromPuzzles(challenge),code);
+ }
+ const older=generateStationChallenge('station-older','007','middle',2026);
+ assert.equal(older.puzzles[2].kind,'cipher');
+});
