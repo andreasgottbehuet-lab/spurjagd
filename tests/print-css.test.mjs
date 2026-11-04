@@ -355,3 +355,9 @@ test('Browser rejects misassigned child sheets and mislabelled route pages',()=>
  assert.ok(script.includes('Missing A5 child sheet did not block printing'));
  assert.ok(script.includes('A5 print did not recover after restoring missing child sheet'));
 });
+
+test('Browser rejects whitespace-padded packing labels and restores printing',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('Whitespace-padded A5 envelope label did not block printing'));
+ assert.ok(script.includes('A5 print did not recover after correcting whitespace-padded label'));
+});
