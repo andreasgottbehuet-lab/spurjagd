@@ -613,8 +613,8 @@ try {
     const parts = row.split(' · ');
     if (!parts.every(part => printedPage.includes(part.trim())))
       failures.push('A5 packing-list row ' + (index + 1) + ' is missing from its expected organizer PDF page');
-    const details = (checklistDetails[index] ?? '').replace(/\\s+/g, ' ').trim();
-    const code = details.match(/Schloss-Code:\\s*(\\d{3})/)?.[1];
+    const details = (checklistDetails[index] ?? '').replace(/\s+/g, ' ').trim();
+    const code = details.match(/Schloss-Code:\s*(\d{3})/)?.[1];
     const destination = details.split('Danach:').at(-1)?.trim();
     if (!code || !printedPage.includes('Schloss-Code: ' + code))
       failures.push('A5 packing-list code ' + (index + 1) + ' is missing from its expected PDF page');
