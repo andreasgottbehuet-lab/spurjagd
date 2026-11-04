@@ -135,3 +135,13 @@ test('A5 printable area catches over-wide and over-tall sheets',()=>{
  assert.ok(auditA5PageBounds([{...valid,id:'C',scrollHeight:192*px}],px).some(x=>x.includes('190 mm')));
  assert.ok(auditA5PageBounds([valid],0).some(x=>x.includes('skalierung')));
 });
+
+
+test('Doppelte Umschlagkennungen und ungültige Blattzahlen sperren den Druck',()=>{
+ const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
+ assert.ok(auditRenderedEnvelopes([{id:'A',sheetCount:3},{id:'A',sheetCount:3}],sheets).some(x=>x.includes('doppelte Umschlagkennungen')));
+ for(const count of [0,2,-1,1.5,NaN,Infinity]){
+  assert.ok(auditRenderedEnvelopes([{id:'A',sheetCount:count}],sheets).some(x=>x.includes('ungültige Anzahl Kinderblätter')));
+ }
+ assert.ok(auditRenderedEnvelopes([{id:'',sheetCount:3}],[]).some(x=>x.includes('leere Umschlagkennung')));
+});
