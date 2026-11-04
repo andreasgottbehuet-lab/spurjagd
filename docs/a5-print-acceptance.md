@@ -175,3 +175,7 @@ Für jeden Stationsbesuch wird genau ein Umschlag gepackt. Die Spielleitung prü
 **Abweichungen dokumentieren:** Team / Station / Umschlagnummer / Blattnummer / Fehlerbild / Korrektur / Nachprüfung. Ein fehlerhafter Umschlag darf nicht ausgegeben werden. Der automatisierte PDF-Test ersetzt diese physische Kontrolle nicht.
 
 **CI-Nachweis:** Der Prüfbericht `verification/a5-browser-report.json` und die gerenderten Beispielseiten werden im GitHub-Actions-Artefakt des jeweiligen Commits abgelegt. Nur der erfolgreiche CI-Lauf des tatsächlich geprüften Commits gilt als automatisierter Nachweis; ältere erfolgreiche Läufe reichen nicht aus.
+
+## Papiermenge und Druckeinstellungen
+
+Die angezeigte A5-Seitenzahl ist die Anzahl **einzelner bedruckter A5-Seiten**, nicht die Anzahl der A4-Papierbogen. Für den ersten Abnahmedruck A5-Hochformat, 100 % Maßstab und deaktivierte Browser-Kopf-/Fußzeilen wählen. Duplex- oder A4-Mehrfachdruck nur verwenden, wenn die Blattreihenfolge und Umschlagzuordnung danach erneut geprüft werden. Die Kinderblätter müssen sich je Umschlag in der Reihenfolge Aufgabe, Antwort und Wegrätsel befinden. Spielleitungsseiten und Etiketten getrennt halten.
