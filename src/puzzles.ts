@@ -44,6 +44,21 @@ function chooseInt(rng: () => number, low: number, high: number): number {
 export function validCode(code: string, digits = 3): boolean {
   return new RegExp('^[0-9]{' + digits + '}$').test(code);
 }
+/** Enumerate every visible digit-word match, including reverse and diagonal directions. */
+export function findDigitWords(rows: string[]): {digit:number;row:number;col:number;dr:number;dc:number}[] {
+  const n=rows.length;
+  if(!n||rows.some(row=>row.length!==n)) return [];
+  const matches: {digit:number;row:number;col:number;dr:number;dc:number}[]=[];
+  for(let digit=0;digit<DIGIT_WORDS.length;digit++){
+    const word=DIGIT_WORDS[digit];
+    for(let row=0;row<n;row++) for(let col=0;col<n;col++)
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc) continue;
+        if([...word].every((letter,i)=>rows[row+i*dr]?.[col+i*dc]===letter)) matches.push({digit,row,col,dr,dc});
+      }
+  }
+  return matches;
+}
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
   const rng = seededRandom(seed);
@@ -84,11 +99,16 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
       if(r+(word.length-1)*dr>=0 && r+(word.length-1)*dr<size && c+(word.length-1)*dc>=0 && c+(word.length-1)*dc<size)
         candidates.push({r,c,dr,dc});
     }
-    const selected=candidates[chooseInt(rng,0,candidates.length-1)];
-    const grid=Array.from({length:size},()=>Array.from({length:size},()=>ALPHABET[chooseInt(rng,0,25)]));
-    for(let i=0;i<word.length;i++) grid[selected.r+i*selected.dr][selected.c+i*selected.dc]=word[i];
-    const rows=grid.map(row=>row.join(''));
-    return {id,kind,instruction:'Finde ein ausgeschriebenes Zahlwort im Buchstabengitter. Die Zahl ist deine Code-Ziffer.',question:age==='young'?'Suche waagerecht oder senkrecht.':age==='middle'?'Suche auch diagonal.':'Suche waagerecht, senkrecht und diagonal – auch rückwärts.',hint:'Die Buchstaben stehen direkt nebeneinander in einer geraden Linie.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,wordGrid:{rows,startRow:selected.r,startCol:selected.c,deltaRow:selected.dr,deltaCol:selected.dc,word}};
+    for(let attempt=0;attempt<200;attempt++){
+      const selected=candidates[chooseInt(rng,0,candidates.length-1)];
+      const grid=Array.from({length:size},()=>Array.from({length:size},()=>ALPHABET[chooseInt(rng,0,25)]));
+      for(let i=0;i<word.length;i++) grid[selected.r+i*selected.dr][selected.c+i*selected.dc]=word[i];
+      const rows=grid.map(row=>row.join(''));
+      const matches=findDigitWords(rows);
+      if(matches.length!==1||matches[0].digit!==target) continue;
+      return {id,kind,instruction:'Finde ein ausgeschriebenes Zahlwort im Buchstabengitter. Die Zahl ist deine Code-Ziffer.',question:age==='young'?'Suche waagerecht oder senkrecht.':age==='middle'?'Suche auch diagonal.':'Suche waagerecht, senkrecht und diagonal – auch rückwärts.',hint:'Die Buchstaben stehen direkt nebeneinander in einer geraden Linie.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,wordGrid:{rows,startRow:selected.r,startCol:selected.c,deltaRow:selected.dr,deltaCol:selected.dc,word}};
+    }
+    throw new Error('Kein eindeutiges Zahlwort-Suchgitter erzeugbar');
   }
   if (kind === 'symbols') {
     // Counted symbols are placed on the worksheet; zero is represented explicitly.
@@ -165,7 +185,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     if(!g || g.word!==DIGIT_WORDS[target] || !g.rows.length || g.rows.some(row=>row.length!==g.rows.length || !/^[A-Z]+$/.test(row))) return false;
     const {startRow:r,startCol:c,deltaRow:dr,deltaCol:dc}=g;
     if(!Number.isInteger(r)||!Number.isInteger(c)||!Number.isInteger(dr)||!Number.isInteger(dc)||(dr===0&&dc===0)||Math.abs(dr)>1||Math.abs(dc)>1) return false;
-    return [...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter);
+    return [...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter) && findDigitWords(g.rows).length===1;
   }
   if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0 && puzzle.render.symbol.length <= 4 && puzzle.render.symbol.trim().length > 0;
   if (puzzle.kind === 'arithmetic') {
