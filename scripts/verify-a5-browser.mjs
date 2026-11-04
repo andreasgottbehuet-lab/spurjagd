@@ -314,6 +314,30 @@ try {
   const restoredOrganizerCode = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredOrganizerCode.calls !== 1 || restoredOrganizerCode.alerts.length)
     failures.push('A5 print did not recover after organizer code correction');
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row');
+    if (!row) throw new Error('Missing organizer checklist row for next-destination test');
+    row.dataset.testDestination = row.dataset.destination ?? '';
+    row.dataset.destination = 'Unbekannter Ort';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const wrongOrganizerDestination = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (wrongOrganizerDestination.calls !== 0 || wrongOrganizerDestination.alerts.length === 0)
+    failures.push('Incorrect organizer next destination did not block printing');
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row[data-test-destination]');
+    if (!row) throw new Error('Missing organizer checklist row for destination restoration');
+    row.dataset.destination = row.dataset.testDestination ?? '';
+    delete row.dataset.testDestination;
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredOrganizerDestination = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredOrganizerDestination.calls !== 1 || restoredOrganizerDestination.alerts.length)
+    failures.push('A5 print did not recover after organizer destination correction');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
