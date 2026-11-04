@@ -420,3 +420,33 @@ test('Deleting an active project rolls back if clearing active key fails',()=>{
   assert.equal(activeGameId(),'test-one');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Deleting one of several projects selects the surviving project atomically',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
+ try{
+  saveGame(sample());
+  saveGame({...sample(),id:'second'});
+  assert.equal(activeGameId(),'second');
+  assert.deepEqual(deleteGame('second').map(x=>x.id),['test-one']);
+  assert.equal(activeGameId(),'test-one');
+  assert.throws(()=>deleteGame('unknown'),/nicht gefunden/);
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Deleting active project with surviving draft rolls back on failed active selection',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let deny=false;
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>{if(deny&&key==='spurjagd-active-project-v1')throw new Error('denied');entries.set(key,String(value));},removeItem:key=>entries.delete(key)};
+ try{
+  saveGame(sample());
+  saveGame({...sample(),id:'second'});
+  deny=true;
+  assert.throws(()=>deleteGame('second'));
+  assert.equal(loadGames().length,2);
+  assert.equal(activeGameId(),'second');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
