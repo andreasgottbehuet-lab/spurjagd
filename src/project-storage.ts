@@ -82,7 +82,9 @@ export function loadGames(): SavedGame[] {
   const raw = localStorage.getItem(KEY);
   if (raw === null) return [];
   if (raw === '') throw new Error('Lokale Projektdaten sind leer oder beschädigt.');
-  const items: unknown = JSON.parse(raw);
+  let items: unknown;
+  try { items = JSON.parse(raw); }
+  catch { throw new Error('Lokale Projektdaten enthalten ungültiges JSON. Bitte eine Sicherung importieren.'); }
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
   const projects=items as SavedGame[];
   if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
