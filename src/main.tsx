@@ -395,6 +395,12 @@ function App() {
             </>}
             {activeStep === 4 && <>
               <div className="section-line"><span className="step">04</span><h2>{t.route}</h2></div>
+              <div className={printIssues.length ? 'preflight-status preflight-blocked' : 'preflight-status preflight-ready'} role="status" aria-live="polite">
+                <strong>{printIssues.length ? tx('Druck noch gesperrt', 'Printing not ready') : tx('Druckpaket bereit', 'Print packet ready')}</strong>
+                <span>{printIssues.length
+                  ? tx('Bitte die unten genannten Eingaben korrigieren. Das Druckpaket wird danach automatisch aktualisiert.', 'Correct the inputs listed below. The print packet updates automatically.')
+                  : tx('Alle automatischen Plausibilitätsprüfungen sind bestanden. Vor der Ausgabe die Druckvorschau und die echten Schlösser prüfen.', 'All automated consistency checks passed. Check the print preview and physical locks before use.')}</span>
+              </div>
               {plan.error ? <p className="error" role="alert">{plan.error}</p> : plan.value && <>
                 <div className="stats">
                   <div className="stat"><strong>{plan.value.teams.length}</strong><span>{t.teams}</span></div>
@@ -439,7 +445,7 @@ function App() {
                   <p>{tx('Papierbedarf: Die angezeigte Seitenzahl bezieht sich auf A5-Einzelseiten. Bei zwei A5-Seiten pro A4-Bogen oder Duplexdruck hängt die benötigte Bogenanzahl von der gewählten Druckeinstellung ab.','Paper estimate: the displayed count refers to individual A5 pages. Sheets needed for two A5 pages per A4 sheet or duplex printing depend on printer settings.')}</p>
                   <p>{tx('Schloss-Codes am echten Schloss prüfen. Die automatische Prüfung ersetzt keinen A5-Probedruck.','Check each code on the actual lock. Automated checks do not replace a physical A5 test print.')}</p>
                 </div>}
-                {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}<button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Stationsangaben und Codes korrigieren','Correct stations and lock codes')}</button></div>}
+                {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
                   {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
