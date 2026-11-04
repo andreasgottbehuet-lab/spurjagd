@@ -318,6 +318,8 @@ test('A5 print instructions are visible on screen and absent from the physical p
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
  assert.ok(source.includes('className="print-guidance"'));
  assert.ok(source.includes('A5 Hochformat'));
+ assert.ok(source.includes('Packübersicht nach Team:'));
+ assert.ok(source.includes('items.reduce((sum,envelope)=>sum+envelope.sheetCount,0)'));
  assert.ok(source.includes('Schloss-Codes am echten Schloss prüfen'));
  assert.ok(css.includes('.print-guidance{display:none!important}'));
 });
