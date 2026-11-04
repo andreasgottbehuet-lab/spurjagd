@@ -400,6 +400,7 @@ function App() {
                   <div className="stat"><strong>{plan.value.estimatedMinutes}</strong><span>{tx('Geschätzte Minuten','Estimated minutes')}</span></div>
                 </div>
                 <p className="helper">{tx('Noch frei im Zeitbudget','Remaining time buffer')}: {plan.value.remainderMinutes} min</p>
+                {plan.value.cautions.length>0 && <div className="warnings" role="status"><strong>{tx("Hinweise für die Spielleitung", "Organizer notes")}</strong>{plan.value.cautions.map((warning,i)=><p key={i}>{warning}</p>)}</div>}
                 <div className="team-list">{plan.value.teams.map((team,i)=>
                   <article className="team" key={i}>
                     <h3>{en ? 'Team ' + (i+1) : 'Team '+team.name}<span>{team.memberCount} {en?'participants':'Kinder'}</span></h3>
