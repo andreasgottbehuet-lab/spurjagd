@@ -505,3 +505,12 @@ test('Import starts planning at step one without changing the original project',
  assert.ok(handler.includes('setActiveStep(1)'));
  assert.ok(handler.includes('importedProjectTitle(imported.title)'));
 });
+
+test('Queued autosave checks cross-tab conflict before writing',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const start=ui.indexOf('const timeout = window.setTimeout(() => {');
+ const end=ui.indexOf('}, 650);',start);
+ const callback=ui.slice(start,end);
+ assert.ok(callback.includes('if (storageConflict.current) return;'));
+ assert.ok(callback.indexOf('if (storageConflict.current) return;') < callback.indexOf('saveGame(project)'));
+});
