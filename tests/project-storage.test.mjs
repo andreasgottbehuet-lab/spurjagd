@@ -464,3 +464,11 @@ test('Projektwechsel behandelt Fehler der aktiven Projektauswahl',()=>{
  assert.ok(select.includes('try { setActiveGameId(project.id); applyGame(project);'));
  assert.ok(select.includes('Projektwechsel fehlgeschlagen:'));
 });
+
+test('Sicherung bleibt auch nach dem Loeschen eines Projekts importierbar',()=>{
+ const source=sample();
+ const backup=serializeGameBackup(source);
+ const restored=parseGameBackup(backup);
+ assert.deepEqual(restored,source);
+ assert.equal(backupFilename(restored).endsWith('.json'),true);
+});
