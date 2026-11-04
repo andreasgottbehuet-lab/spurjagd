@@ -274,3 +274,12 @@ test('Alle 1000 Schlosskombinationen bleiben für jüngere Kinder lösbar',()=>{
   assert.ok(result.puzzles.every(verifyDigitPuzzle));
  }
 });
+
+test('Manipulierte Symbolrätsel ohne sichtbares Zählzeichen werden abgelehnt',()=>{
+ const puzzle=generateDigitPuzzle(4,'symbols','young',17);
+ assert.equal(verifyDigitPuzzle(puzzle),true);
+ puzzle.render.symbol='   ';
+ assert.equal(verifyDigitPuzzle(puzzle),false);
+ puzzle.render.symbol='ABCDE';
+ assert.equal(verifyDigitPuzzle(puzzle),false);
+});
