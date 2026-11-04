@@ -5,6 +5,8 @@ mkdirSync('verification', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ acceptDownloads: true });
 const checks = [];
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
 try {
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.locator('#projectTitle').fill('Browser Testprojekt');
@@ -37,8 +39,13 @@ try {
   await page.waitForTimeout(900);
   if (await page.locator('#savedProjects option').count() !== before - 1) throw new Error('Delete project');
   checks.push('Delete project');
+  if (errors.length) throw new Error('Browser JavaScript errors: ' + errors.join(' | '));
+} catch (error) {
+  errors.push(error instanceof Error ? error.message : String(error));
+  try { await page.screenshot({ path: 'verification/project-browser-failure.png', fullPage: true }); } catch {}
+  throw error;
 } finally {
-  writeFileSync('verification/project-browser-report.json', JSON.stringify({ checks }, null, 2));
+  writeFileSync('verification/project-browser-report.json', JSON.stringify({ checks, errors }, null, 2));
   await browser.close();
 }
 console.log('Project browser checks:', checks.join(', '));
