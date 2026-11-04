@@ -108,6 +108,31 @@ try {
   const restoredPrint = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredPrint.calls !== 1 || restoredPrint.alerts.length)
     failures.push('Valid A5 envelope labels did not restore the print action');
+  // The same gate must reject a packing-list count that disagrees with
+  // the envelope manifest, even when the number of pages is unchanged.
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row');
+    if (!row) throw new Error('No A5 organizer checklist row');
+    row.dataset.count = '999';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const blockedPacking = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (blockedPacking.calls !== 0 || !blockedPacking.alerts.some(message => message.includes('Packliste')))
+    failures.push('Corrupted A5 organizer packing count did not block printing');
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row');
+    const label = document.querySelector('.print-label');
+    if (!row || !label) throw new Error('Missing A5 packing elements during restoration');
+    row.dataset.count = label.dataset.count ?? '';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredPacking = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredPacking.calls !== 1 || restoredPacking.alerts.length)
+    failures.push('Valid A5 organizer packing count did not restore printing');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
