@@ -70,9 +70,9 @@ try {
   if (blankPages.length) failures.push('PDF contains blank pages: ' + blankPages.join(', '));
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
+  if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
   const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, blankPages, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
-  if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
   if (failures.length) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
     throw new Error(failures.join('\n'));
