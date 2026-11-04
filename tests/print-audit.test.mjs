@@ -232,3 +232,31 @@ test('Druckprüfung erkennt veränderte Stationsbeschreibungen',()=>{
  const issues=auditPrintPacket(c,plan,'projekt-1');
  assert.ok(issues.some(issue=>issue.includes('Gruppenroute Rot')));
 });
+
+test('End-to-End-Matrix: Routen, Ziele und Gruppenzahlen bleiben druckfähig',()=>{
+ let cases=0;
+ for(const players of [3,6,12,15]) for(const startMode of ['shared','distributed']) for(const routeMode of ['same','varied']) for(const finishMode of ['meeting','origin','start']){
+  const c={...config(),players,startMode,routeMode,finishMode,startPoint:'Startpunkt',meetingPoint:'Treffpunkt'};
+  const plan=createPlan(c);
+  const issues=auditPrintPacket(c,plan,'matrix-projekt');
+  assert.deepEqual(issues,[],JSON.stringify({players,startMode,routeMode,finishMode,issues}));
+  assert.equal(plan.teams.reduce((sum,team)=>sum+team.memberCount,0),players);
+  for(const team of plan.teams){
+   assert.equal(team.stations.length,plan.stopsPerTeam);
+   assert.equal(new Set(team.stations.map(station=>station.id)).size,team.stations.length);
+   assert.equal(team.finish,finishMode==='start'?team.stations[0].name:finishMode==='origin'?'Startpunkt':'Treffpunkt');
+  }
+  cases++;
+ }
+ assert.equal(cases,48);
+});
+
+test('End-to-End: Kürzere Routen verlangen nur die tatsächlich besuchten Codes',()=>{
+ for(const players of [3,6,9,12]) for(const durationMinutes of [30,45,60]){
+  const c={...config(),players,durationMinutes};
+  const plan=createPlan(c);
+  const visited=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));
+  c.stationCodes=Object.fromEntries(Object.entries(c.stationCodes).filter(([id])=>visited.has(id)));
+  assert.deepEqual(auditPrintPacket(c,plan,'kurzstrecke'),[],JSON.stringify({players,durationMinutes}));
+ }
+});
