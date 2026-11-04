@@ -243,6 +243,12 @@ try {
   for (const code of ['007','000','123','987']) {
     if (!extracted.stdout.includes(code)) failures.push('PDF text is missing configured three-digit code ' + code);
   }
+  const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
+  const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
+  if (childText.includes('Codes und Lösungen') || childText.includes('Umschlagkontrolle'))
+    failures.push('Organizer-only solution or envelope checklist leaked onto child pages');
+  if (!labelText.includes('Umschlag'))
+    failures.push('PDF label section is missing envelope labels');
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
   const codeOccurrences = Object.fromEntries(['007','000','123','987'].map(code => [code, pdfPageTexts.filter(pageText => pageText.includes(code)).length]));
   if (Object.values(codeOccurrences).some(count => count === 0)) failures.push('Not every configured lock code is present in the PDF');
