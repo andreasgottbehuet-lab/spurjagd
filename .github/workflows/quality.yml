@@ -69,6 +69,7 @@ jobs:
             echo 'Vite preview failed to start; see verification/vite-preview.log' | tee verification/a5-browser-tests.log
             exit 1
           fi
+          node scripts/verify-project-browser.mjs 2>&1 | tee verification/project-browser-tests.log
           node scripts/verify-a5-browser.mjs 2>&1 | tee verification/a5-browser-tests.log
       - name: Upload verification evidence
         if: always()
