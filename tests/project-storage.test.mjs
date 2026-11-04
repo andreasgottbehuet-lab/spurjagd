@@ -121,7 +121,7 @@ test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen V
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
  assert.ok(creation.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('config:createDefaultGameConfig()'));
- assert.ok(deletion.includes('deleteGame(projectId)'));
+ assert.ok(deletion.includes('deleteGame(projectId,expected??undefined)'));
  assert.ok(deletion.includes('replaceLastGame(projectId,fresh)'));
  assert.ok(deletion.includes('applyGame(fresh)'));
 });
@@ -319,7 +319,7 @@ test('After deleting the final project a clean replacement can be persisted and 
 test('Deleting final project immediately persists replacement in the UI',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
- assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh)'));
+ assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh,expected??undefined)'));
  assert.ok(deletion.includes('setProjects(saved);'));
  assert.ok(deletion.includes('applyGame(fresh);'));
 });
