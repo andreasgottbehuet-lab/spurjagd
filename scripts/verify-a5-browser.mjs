@@ -138,7 +138,9 @@ try {
   await page.evaluate(() => {
     const label = document.querySelector('.print-label');
     if (!label) throw new Error('Missing A5 label for duplicate test');
-    label.parentElement?.appendChild(label.cloneNode(true));
+    const duplicate = label.cloneNode(true);
+    duplicate.setAttribute('data-test-duplicate', 'true');
+    label.parentElement?.appendChild(duplicate);
     window.__a5PrintCalls = 0;
     window.__a5Alerts = [];
   });
@@ -147,8 +149,7 @@ try {
   if (duplicateLabel.calls !== 0 || duplicateLabel.alerts.length === 0)
     failures.push('Duplicated A5 envelope label did not block printing');
   await page.evaluate(() => {
-    const labels = document.querySelectorAll('.print-label');
-    labels[labels.length - 1]?.remove();
+    document.querySelector('.print-label[data-test-duplicate="true"]')?.remove();
     window.__a5PrintCalls = 0;
     window.__a5Alerts = [];
   });
