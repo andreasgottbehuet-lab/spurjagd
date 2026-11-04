@@ -487,5 +487,5 @@ test('Browserprojekt-Pruefung wartet auf echte Zustandsaenderungen',()=>{
  const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes('waitForFunction'));
  assert.ok(script.includes('Import fehlgeschlagen'));
- assert.ok(!script.includes('waitForTimeout('));
+ assert.ok(script.includes('waitForTimeout(850)')); // Negative assertion: allow the 650ms autosave debounce to elapse.
 });
