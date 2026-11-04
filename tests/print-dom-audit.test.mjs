@@ -173,3 +173,9 @@ test('Extrem große gültige Einzelblattzahl wird vor der Sequenzbildung begrenz
  assert.ok(issues.some(issue=>issue.includes('Umschlag-Reihenfolge')));
  assert.ok(issues.length<10);
 });
+
+test('A5-Geometriedatensätze ohne Blattkennung werden abgewiesen',()=>{
+ const px=96/25.4;
+ const sheet={id:'',contentWidth:120*px,contentHeight:180*px,scrollWidth:120*px,scrollHeight:180*px};
+ assert.ok(auditA5PageBounds([sheet],px).some(issue=>issue.includes('ohne Kennung')));
+});
