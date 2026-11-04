@@ -342,3 +342,15 @@ test('Die Mindestblattzahl bleibt bei jeder beschädigten Teilmenge gesperrt',()
   assert.ok(auditPrintManifest(plan,manifest).length>0,'Unbemerkte Abweichung: '+field);
  }
 });
+
+test('Druckfreigabe weist ungueltige Gesamtsummen fuer jede Seitenkategorie zurueck',()=>{
+ const plan=createPlan(config);
+ for(const field of ['taskSheets','organizerSheets','labelSheets','minimumSheets']){
+  for(const value of [-1,0.5,NaN,Infinity]){
+   const manifest=createPrintManifest(plan);
+   manifest[field]=value;
+   assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes('ungültige Seitenzahlen')),
+    field+'='+value+' wurde nicht als ungueltig erkannt');
+  }
+ }
+});
