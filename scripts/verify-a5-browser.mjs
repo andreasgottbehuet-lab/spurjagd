@@ -90,7 +90,7 @@ try {
   if (await guidance.count() !== 1 || !(await guidance.isVisible()))
     failures.push('A5 organizer print guidance is missing from the screen');
   const guidanceText = await guidance.innerText();
-  for (const term of ['A5 Hochformat', 'Packübersicht nach Team:', 'Schloss-Codes am echten Schloss']) {
+  for (const term of ['A5 Hochformat', 'Packübersicht nach Team:', 'A5-Einzelseiten', 'Schloss-Codes am echten Schloss']) {
     if (!guidanceText.includes(term)) failures.push('A5 organizer guidance missing: ' + term);
   }
   const renderedOrder = await sheets.evaluateAll(elements => elements.map(el =>
