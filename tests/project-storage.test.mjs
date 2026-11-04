@@ -381,3 +381,41 @@ test('Failed active-project update restores original project list',()=>{
   assert.equal(activeGameId(),'test-one');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Saving a project rolls back if the active project key cannot be written',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let deny=false;
+ globalThis.localStorage={
+  getItem:key=>entries.get(key)??null,
+  setItem:(key,value)=>{if(deny&&key==='spurjagd-active-project-v1')throw new Error('denied');entries.set(key,String(value));},
+  removeItem:key=>entries.delete(key)
+ };
+ try{
+  saveGame(sample());
+  deny=true;
+  assert.throws(()=>saveGame({...sample(),id:'second'}));
+  assert.equal(loadGames().length,1);
+  assert.equal(loadGames()[0].id,'test-one');
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Deleting an active project rolls back if clearing active key fails',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let deny=false;
+ globalThis.localStorage={
+  getItem:key=>entries.get(key)??null,
+  setItem:(key,value)=>entries.set(key,String(value)),
+  removeItem:key=>{if(deny&&key==='spurjagd-active-project-v1')throw new Error('denied');entries.delete(key);}
+ };
+ try{
+  saveGame(sample());
+  deny=true;
+  assert.throws(()=>deleteGame('test-one'));
+  assert.equal(loadGames().length,1);
+  assert.equal(loadGames()[0].id,'test-one');
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
