@@ -150,3 +150,10 @@ test('Etikettenprüfung akzeptiert keine doppelten oder leeren Manifestkennungen
  assert.ok(auditRenderedLabels([{id:'A',sheetCount:3},{id:'A',sheetCount:3}],['A','A']).some(x=>x.includes('doppelte Umschlagkennungen')));
  assert.ok(auditRenderedLabels([{id:'',sheetCount:3}],['']).some(x=>x.includes('leere Umschlagkennung')));
 });
+
+test('Widersprüchliche Druckmanifest-Summen und ungültige Sollwerte sperren die Freigabe',()=>{
+ const actual={total:53,organizer:14,children:36,labels:3};
+ assert.ok(auditRenderedPrintCategories({minimumSheets:53,organizerSheets:13,taskSheets:36,labelSheets:3},actual).some(x=>x.includes('Blattkategorien')));
+ assert.ok(auditRenderedPrintCategories({minimumSheets:53,organizerSheets:-1,taskSheets:51,labelSheets:3},actual).some(x=>x.includes('ungültige erwartete')));
+ assert.ok(auditRenderedPrintCategories({minimumSheets:53,organizerSheets:14.5,taskSheets:35.5,labelSheets:3},actual).some(x=>x.includes('ungültige erwartete')));
+});
