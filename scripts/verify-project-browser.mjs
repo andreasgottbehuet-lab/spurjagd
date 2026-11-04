@@ -5,6 +5,7 @@ mkdirSync('verification', { recursive: true });
 let browser;
 let page;
 const checks = [];
+const startedAt = new Date().toISOString();
 const errors = [];
 try {
   browser = await chromium.launch({ headless: true });
@@ -109,7 +110,7 @@ try {
   }
   throw error;
 } finally {
-  writeFileSync('verification/project-browser-report.json', JSON.stringify({ checks, errors }, null, 2));
+  writeFileSync('verification/project-browser-report.json', JSON.stringify({ startedAt, finishedAt: new Date().toISOString(), passed: errors.length === 0, checks, errors }, null, 2));
   if (browser) await browser.close();
 }
 console.log('Project browser checks:', checks.join(', '));
