@@ -45,6 +45,13 @@ try {
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value.includes('Import'));
   if (!(await page.locator('#projectTitle').inputValue()).includes('Import')) throw new Error('Backup import');
   checks.push('JSON import');
+  const importedId = await page.locator('#savedProjects').inputValue();
+  if (importedId === originalId) throw new Error('Import overwrote original project');
+  await page.locator('#savedProjects').selectOption(originalId);
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
+  checks.push('Original project preserved after import');
+  await page.locator('#savedProjects').selectOption(importedId);
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value.includes('Import'));
   const before = await page.locator('#savedProjects option').count();
   page.once('dialog', dialog => dialog.dismiss());
   await page.getByRole('button', { name: 'Löschen' }).click();
