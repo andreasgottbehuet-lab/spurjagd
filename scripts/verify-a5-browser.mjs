@@ -207,6 +207,34 @@ try {
   const restoredKind = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredKind.calls !== 1 || restoredKind.alerts.length)
     failures.push('A5 print did not recover after route page kind restoration');
+  // Removing a whole child page must also block printing, even when
+  // its envelope label and packing checklist are still present.
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.print-child-sheet[data-sheet-kind="task"]');
+    if (!sheet) throw new Error('Missing A5 task page for removal test');
+    sheet.setAttribute('data-test-removed', 'true');
+    sheet.hidden = true;
+    sheet.classList.remove('print-sheet');
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const missingSheet = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (missingSheet.calls !== 0 || missingSheet.alerts.length === 0)
+    failures.push('Missing A5 child sheet did not block printing');
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.print-child-sheet[data-test-removed="true"]');
+    if (!sheet) throw new Error('Missing child page for restoration');
+    sheet.classList.add('print-sheet');
+    sheet.hidden = false;
+    sheet.removeAttribute('data-test-removed');
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredSheet = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredSheet.calls !== 1 || restoredSheet.alerts.length)
+    failures.push('A5 print did not recover after restoring missing child sheet');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
