@@ -252,6 +252,16 @@ try {
     if (!team || !(pdfPageTexts[pageNumber - 1] ?? '').includes(team))
       failures.push('A5 PDF page ' + pageNumber + ' has no matching team identification');
   }
+  // Compare the full team/station/sheet identification line for each child page.
+  const printedHeaders = await page.locator('.print-child-sheet').evaluateAll(elements =>
+    elements.map(element => element.querySelector('p')?.textContent?.trim() ?? ''));
+  for (let index = 0; index < printedHeaders.length; index++) {
+    const pageNumber = categories.organizer + index + 1;
+    const expectedHeader = printedHeaders[index].replace(/\\s+/g, ' ');
+    const pdfText = (pdfPageTexts[pageNumber - 1] ?? '').replace(/\\s+/g, ' ');
+    if (!expectedHeader || !pdfText.includes(expectedHeader))
+      failures.push('A5 PDF page ' + pageNumber + ' differs from the team/station/sheet header in the browser');
+  }
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.
   const labelNames = await page.locator('.print-label strong').allTextContents();
