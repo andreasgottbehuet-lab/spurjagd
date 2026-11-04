@@ -21,3 +21,10 @@ test('Allocated IDs remain unique across multiple expansions',()=>{
 test('Invalid station counts are rejected',()=>{
  for(const n of [-1,21,1.5,Infinity]) assert.throws(()=>allocateLocationIds([],[],n));
 });
+
+test('Invalid allocator start values are rejected without looping',()=>{
+ for(const start of [NaN,Infinity,-1,0,1.5,1000001]){
+  assert.throws(()=>allocateLocationIds([],[],1,start),/Startwert/);
+ }
+ assert.deepEqual(allocateLocationIds([],[],2,1),['loc-1','loc-2']);
+});
