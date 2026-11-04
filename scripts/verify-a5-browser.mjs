@@ -98,6 +98,20 @@ try {
   const a5 = size && Math.abs(Number(size[1]) - 419.53) < 2 && Math.abs(Number(size[2]) - 595.28) < 2;
   if (!a5) failures.push('PDF page size differs from A5 portrait: ' + (size?.[0] ?? 'unknown'));
   if (pages !== expected) failures.push('PDF pages ' + pages + ' do not match logical A5 sheets ' + expected);
+  // Export representative PDF pages as PNG for a quick human print-layout review.
+  for (const [label, number] of [
+    ['organizer', 1],
+    ['child', categories.organizer + 1],
+    ['labels', categories.organizer + categories.children + 1]
+  ]) {
+    if (number > pages) continue;
+    const preview = spawnSync('pdftoppm', [
+      '-f', String(number), '-l', String(number), '-singlefile',
+      '-scale-to', '1200', '-png', 'verification/a5-browser-print.pdf',
+      'verification/a5-preview-' + label
+    ], { encoding: 'utf8' });
+    if (preview.status !== 0) failures.push('Cannot render A5 ' + label + ' preview: ' + preview.stderr);
+  }
   const extracted = spawnSync('pdftotext', ['-layout', 'verification/a5-browser-print.pdf', '-'], { encoding: 'utf8' });
   if (extracted.status !== 0) throw new Error('pdftotext failed: ' + extracted.stderr);
   const pdfPageTexts = extracted.stdout.split('\f');
