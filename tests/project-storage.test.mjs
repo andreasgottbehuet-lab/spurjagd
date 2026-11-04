@@ -144,7 +144,7 @@ test('Beschädigte Browserdaten dürfen durch Autostart nicht überschrieben wer
  assert.ok(init.includes('setStorageReady(true)'));
  assert.ok(init.includes('setStorageReady(false)'));
  assert.ok(init.includes('Automatisches Speichern bleibt'));
- assert.ok(source.includes('if (!storageReady) return;'));
+ assert.ok(source.includes('if (!storageReady || storageConflict.current) return;'));
 });
 
 test('Beschädigte Browserdaten bleiben beim fehlgeschlagenen Speichern unverändert',()=>{
