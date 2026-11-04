@@ -117,6 +117,7 @@ export function createPlan(config: GameConfig): GamePlan {
   if (startMode === 'distributed' && teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
   if (startMode === 'shared') cautions.push('Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.');
   if (routeMode === 'varied' && places.length < 3) cautions.push('Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.');
+  if (routeMode === 'varied' && stopsPerTeam === 1) cautions.push('Bei nur einer Station pro Team entstehen trotz unterschiedlicher Umlaufrichtung keine unterschiedlichen Stationsfolgen.');
   if (finishMode === 'origin' && startMode === 'distributed') cautions.push('Die Teams starten verteilt an Rätselstationen und kehren zum gemeinsamen Startort zurück.');
   if (finishMode === 'start') cautions.push('Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.');
   if (stopsPerTeam < places.length) cautions.push('Zeitbudget: Nicht alle Standorte werden pro Team besucht.');
