@@ -128,3 +128,6 @@ Die Projektprüfung wartet auf tatsächlich gespeicherte und gerenderte Zuständ
 
 ### Erweiterte Datensicherheits-Abnahme
 Der Browser-Test kontrolliert nach dem JSON-Import ausdrücklich, dass das ursprüngliche Projekt noch vorhanden und unverändert ist. Nach einer Änderung aus einem zweiten Tab wird im veralteten Tab absichtlich erneut editiert; nach Ablauf der Autospeicherverzögerung muss der aktuelle Datenstand im zweiten Tab erhalten bleiben. Der Löschhinweis ist nun in Deutsch und Englisch ausdrücklich als unwiderruflich formuliert. Alle Prüfungen müssen in einem realen Browserlauf erfolgreich sein, bevor die Datensicherheit als abgenommen gelten kann.
+
+### JSON-Import: Identität und Bedienzustand
+Nach einem Import wird eine neue Projektkennung vergeben und der Planer auf Schritt 1 zurückgesetzt. Der Browser-Test liest die tatsächlich heruntergeladene JSON-Datei und kontrolliert Format, Projektkennung und Titel. Anschließend prüft er, dass der Import den Originaldatensatz nicht ersetzt und das spätere Löschen der importierten Kopie das Original erhält. Diese Kontrollen sind Teil des CI-Skripts, aber noch nicht als erfolgreich ausgeführt bestätigt.
