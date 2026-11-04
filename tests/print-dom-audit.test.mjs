@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditPrintOverflow,auditA5PageBounds} from '../src/print-dom-audit.ts';
+import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditRenderedPackingItems,auditPrintOverflow,auditA5PageBounds} from '../src/print-dom-audit.ts';
 
 test('Vollständig gerendertes A5-Paket wird freigegeben',()=>{
  for(const count of [1,3,53,200,1000]) assert.deepEqual(auditRenderedPrintSheets(count,count),[]);
@@ -191,4 +191,21 @@ test('Leere A5-Geometriemessung darf nicht als erfolgreich gelten',()=>{
  const px=96/25.4;
  assert.ok(auditPrintOverflow([]).some(issue=>issue.includes('Keine A5-Blätter')));
  assert.ok(auditA5PageBounds([],px).some(issue=>issue.includes('Keine A5-Blätter')));
+});
+
+test('Packliste und Etiketten müssen exakt zum Umschlagplan passen',()=>{
+ const expected=[
+  {envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3},
+  {envelopeId:'1-b',team:'Blau',stationName:'Platz',stationNumber:2,sheetCount:5}
+ ];
+ assert.deepEqual(auditRenderedPackingItems(expected,expected,expected),[]);
+ for(const field of ['envelopeId','team','stationName','stationNumber','sheetCount']){
+  const wrong=expected.map(item=>({...item}));
+  wrong[0][field]=typeof wrong[0][field]==='number'?99:'Falsch';
+  assert.ok(auditRenderedPackingItems(expected,wrong,expected).some(issue=>issue.includes('Etiketten')),field);
+  assert.ok(auditRenderedPackingItems(expected,expected,wrong).some(issue=>issue.includes('Packliste')),field);
+ }
+ assert.ok(auditRenderedPackingItems(expected,[expected[0],expected[0]],expected).some(issue=>issue.includes('doppelte')));
+ assert.ok(auditRenderedPackingItems(expected,expected.slice(1),expected).some(issue=>issue.includes('von 2')));
+ assert.ok(auditRenderedPackingItems(expected,[...expected].reverse(),expected).some(issue=>issue.includes('einsortiert')));
 });
