@@ -256,3 +256,12 @@ test('Spielleitungs-Packliste prueft Schloss-Code und naechstes Ziel je Umschlag
  assert.ok(auditRenderedOrganizerSecrets(expected,expected.slice(1)).length>0);
  assert.ok(auditRenderedOrganizerSecrets(expected,[expected[0],expected[0]]).some(issue=>issue.includes('doppelte')));
 });
+
+test('Spielleitungsdaten mit identischen falschen Codes werden nicht freigegeben',()=>{
+ for(const code of ['7','abcd',' 007','12x']){
+  const invalid={envelopeId:'0-a',code,destination:'Wiese'};
+  assert.ok(auditRenderedOrganizerSecrets([invalid],[invalid]).some(issue=>issue.includes('ungültige erwartete Daten')),code);
+ }
+ const duplicate={envelopeId:'0-a',code:'007',destination:'Wiese'};
+ assert.ok(auditRenderedOrganizerSecrets([duplicate,duplicate],[duplicate,duplicate]).some(issue=>issue.includes('doppelte erwartete')));
+});
