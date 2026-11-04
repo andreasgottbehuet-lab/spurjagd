@@ -225,3 +225,15 @@
 .preflight-issue button{flex-shrink:0}
 @media(max-width:600px){.preflight-issue{align-items:flex-start;flex-direction:column}}
 @media print{.preflight-issue button{display:none!important}}
+
+/* Restrained, printer-friendly team identity on A5 worksheets, labels and route plans. */
+.print-child-sheet[data-team-color],.print-label[data-team-color]{--team-accent:#63788a;--team-tint:#f0f3f5}
+.print-child-sheet[data-team-color="rot"],.print-label[data-team-color="rot"],.team-route-line[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-child-sheet[data-team-color="blau"],.print-label[data-team-color="blau"],.team-route-line[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-child-sheet[data-team-color="grün"],.print-label[data-team-color="grün"],.team-route-line[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-child-sheet[data-team-color="gelb"],.print-label[data-team-color="gelb"],.team-route-line[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-child-sheet[data-team-color]{border-top:4mm solid var(--team-accent);border-bottom:3mm solid var(--team-accent)}
+.print-child-sheet[data-team-color]>p:first-of-type{background:var(--team-tint);padding:1.5mm 2mm;border-radius:1mm}
+.team-route-line[data-team-color]{border-left:4mm solid var(--team-accent);background:var(--team-tint);padding:2mm 3mm;margin:2mm 0}
+.print-label[data-team-color]{border-left:3mm solid var(--team-accent);background:var(--team-tint)}
+@media print{.print-child-sheet[data-team-color],.print-label[data-team-color],.team-route-line[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
