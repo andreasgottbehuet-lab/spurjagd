@@ -200,3 +200,10 @@ test('Druckfreigabe weist zu lange benutzerdefinierte Wegrätsel zurück',()=>{
  const issues=auditPrintPacket(c,createPlan(c),'projekt-1');
  assert.ok(issues.some(issue=>issue.includes('400 Zeichen')));
 });
+
+test('Druckfreigabe erkennt manipulierte Planungshinweise',()=>{
+ const c=config();
+ const plan=createPlan(c);
+ plan.cautions.push('Nicht aus der Planung stammender Hinweis');
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Planungshinweise')));
+});
