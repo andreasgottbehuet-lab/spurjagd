@@ -81,6 +81,7 @@ try {
     envelopeGroups.set(entry.id, entries);
   }
   for (const [id, entries] of envelopeGroups) {
+    if (!/^[^\s]+/.test(id)) failures.push('Invalid envelope identifier: ' + id);
     if (entries.filter(entry => entry.kind === 'task').length !== 1 || entries.filter(entry => entry.kind === 'answer').length !== 1 || entries.filter(entry => entry.kind === 'route').length < 1)
       failures.push('Incomplete A5 envelope: ' + id);
     if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'answer' || entries.slice(2).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
