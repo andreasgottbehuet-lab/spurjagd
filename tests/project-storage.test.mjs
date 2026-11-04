@@ -2,7 +2,7 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame, backupFilename } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -449,4 +449,10 @@ test('Deleting active project with surviving draft rolls back on failed active s
   assert.equal(loadGames().length,2);
   assert.equal(activeGameId(),'second');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('JSON-Sicherungen erhalten lesbare und sichere Dateinamen',()=>{
+ assert.equal(backupFilename({title:'Doras Schatzsuche',id:'abc12345-0000'}),'spurjagd-Doras-Schatzsuche-abc12345.json');
+ assert.equal(backupFilename({title:'///',id:'!'}),'spurjagd-projekt-sicherung.json');
+ assert.ok(backupFilename({title:'A'.repeat(200),id:'12345678'}).length<80);
 });
