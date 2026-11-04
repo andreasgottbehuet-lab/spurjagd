@@ -168,6 +168,13 @@ try {
     if (staleBackup.project?.title !== staleTitle)
       throw new Error('Stale editor cannot export its current unsaved draft');
     checks.push('Stale tab blocks writes but permits emergency JSON export');
+    const staleCount=await page.locator('#savedProjects option').count();
+    await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
+    await page.waitForTimeout(100);
+    if (await page.locator('#savedProjects option').count() !== staleCount ||
+        await page.locator('#savedProjects').inputValue() !== staleProjectId)
+      throw new Error('Stale editor imported a project despite storage conflict');
+    checks.push('Stale tab blocks backup import');
   } finally {
     await otherTab.close();
   }
