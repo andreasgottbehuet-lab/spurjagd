@@ -214,3 +214,13 @@ test('Druckprüfung erkennt doppelte Stationskennungen trotz Leerzeichen',()=>{
  const issues=auditPrintPacket(c,createPlan(config()),'projekt-1');
  assert.ok(issues.some(issue=>issue.includes('Stations-IDs sind nicht eindeutig')));
 });
+
+test('Druckprüfung entdeckt abweichende Gruppengrößen und Zielorte',()=>{
+ const c=config();
+ const plan=createPlan(c);
+ plan.teams[0].memberCount++;
+ plan.teams[1].finish='Unbekannter Ort';
+ const issues=auditPrintPacket(c,plan,'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Gruppenroute Rot')));
+ assert.ok(issues.some(issue=>issue.includes('Gruppenroute Blau')));
+});
