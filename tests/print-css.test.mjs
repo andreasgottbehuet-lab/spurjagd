@@ -352,4 +352,6 @@ test('Browser rejects misassigned child sheets and mislabelled route pages',()=>
  assert.ok(script.includes('A5 route page mislabelled as answer did not block printing'));
  assert.ok(script.includes('A5 print did not recover after child envelope restoration'));
  assert.ok(script.includes('A5 print did not recover after route page kind restoration'));
+ assert.ok(script.includes('Missing A5 child sheet did not block printing'));
+ assert.ok(script.includes('A5 print did not recover after restoring missing child sheet'));
 });
