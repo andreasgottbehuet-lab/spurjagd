@@ -186,3 +186,11 @@ test('A5 workflow records browser setup log',()=>{
  assert.ok(workflow.includes('a5-browser-setup.log'));
  assert.ok(workflow.includes('timeout-minutes: 30'));
 });
+
+test('A5 Chromium fixture checks leading zeroes and printable category order',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes("['007', '000', '123', '987']"));
+ assert.ok(script.includes('Station code lost leading zeroes'));
+ assert.ok(script.includes('printButton.isDisabled()'));
+ assert.ok(script.includes('A5 sheet category order must be organizer, child, labels'));
+});
