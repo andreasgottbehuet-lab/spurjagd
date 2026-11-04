@@ -351,3 +351,14 @@ test('A5-Gitterrätsel zeigt für jede Antwort genau ein hervorgehobenes Lösung
  assert.ok(source.includes('index===r.letterIndex'));
  assert.ok(source.includes('route-answer-highlight'));
 });
+
+test('Zahlenfolgen sind für jede Codeziffer und Altersstufe eindeutig prüfbar',()=>{
+ for(const age of ['young','middle','older']) for(let digit=0;digit<=9;digit++) for(const seed of [0,1,2,7,91]){
+  const p=generateDigitPuzzle(digit,'sequence',age,seed);
+  assert.equal(verifyDigitPuzzle(p),true);
+  assert.equal(p.expectedDigit,digit);
+  assert.deepEqual(generateDigitPuzzle(digit,'sequence',age,seed),p);
+  const invalid={...p,question:p.question.replace('  ·  ?', '  ·  5')};
+  assert.equal(verifyDigitPuzzle(invalid),false);
+ }
+});
