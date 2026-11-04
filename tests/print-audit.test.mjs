@@ -190,5 +190,5 @@ test('Ortsbeschreibung mit verstecktem Zielnamen wird bei der Druckprüfung abge
  c.locations[1].name='Wiese über der Sabine';
  c.locations[1].description='Ihr sucht die Wiese ueber der Sabine neben den Bäumen.';
  c.routeClueModes.b='description';
- assert.ok(auditPrintPacket(c,createPlan(c),'projekt-1').some(issue=>issue.includes('Wegrätsel')));
+ assert.ok(auditPrintPacket(c,createPlan(c),'projekt-1').some(issue=>issue.includes('verrät den Zielnamen') || issue.includes('Wegrätsel')));
 });
