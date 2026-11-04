@@ -217,3 +217,8 @@ test('Lock-code input identifies invalid values and preserves three-digit text e
  assert.ok(ui.includes('Bitte genau drei Ziffern eingeben; 000 und führende Nullen sind erlaubt.'));
  assert.ok(ui.includes('pattern="[0-9]{3}"'));
 });
+
+test('Organizer explains the shared age group without product-roadmap copy',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.match(source,/Alle Gruppen erhalten Aufgaben für die gemeinsam ausgewählte Altersklasse/);
+});
