@@ -2,12 +2,14 @@ import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 mkdirSync('verification', { recursive: true });
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ acceptDownloads: true });
+let browser;
+let page;
 const checks = [];
 const errors = [];
-page.on('pageerror', error => errors.push(error.message));
 try {
+  browser = await chromium.launch({ headless: true });
+  page = await browser.newPage({ acceptDownloads: true });
+  page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.locator('#projectTitle').fill('Browser Testprojekt');
   await page.waitForFunction(() => document.querySelector('#savedProjects')?.value && [...document.querySelectorAll('#savedProjects option')].some(option => option.value === document.querySelector('#savedProjects').value && option.textContent?.includes('Browser Testprojekt')));
@@ -63,10 +65,12 @@ try {
   if (errors.length) throw new Error('Browser JavaScript errors: ' + errors.join(' | '));
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
-  try { await page.screenshot({ path: 'verification/project-browser-failure.png', fullPage: true }); } catch {}
+  if (page && !page.isClosed()) {
+    try { await page.screenshot({ path: 'verification/project-browser-failure.png', fullPage: true }); } catch {}
+  }
   throw error;
 } finally {
   writeFileSync('verification/project-browser-report.json', JSON.stringify({ checks, errors }, null, 2));
-  await browser.close();
+  if (browser) await browser.close();
 }
 console.log('Project browser checks:', checks.join(', '));
