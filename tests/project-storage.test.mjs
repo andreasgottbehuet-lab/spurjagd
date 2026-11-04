@@ -122,7 +122,7 @@ test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen V
  assert.ok(creation.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('deleteGame(projectId,expected??undefined)'));
- assert.ok(deletion.includes('replaceLastGame(projectId,fresh)'));
+ assert.ok(deletion.includes('replaceLastGame(projectId,fresh,expected??undefined)'));
  assert.ok(deletion.includes('applyGame(fresh)'));
 });
 
