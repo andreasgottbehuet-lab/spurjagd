@@ -81,7 +81,7 @@ try {
     envelopeGroups.set(entry.id, entries);
   }
   for (const [id, entries] of envelopeGroups) {
-    if (!/^[^\s]+/.test(id)) failures.push('Invalid envelope identifier: ' + id);
+    if (!id.trim() || id !== id.trim()) failures.push('Invalid envelope identifier: ' + id);
     if (entries.filter(entry => entry.kind === 'task').length !== 1 || entries.filter(entry => entry.kind === 'answer').length !== 1 || entries.filter(entry => entry.kind === 'route').length < 1)
       failures.push('Incomplete A5 envelope: ' + id);
     if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'answer' || entries.slice(2).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
@@ -98,6 +98,7 @@ try {
   if (new Set(taskIds).size !== taskIds.length || new Set(answerIds).size !== answerIds.length)
     failures.push('Duplicate task or answer sheets for an envelope');
   if (taskIds.join('|') !== answerIds.join('|')) failures.push('Task and answer envelope sequence differs');
+  if (taskIds.length !== 12 || answerIds.length !== 12) failures.push('Expected exactly 12 task and 12 answer sheets');
   if (envelopeGroups.size !== 12 || categories.children !== 36 || categories.labels !== 3)
     failures.push('Default 12-child A5 fixture differs from 12 envelopes / 36 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
@@ -152,6 +153,9 @@ try {
   // Validate that each PDF page carries the expected category of content,
   // not merely that the DOM contains the right number of sheets.
   if (pdfPageTexts.length === expected) {
+    for (let i = 0; i < categories.organizer; i++) {
+      if (!(pdfPageTexts[i] ?? '').trim()) failures.push('Empty organizer page ' + (i + 1));
+    }
     for (let i = 0; i < envelopePages.length; i++) {
       const pageNumber = categories.organizer + i + 1;
       const content = pdfPageTexts[pageNumber - 1] ?? '';
@@ -167,6 +171,9 @@ try {
     }
   }
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
+  for (const code of ['007','000','123','987']) {
+    if (!extracted.stdout.includes(code)) failures.push('PDF text is missing configured three-digit code ' + code);
+  }
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
   const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, envelopeCount: envelopeGroups.size, labelCount: labelIds.length, blankPages, measurements: measured, failures };
