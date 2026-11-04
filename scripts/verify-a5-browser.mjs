@@ -34,6 +34,9 @@ try {
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
   await page.emulateMedia({ media: 'print' });
+  // Print-media emulation does not impose the PDF paper width on the screen viewport.
+  // Match the A5 content width before collecting geometry diagnostics.
+  await page.setViewportSize({ width: Math.round(128 * 96 / 25.4), height: Math.round(190 * 96 / 25.4) });
   const measured = await sheets.evaluateAll(elements => {
     const pxPerMm = 96 / 25.4;
     const maxW = 128 * pxPerMm;
