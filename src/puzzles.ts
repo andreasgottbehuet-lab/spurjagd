@@ -273,7 +273,7 @@ export function clueRevealsDestination(clueText:string,destination:string):boole
 export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  const destination=clue.answer.trim();
  if(!destination || !clue.instruction.trim()) return false;
- if(clue.mode==='questions') return verifyRouteQuestions(clue) && clue.rows!.every(row=>row.question.trim().length>0 && row.solution.trim().length>0);
+ if(clue.mode==='questions') return verifyRouteQuestions(clue) && clue.rows!.every(row=>row.question.trim().length>0 && row.solution.trim().length>0 && !clueRevealsDestination(row.question,destination));
  if(clue.mode==='description') {
   return clue.question.trim().length>=12
    && !clueRevealsDestination(clue.question,destination);
