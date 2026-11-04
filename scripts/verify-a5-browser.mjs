@@ -39,6 +39,16 @@ try {
       const values = await page.locator('input[pattern="[0-9]{3}"]').evaluateAll(inputs => inputs.map(input => input.value));
       if (JSON.stringify(values) !== JSON.stringify(['007','000','123','987']))
         throw new Error('Saved lock codes differ after reload: ' + JSON.stringify(values));
+      // Invalid codes must be flagged, and correction must restore readiness.
+      const firstCode = page.locator('input[pattern="[0-9]{3}"]').first();
+      for (const invalid of ['', '07']) {
+        await firstCode.fill(invalid);
+        if (await firstCode.getAttribute('aria-invalid') !== 'true')
+          throw new Error('Invalid lock code was not flagged: ' + JSON.stringify(invalid));
+      }
+      await firstCode.fill('007');
+      if (await firstCode.getAttribute('aria-invalid') !== 'false')
+        throw new Error('Corrected lock code remains invalid');
     }
     const next = page.locator('button.next');
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
