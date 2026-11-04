@@ -68,6 +68,18 @@ try {
   const afterDelete = await page.locator('#savedProjects').evaluate(select => [...select.options].map(option => option.value));
   if (afterDelete.includes(importedId) || !afterDelete.includes(originalId)) throw new Error('Deleting import also removed original project');
   checks.push('Delete project');
+  const remainingIds = await page.locator('#savedProjects').evaluate(select => [...select.options].map(option => option.value));
+  for (const id of remainingIds.slice(1)) {
+    await page.locator('#savedProjects').selectOption(id);
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Löschen' }).click();
+  }
+  const lastId = await page.locator('#savedProjects').inputValue();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Löschen' }).click();
+  await page.waitForFunction(previous => document.querySelector('#savedProjects')?.value && document.querySelector('#savedProjects')?.value !== previous, lastId);
+  if (await page.locator('#savedProjects option').count() !== 1) throw new Error('Last-project deletion did not create a fresh draft');
+  checks.push('Last project replacement');
   const otherTab = await page.context().newPage();
   try {
     await otherTab.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
