@@ -454,6 +454,7 @@ test('Deleting active project with surviving draft rolls back on failed active s
 test('JSON-Sicherungen erhalten lesbare und sichere Dateinamen',()=>{
  assert.equal(backupFilename({title:'Doras Schatzsuche',id:'abc12345-0000'}),'spurjagd-Doras-Schatzsuche-abc12345.json');
  assert.equal(backupFilename({title:'///',id:'!'}),'spurjagd-projekt-sicherung.json');
+ assert.equal(backupFilename({title:'Rätsel für Groß & Klein',id:'abcdef12'}),'spurjagd-Raetsel-fuer-Gross-Klein-abcdef12.json');
  assert.ok(backupFilename({title:'A'.repeat(200),id:'12345678'}).length<80);
 });
 
