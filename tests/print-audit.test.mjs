@@ -207,3 +207,10 @@ test('Druckfreigabe erkennt manipulierte Planungshinweise',()=>{
  plan.cautions.push('Nicht aus der Planung stammender Hinweis');
  assert.ok(auditPrintPacket(c,plan,'projekt-1').some(issue=>issue.includes('Planungshinweise')));
 });
+
+test('Druckprüfung erkennt doppelte Stationskennungen trotz Leerzeichen',()=>{
+ const c=config();
+ c.locations[1].id=' '+c.locations[0].id+' ';
+ const issues=auditPrintPacket(c,createPlan(config()),'projekt-1');
+ assert.ok(issues.some(issue=>issue.includes('Stations-IDs sind nicht eindeutig')));
+});
