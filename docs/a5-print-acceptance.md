@@ -92,3 +92,12 @@ Der Chromium-Test ermittelt die tatsächlichen Kategorien aller logischen Drucks
 
 ## Visuelle Nachkontrolle anhand von PDF-Vorschauen
 Der Browser-Test erzeugt aus der PDF zusätzlich PNG-Vorschauen für das erste Spielleitungsblatt, das erste Kinderblatt und das erste Etikettenblatt (`verification/a5-preview-*.png`). Diese Dateien werden zusammen mit dem PDF als GitHub-Actions-Artefakt archiviert. Die Seitenpositionsprüfung kontrolliert außerdem, ob Antwort- und Wegrätselseiten an den erwarteten Stellen der PDF stehen. Die Vorschauen dienen der manuellen Sichtkontrolle; die automatischen Textprüfungen erkennen keine sämtlichen typografischen oder gestalterischen Mängel.
+
+## Freigabeablauf
+1. GitHub Actions für den Pull-Request starten und auf einen grünen Abschluss von Tests, Build und Chromium-Prüfung warten.
+2. Das Artefakt `spurjagd-verification-*` herunterladen. Bei einem frühen Browserfehler `a5-browser-error.json`, `a5-browser-failure.png` und `vite-preview.log` prüfen.
+3. `a5-browser-report.json` auf `failures: []`, korrekte Kategorien, Umschläge und Etiketten prüfen. `a5-browser-print.pdf` und die drei `a5-preview-*.png` öffnen und Lesbarkeit, Beschnitt und Reihenfolge kontrollieren.
+4. Einen echten A5-Probedruck durchführen. Maßstab 100 %, keine zusätzliche Druckerskalierung; Druckertreiberränder und lesbare Aufgaben prüfen.
+5. Erst nach bestandenem Test und Probedruck Pull-Request freigeben. Bei Abweichungen Fehler im Entwicklungszweig beheben, nicht in `main` umgehen.
+
+**Status:** Dieser Ablauf ist dokumentiert, nicht durchgeführt. Der GitHub-Connector meldet aktuell keine erfolgreichen Workflow-Läufe. Die frühe Fehlerdiagnose schreibt nun auch dann einen JSON-Fehlerbericht und nach Möglichkeit einen Screenshot, wenn die PDF noch nicht erzeugt werden konnte.
