@@ -304,3 +304,11 @@ test('Eigene Wegrätsel sind bereits im Eingabefeld auf 400 Zeichen begrenzt',()
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.ok(source.includes('maxLength={400} value={routeClueTexts[location.id]'));
 });
+
+test('A5 print button validates rendered packing labels against organizer rows',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('auditRenderedPackingItems('));
+ assert.ok(source.includes("readPacking('.print-label')"));
+ assert.ok(source.includes("readPacking('.print-checklist-row')"));
+ assert.ok(source.includes('data-count={envelope.sheetCount}'));
+});
