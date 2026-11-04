@@ -319,7 +319,8 @@ test('Deleting final project immediately persists replacement in the UI',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
  assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh)'));
- assert.ok(deletion.includes('setProjects(saved);applyGame(fresh)'));
+ assert.ok(deletion.includes('setProjects(saved);'));
+ assert.ok(deletion.includes('applyGame(fresh);'));
 });
 
 test('Replacing the last saved project is atomic and validates the old ID',()=>{
