@@ -43,6 +43,28 @@ try {
     failures.push('A5 pages without a valid category: ' + JSON.stringify(categories));
   if (!categories.organizer || !categories.children || !categories.labels)
     failures.push('A5 packet is missing a required page category: ' + JSON.stringify(categories));
+  const envelopePages = await page.locator('.print-child-sheet').evaluateAll(elements => elements.map(el => ({
+    id: el.getAttribute('data-envelope-id') ?? '',
+    kind: el.getAttribute('data-sheet-kind') ?? '',
+    routePage: el.getAttribute('data-route-page') ?? ''
+  })));
+  const envelopeGroups = new Map();
+  for (const entry of envelopePages) {
+    if (!entry.id) failures.push('A5 child sheet without envelope identifier');
+    if (!['task','answer','route'].includes(entry.kind)) failures.push('A5 child sheet with invalid kind: ' + entry.kind);
+    const entries = envelopeGroups.get(entry.id) ?? [];
+    entries.push(entry);
+    envelopeGroups.set(entry.id, entries);
+  }
+  for (const [id, entries] of envelopeGroups) {
+    if (entries.filter(entry => entry.kind === 'task').length !== 1 || entries.filter(entry => entry.kind === 'answer').length !== 1 || entries.filter(entry => entry.kind === 'route').length < 1)
+      failures.push('Incomplete A5 envelope: ' + id);
+    if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'answer' || entries.slice(2).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
+      failures.push('Incorrect A5 envelope page order: ' + id);
+  }
+  const labelIds = await page.locator('.print-label').evaluateAll(elements => elements.map(el => el.getAttribute('data-envelope-id') ?? ''));
+  if (labelIds.length !== envelopeGroups.size || labelIds.some((id,index) => id !== [...envelopeGroups.keys()][index]))
+    failures.push('A5 envelope labels do not match child packet order');
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
@@ -81,7 +103,7 @@ try {
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
-  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, blankPages, measurements: measured, failures };
+  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, categories, envelopeCount: envelopeGroups.size, labelCount: labelIds.length, blankPages, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
   if (failures.length) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
