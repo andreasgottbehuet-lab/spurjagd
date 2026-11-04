@@ -12,6 +12,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.locator('#projectTitle').fill('Browser Testprojekt');
+  await page.locator('#projectTitle').blur();
   await page.waitForFunction(() => document.querySelector('#savedProjects')?.value && [...document.querySelectorAll('#savedProjects option')].some(option => option.value === document.querySelector('#savedProjects').value && option.textContent?.includes('Browser Testprojekt')));
   const originalId = await page.locator('#savedProjects').inputValue();
   if (!originalId) throw new Error('Initial project not saved');
