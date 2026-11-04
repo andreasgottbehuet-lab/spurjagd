@@ -379,3 +379,11 @@ test('Browser print gate checks organizer lock codes and next destinations',()=>
  assert.ok(script.includes('A5 print did not recover after organizer code correction'));
  assert.ok(script.includes('A5 print did not recover after organizer destination correction'));
 });
+
+test('PDF verification binds organizer codes and destinations to the correct A5 checklist page',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('A5 packing-list code '));
+ assert.ok(script.includes('A5 packing-list destination '));
+ assert.ok(script.includes("printedPage.includes('Schloss-Code: ' + code)"));
+ assert.ok(script.includes("printedPage.includes('Danach: ' + destination)"));
+});
