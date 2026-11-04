@@ -65,6 +65,8 @@ try {
   await page.getByRole('button', { name: 'Löschen' }).click();
   await page.waitForFunction(expected => document.querySelectorAll('#savedProjects option').length === expected, before - 1);
   if (await page.locator('#savedProjects option').count() !== before - 1) throw new Error('Delete project');
+  const afterDelete = await page.locator('#savedProjects').evaluate(select => [...select.options].map(option => option.value));
+  if (afterDelete.includes(importedId) || !afterDelete.includes(originalId)) throw new Error('Deleting import also removed original project');
   checks.push('Delete project');
   const otherTab = await page.context().newPage();
   try {
