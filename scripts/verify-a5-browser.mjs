@@ -489,6 +489,8 @@ try {
     failures.push('A5 PDF unexpectedly includes screen-only packing guidance');
   if (pdfPageTexts.some(content => content.includes('Packübersicht nach Team:')))
     failures.push('A5 PDF unexpectedly includes screen-only team packing totals');
+  if (pdfPageTexts.some(content => content.includes('Umschläge vor dem Drucken einzeln kontrollieren')))
+    failures.push('A5 PDF unexpectedly includes organizer-only on-screen packing preview');
   const blankPages = pdfPageTexts.flatMap((content, index) => content.trim() ? [] : [index + 1]);
   if (pdfPageTexts.length !== pages) failures.push('PDF text extraction reports ' + pdfPageTexts.length + ' pages, expected ' + pages);
   if (blankPages.length) failures.push('PDF contains blank pages: ' + blankPages.join(', '));
