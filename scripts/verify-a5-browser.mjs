@@ -259,7 +259,7 @@ try {
   for (let index = 0; index < labelNames.length; index++) {
     const labelPage = Math.floor(index / 4);
     const expectedLabel = labelNames[index].trim();
-    if (!expectedLabel || !(labelPages[labelPage] ?? '').includes(expectedLabel))
+    if (!expectedLabel || !(labelPages[labelPage] ?? '').replace(/\s+/g, ' ').includes(expectedLabel.replace(/\s+/g, ' ')))
       failures.push('A5 label ' + (index + 1) + ' missing from its expected PDF sheet');
   }
   const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
