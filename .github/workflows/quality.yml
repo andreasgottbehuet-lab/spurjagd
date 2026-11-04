@@ -88,5 +88,6 @@ jobs:
           echo '- Testlauf: siehe Schritt Unit and integration tests und Artefakt tests.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- TypeScript und Build: siehe Schritt TypeScript and production build und Artefakt build.log' >> "$GITHUB_STEP_SUMMARY"
           echo '- A5-Drucklogik: siehe Schritt Verify A5 print invariants und Artefakt a5-print-tests.log' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Projektverwaltung im Browser: siehe project-browser-tests.log und project-browser-report.json im Artefakt' >> "$GITHUB_STEP_SUMMARY"
           echo '- Chromium-Probedruck: siehe a5-browser-tests.log, a5-browser-report.json und PDF/PNG-Vorschauen im Artefakt' >> "$GITHUB_STEP_SUMMARY"
           echo '- A5-Druckbild: visueller A5-Probedruck weiterhin erforderlich' >> "$GITHUB_STEP_SUMMARY"
