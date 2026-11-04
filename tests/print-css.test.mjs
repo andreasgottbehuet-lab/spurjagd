@@ -398,3 +398,25 @@ test('Organizer packing preview is screen-only and verified in Chromium',()=>{
  assert.ok(browser.includes('Organizer packing preview does not list all 12 envelopes'));
  assert.ok(browser.includes('A5 PDF unexpectedly includes organizer-only on-screen packing preview'));
 });
+
+test('A5 preflight explains readiness and offers corrections for rules and station codes',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.ok(source.includes('preflight-status preflight-blocked'));
+ assert.ok(source.includes('preflight-status preflight-ready'));
+ assert.ok(source.includes("tx('Druck noch gesperrt'"));
+ assert.ok(source.includes("tx('Druckpaket bereit'"));
+ assert.ok(source.includes("onClick={()=>setActiveStep(2)}"));
+ assert.ok(source.includes("onClick={()=>setActiveStep(3)}"));
+ assert.match(css,/\.preflight-status\s*\{/);
+ assert.match(css,/@media print\s*\{\.preflight-status,\.preflight-actions\{display:none!important\}\}/);
+});
+
+test('Full A5 browser test explicitly verifies varied routes and persisted route choice',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes("if (step === 1)"));
+ assert.ok(script.includes("selectOption('varied')"));
+ assert.ok(script.includes('Different group routes were lost after reload'));
+ assert.ok(script.includes('routeSequences.length !== 4'));
+ assert.ok(script.includes('new Set(routeSequences).size < 2'));
+});
