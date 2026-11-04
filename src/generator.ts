@@ -71,7 +71,7 @@ export function createPlan(config: GameConfig): GamePlan {
   const places = locations.map(place => ({ ...place, name: place.name.trim(), description: place.description.trim() }));
   if (places.some(place => !place.name)) throw new Error('Jeder Standort benötigt einen Namen');
   if (new Set(places.map(place => place.name.toLocaleLowerCase('de'))).size !== places.length) throw new Error('Standortnamen müssen eindeutig sein');
-  if (new Set(places.map(place => place.id)).size !== places.length || places.some(place=>!place.id.trim())) throw new Error('Stations-IDs müssen eindeutig und ausgefüllt sein');
+  if (new Set(places.map(place => place.id.trim())).size !== places.length || places.some(place=>!place.id.trim())) throw new Error('Stations-IDs müssen eindeutig und ausgefüllt sein');
   const sizes = teamSizes(players,groupSize);
   const teamCount = sizes.length;
   // One travel leg to each station, plus one leg back to the finish.
