@@ -116,7 +116,9 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
 export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number): StationChallenge {
   if (!validCode(code)) throw new Error('Der Schloss-Code muss genau drei Ziffern enthalten, auch 000 ist erlaubt.');
   if (!stationId.trim()) throw new Error('Stations-ID fehlt');
-  const kinds: PuzzleKind[] = ['arithmetic','symbols','cipher'];
+  // Younger children should not need Caesar ciphers to open a lock.
+  // Keep three independent digits and the existing deterministic seeds.
+  const kinds: PuzzleKind[] = age === 'young' ? ['arithmetic','symbols','arithmetic'] : ['arithmetic','symbols','cipher'];
   const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
   return { stationId, code, puzzles };
