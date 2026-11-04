@@ -12,6 +12,25 @@ test('Vollständige A5-Druckpakete bestehen die Plausibilitätsprüfung',()=>{co
 test('Fehlende Umschläge und falsche Ziele verhindern die Druckfreigabe',()=>{const plan=createPlan(config);const manifest=createPrintManifest(plan);manifest.envelopes[0].destination='Falscher Ort';assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('Zielort')));manifest.envelopes.pop();assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('Umschlaganzahl')));});
 test('Doppelte Kennungen und falsche Blattanzahl werden erkannt',()=>{const plan=createPlan(config);const manifest=createPrintManifest(plan);manifest.envelopes[1].id=manifest.envelopes[0].id;manifest.taskSheets=1;assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('eindeutig')));assert.ok(auditPrintManifest(plan,manifest).some(x=>x.includes('Aufgabenblätter')));});
 
+test('Packliste erkennt manipulierte Gruppen-, Stations- und Blattangaben einzeln',()=>{
+ const plan=createPlan({...config,routeMode:'varied',startMode:'distributed'});
+ const mutations=[
+  [m=>{m.envelopes[0].stationId='unknown';},'falsche Station'],
+  [m=>{m.envelopes[0].stationName='Andere Wiese';},'falsche Station'],
+  [m=>{m.envelopes[0].stationTotal=99;},'Umschlagbeschriftung'],
+  [m=>{m.envelopes[0].teamIndex=99;},'Umschlag'],
+  [m=>{m.envelopes[0].sheetCount=5;},'Anzahl A5-Blätter'],
+  [m=>{m.envelopes[0].destination='Geheimer falscher Ort';},'Zielort'],
+  [m=>{m.envelopes[0].id='falsche-kennung';},'Umschlag']
+ ];
+ for(const [mutate,expected] of mutations){
+  const manifest=createPrintManifest(plan);
+  mutate(manifest);
+  const issues=auditPrintManifest(plan,manifest);
+  assert.ok(issues.some(issue=>issue.includes(expected)),expected+': '+issues.join(' | '));
+ }
+});
+
 test('Fehlerhafte Seitenzahl verhindert Druckfreigabe',()=>{const plan=createPlan(config);const m=createPrintManifest(plan);m.minimumSheets=1;assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Mindestumfang')));});
 
 test('Falsche Teambezeichnung auf Umschlag wird erkannt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan);m.envelopes[0].team='Fremde Gruppe';assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Umschlagbeschriftung')));});
