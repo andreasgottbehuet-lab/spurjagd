@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPlan } from '../src/generator.ts';
+import { createPlan, teamSizes } from '../src/generator.ts';
 
 const config = (overrides = {}) => ({
   players: 12,
@@ -161,4 +161,17 @@ test('13 Kinder werden bei maximal drei pro Team ausgewogen verteilt',()=>{
  const result=createPlan(config({players:13,groupSize:3}));
  assert.deepEqual(result.teams.map(team=>team.memberCount),[3,3,3,2,2]);
  assert.equal(result.teams.reduce((sum,team)=>sum+team.memberCount,0),13);
+});
+
+test('Gruppenvorschau stimmt bei jeder Kinderzahl mit dem Spielplan überein',()=>{
+ for(let players=1;players<=100;players++){
+  for(let groupSize=1;groupSize<=10;groupSize++){
+   const sizes=teamSizes(players,groupSize);
+   assert.equal(sizes.reduce((sum,n)=>sum+n,0),players);
+   assert.ok(sizes.every(n=>n>=1&&n<=groupSize));
+   assert.ok(Math.max(...sizes)-Math.min(...sizes)<=1);
+   const actual=createPlan(config({players,groupSize})).teams.map(team=>team.memberCount);
+   assert.deepEqual(sizes,actual);
+  }
+ }
 });
