@@ -386,6 +386,7 @@ function App() {
                 <label>{tx('Gehzeit je Abschnitt (Min.)','Walking time per leg (min)')}<input type="number" min="0" max="60" value={walkingMinutes} onChange={e=>setWalkingMinutes(Number(e.target.value))}/></label>
                 <label>{tx('Start und Finale zusammen (Min.)','Start and finish together (min)')}<input type="number" min="0" max="120" value={startFinishMinutes} onChange={e=>setStartFinishMinutes(Number(e.target.value))}/></label>
               </div>
+              <button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx("Weiter zu den Standorten", "Continue to locations")}</button>
             </>}
             {activeStep === 4 && <>
               <div className="section-line"><span className="step">04</span><h2>{t.route}</h2></div>
