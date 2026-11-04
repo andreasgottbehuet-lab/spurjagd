@@ -105,6 +105,23 @@ try {
   const blankPages = pdfPageTexts.flatMap((content, index) => content.trim() ? [] : [index + 1]);
   if (pdfPageTexts.length !== pages) failures.push('PDF text extraction reports ' + pdfPageTexts.length + ' pages, expected ' + pages);
   if (blankPages.length) failures.push('PDF contains blank pages: ' + blankPages.join(', '));
+  // Validate that each PDF page carries the expected category of content,
+  // not merely that the DOM contains the right number of sheets.
+  if (pdfPageTexts.length === expected) {
+    for (let i = 0; i < envelopePages.length; i++) {
+      const pageNumber = categories.organizer + i + 1;
+      const content = pdfPageTexts[pageNumber - 1] ?? '';
+      const kind = envelopePages[i].kind;
+      const marker = kind === 'answer' ? 'Antwortblatt' : kind === 'route' ? 'Wegrätsel' : '';
+      if (marker && !content.includes(marker))
+        failures.push('PDF page ' + pageNumber + ' does not contain expected ' + kind + ' sheet heading');
+    }
+    for (let i = 0; i < categories.labels; i++) {
+      const pageNumber = categories.organizer + categories.children + i + 1;
+      if (!(pdfPageTexts[pageNumber - 1] ?? '').includes('Umschlag'))
+        failures.push('PDF page ' + pageNumber + ' does not contain envelope labels');
+    }
+  }
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
   if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
