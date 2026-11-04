@@ -119,7 +119,8 @@ export function deleteGame(id:string):SavedGame[] {
  const remaining=existing.filter(p=>p.id!==id);
  if(remaining.length===existing.length)throw new Error('Projekt nicht gefunden.');
  const active=localStorage.getItem(ACTIVE);
- persistProjects(remaining,active===id?null:active);
+ const nextActive=active===id ? (remaining[0]?.id??null) : active;
+ persistProjects(remaining,nextActive);
  return remaining;
 }
 /** Replace the final saved project without ever writing an empty project list. */
