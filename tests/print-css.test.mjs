@@ -330,3 +330,8 @@ test('Browser checks A5 screen packing totals against actual labels',()=>{
  assert.ok(script.includes('A5 screen packing overview does not match printed labels'));
  assert.ok(script.includes("page.locator('.print-label').evaluateAll"));
 });
+
+test('PDF keeps screen packing notes off A5 sheets',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('A5 PDF unexpectedly includes screen-only packing guidance'));
+});
