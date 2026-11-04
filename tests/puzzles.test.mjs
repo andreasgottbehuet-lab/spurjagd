@@ -394,3 +394,11 @@ test('Pfeilpfade haben auch bei schwierigen Seeds immer die volle altersgerechte
 test('Unbekannte Rätselarten werden nicht stillschweigend als Geheimschrift erzeugt',()=>{
  assert.throws(()=>generateDigitPuzzle(5,'unknown','middle',12),/Unbekannte Rätselart/);
 });
+
+test('Manipulierte Schloss-Pakete mit fehlender Aufgabe oder abweichendem Code werden gesperrt',()=>{
+ const original=generateStationChallenge('s-lock','007','middle',121);
+ assert.equal(codeFromPuzzles(original),'007');
+ assert.throws(()=>codeFromPuzzles({...original,puzzles:original.puzzles.slice(0,2)}),/Rätselprüfung/);
+ assert.throws(()=>codeFromPuzzles({...original,code:'008'}),/Schloss-Code/);
+ assert.throws(()=>codeFromPuzzles({...original,code:'07'}),/Rätselprüfung/);
+});
