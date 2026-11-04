@@ -27,3 +27,13 @@ Der erfolgreiche Lauf 41825593529 prüfte den bisherigen Standardfall. Er belegt
 - Browserdruckvergleich in Edge/Chrome, falls nicht durch dieselbe Chromium-Engine hinreichend repräsentiert.
 
 **Freigabe:** Automatisierte technische Abnahme des ursprünglichen Standardfalls bestanden. Erweiterter Varianzfall und physische Praxiserprobung noch offen. Keine Behauptung einer vollständigen Druck-/Spielabnahme.
+
+## Block 3 – Fehlerbehebung und Bedienbarkeit (04.11.2026)
+
+**Behobener Fehler:** Die in Block 2 ergänzte Chromium-Prüfung versuchte zunächst, die Routenführung auf Assistentenschritt 3 auszuwählen. Das Bedienelement liegt tatsächlich auf Schritt 2. Der Test wurde auf Schritt 2 korrigiert und prüft nach dem Neuladen den gespeicherten Wert, bevor er die Stationscodes kontrolliert.
+
+**Bedienung:** Auf Schritt 4 erscheint jetzt vor den umfangreichen Spielleitungsansichten ein sichtbarer Druckstatus. Bei Fehlern werden die Drucksperre und die Korrekturmöglichkeiten angezeigt; getrennte Schaltflächen führen zu Spielregeln/Zeit (Schritt 2) beziehungsweise Standorten/Codes (Schritt 3). Bei erfolgreichem Preflight wird die technische Bereitschaft angezeigt, ausdrücklich ohne eine physische Druckfreigabe zu behaupten. Die Statusanzeige ist per `role="status"` zugänglich und wird nicht mitgedruckt.
+
+**Regressionstests:** `tests/print-css.test.mjs` enthält zusätzliche Prüfungen für Status-/Korrektursteuerung und die abweichenden Routen im Browser-Test.
+
+**Prüfgrenze:** Die Codeänderungen sind auf dem Feature-Branch gespeichert. Ein erfolgreicher GitHub-Actions-Lauf des neuen Commitstands wurde zum Zeitpunkt dieses Eintrags nicht nachgewiesen. Browser- und Druckabnahme bleiben bis zum tatsächlichen CI-Ergebnis und zur physischen Probe offen.
