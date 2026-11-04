@@ -120,6 +120,7 @@ export interface PrintSheetGeometry {
 export function auditPrintOverflow(sheets:PrintSheetGeometry[],tolerance=2):string[] {
  const issues:string[]=[];
  if(!Number.isFinite(tolerance)||tolerance<0) return ['Ungültige Messtoleranz für A5-Blätter.'];
+ if(sheets.length===0) issues.push('Keine A5-Blätter für die Geometrieprüfung vorhanden.');
  const ids=sheets.map(sheet=>sheet.id);
  if(new Set(ids).size!==ids.length) issues.push('A5-Geometrieprüfung enthält doppelte Blattkennungen.');
  for(const sheet of sheets){
