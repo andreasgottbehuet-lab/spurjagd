@@ -131,3 +131,6 @@ Der Browser-Test kontrolliert nach dem JSON-Import ausdrücklich, dass das urspr
 
 ### JSON-Import: Identität und Bedienzustand
 Nach einem Import wird eine neue Projektkennung vergeben und der Planer auf Schritt 1 zurückgesetzt. Der Browser-Test liest die tatsächlich heruntergeladene JSON-Datei und kontrolliert Format, Projektkennung und Titel. Anschließend prüft er, dass der Import den Originaldatensatz nicht ersetzt und das spätere Löschen der importierten Kopie das Original erhält. Diese Kontrollen sind Teil des CI-Skripts, aber noch nicht als erfolgreich ausgeführt bestätigt.
+
+### Zusätzliche Fehlerkorrekturen Projektablage
+Die automatische Speicherung prüft einen Konflikt mit einem zweiten Browser-Tab unmittelbar vor dem eigentlichen Schreibvorgang; damit kann ein bereits eingeplanter Speicherauftrag nach einer Konfliktmeldung keine veralteten Daten mehr schreiben. Der Speichermechanismus versucht jetzt auch bei einem Fehler des ersten Projektdaten-Schreibvorgangs, den vorherigen Datenstand wiederherzustellen. Die Sortierung der Projektliste erfolgt nach dem tatsächlichen Zeitpunkt einschließlich Zeitzonenversatz statt nach Textvergleich. Die Browserprüfung wartet beim Entfernen mehrerer Projekte auf jede abgeschlossene Löschung. Diese Punkte sind durch ergänzte Quellcode- bzw. Unit-Tests abgedeckt; der erfolgreiche Gesamtlauf steht noch aus.
