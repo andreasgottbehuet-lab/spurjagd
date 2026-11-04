@@ -48,6 +48,7 @@ function App() {
   const importRef = useRef<HTMLInputElement>(null);
   const skipSave = useRef(false);
   const storageConflict = useRef(false);
+  const savedRevision = useRef<{id:string;updatedAt:string|null}|null>(null);
   const [selectedProject, setSelectedProject] = useState('');
 
   const t = messages[lang];
@@ -103,6 +104,7 @@ function App() {
   const applyGame = (project: SavedGame) => {
     const c = project.config;
     skipSave.current = true;
+    savedRevision.current={id:project.id,updatedAt:project.updatedAt};
     setProjectId(project.id);
     setSelectedProject(project.id);
     setProjectTitle(project.title);
@@ -162,11 +164,13 @@ function App() {
       if (storageConflict.current) return;
       try {
         const project: SavedGame = { version:1, id:projectId, title:projectTitle.trim()||'Unbenanntes Projekt', updatedAt:new Date().toISOString(), config: { ...config, locations:config.locations.map(x=>({...x})) } };
-        const saved = saveGame(project);
+        const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
+        const saved = saveGame(project,expected);
+        savedRevision.current={id:projectId,updatedAt:project.updatedAt};
         setProjects(saved);
         setSelectedProject(projectId);
         setStorageMessage('');
-      } catch(e) { setStorageMessage('Automatisches Speichern fehlgeschlagen: ' + String(e)); }
+      } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage('Automatisches Speichern gestoppt: ' + String(e) + ' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.'); }
     }, 650);
     return () => window.clearTimeout(timeout);
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
@@ -177,7 +181,9 @@ function App() {
       if(storageConflict.current) return;
       try{
         const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
-        saveGame(current);
+        const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
+        saveGame(current,expected);
+        savedRevision.current={id:projectId,updatedAt:current.updatedAt};
       }catch(error){
         // Browsers may discard UI updates during pagehide; preserve data where possible.
         setStorageMessage('Speichern beim Verlassen fehlgeschlagen: '+String(error));
@@ -197,7 +203,9 @@ function App() {
     if (!storageReady){setStorageMessage('Projektwechsel gesperrt: Lokale Speicherung ist nicht verfügbar. Bitte zuerst eine JSON-Sicherung exportieren.');return false;}
     try {
       const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:new Date().toISOString(),config:{...config,locations:config.locations.map(x=>({...x}))}};
-      setProjects(saveGame(current));
+      const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
+      setProjects(saveGame(current,expected));
+      savedRevision.current={id:projectId,updatedAt:current.updatedAt};
       return true;
     } catch(error) {
       setStorageMessage('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. '+String(error));
