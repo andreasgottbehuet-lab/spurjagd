@@ -5,11 +5,11 @@
 ## Verifizierter technischer Stand (04.11.2026)
 
 - Branch: `feature/print-preflight-hardening-20261104`
-- Geprüfter Commit: `71276b8acef87e38b5e0a1c0731db8ba1288f7b9`
-- GitHub Actions: [Quality checks #1231](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41887991524) – **success**
-- Automatische Tests: **329 bestanden, 0 fehlgeschlagen**
+- Geprüfter Commit: `ff81eec53e0654edadd05af08e970b4964de501f`
+- GitHub Actions: [Quality checks #1235](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41888630316) – **success**
+- Automatische Tests: **329 bestehende Tests plus zusätzlicher 100-Fälle-Stresstest; Gesamtprüfung erfolgreich**
 - Chromium-PDF-Probedruck: **53 A5-Seiten**, automatische PDF-Prüfung bestanden
-- [Prüfartefakt mit PDF und Browser-Nachweisen](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41887991524/artifacts/13350699792)
+- [Prüfartefakt mit PDF und Browser-Nachweisen](https://github.com/andreasgottbehuet-lab/spurjagd/actions/runs/41888630316/artifacts/13351713697)
 - Neu geprüft: gemeinsames Drei-Zahlwörter-Gitter mit eindeutigem Code von oben nach unten; rote und blaue Teamkennzeichnung; Antwortblatt und Spielleiterlösung
 - **Nicht nachgewiesen:** physischer Druck, echte Schlossmechanik, Lesbarkeit auf konkretem Drucker, praktische Verständlichkeit mit Kindern.
 
@@ -23,7 +23,7 @@
 - Druckeinstellung: 100 % / tatsächliche Größe; kein „An Seite anpassen“
 - Testfall: 12 Kinder, vier Dreiergruppen, vier Stationen, zwölf dreistellige Schlösser
 - Codes des Referenzfalls: 007 / 000 / 123 / 987
-- Automatischer CI-Lauf / Commit: #1231 / `71276b8` (technisch bestanden)
+- Automatischer CI-Lauf / Commit: #1235 / `ff81eec` (technisch bestanden)
 
 ## Abnahmekriterien
 
