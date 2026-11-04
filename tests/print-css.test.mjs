@@ -180,3 +180,9 @@ test('A5 CI retains evidence when the browser or preview fails early',()=>{
  assert.ok(workflow.includes('Vite preview failed to start'));
  assert.ok(workflow.includes('if: always()'));
 });
+
+test('A5 workflow records browser setup log',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ assert.ok(workflow.includes('a5-browser-setup.log'));
+ assert.ok(workflow.includes('timeout-minutes: 30'));
+});
