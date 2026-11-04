@@ -211,6 +211,12 @@ try {
   if (extracted.status !== 0) throw new Error('pdftotext failed: ' + extracted.stderr);
   const pdfPageTexts = extracted.stdout.split('\f');
   if (pdfPageTexts.at(-1)?.trim() === '') pdfPageTexts.pop();
+  // Screen-only preparation notes must never consume paper or leak into
+  // the children's A5 handouts.
+  if (pdfPageTexts.some(content => content.includes('Druckeinstellungen und Packen')))
+    failures.push('A5 PDF unexpectedly includes screen-only packing guidance');
+  if (pdfPageTexts.some(content => content.includes('Packübersicht nach Team:')))
+    failures.push('A5 PDF unexpectedly includes screen-only team packing totals');
   const blankPages = pdfPageTexts.flatMap((content, index) => content.trim() ? [] : [index + 1]);
   if (pdfPageTexts.length !== pages) failures.push('PDF text extraction reports ' + pdfPageTexts.length + ' pages, expected ' + pages);
   if (blankPages.length) failures.push('PDF contains blank pages: ' + blankPages.join(', '));
