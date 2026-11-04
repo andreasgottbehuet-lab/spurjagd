@@ -6,8 +6,10 @@ mkdirSync('verification', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const failures = [];
 const browserErrors = [];
+let activePage;
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  activePage = page;
   page.on('pageerror', error => browserErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   for (let step = 0; step < 3; step++) {
@@ -146,6 +148,17 @@ try {
     throw new Error(failures.join('\n'));
   }
   console.log('A5 browser print verified:', expected, 'pages');
+} catch (error) {
+  // Preserve evidence even when the wizard or Chromium fails before PDF creation.
+  writeFileSync('verification/a5-browser-error.json', JSON.stringify({
+    message: error instanceof Error ? error.message : String(error),
+    browserErrors
+  }, null, 2));
+  if (activePage && !activePage.isClosed()) {
+    try { await activePage.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true }); }
+    catch (screenshotError) { console.error('Failure screenshot unavailable:', screenshotError); }
+  }
+  throw error;
 } finally {
   await browser.close();
 }
