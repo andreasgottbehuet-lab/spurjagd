@@ -159,3 +159,55 @@ test('Die Summe der Kinderblätter ist exakt die Summe aller Umschläge',()=>{
   assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
  }
 });
+
+test('Mutationsmatrix: jede Umschlag-Eigenschaft wird unabhängig gegen den Gruppenplan geprüft',()=>{
+ const plan=createPlan({...config,routeMode:'varied'});
+ const cases=[
+  ['id','andere-id','Umschlag'],
+  ['team','Falsches Team','Umschlag'],
+  ['teamIndex',99,'Gruppenzuordnung'],
+  ['stationId','unbekannt','Station'],
+  ['stationName','Falscher Ort','Station'],
+  ['stationNumber',99,'Umschlag'],
+  ['stationTotal',99,'Umschlagbeschriftung'],
+  ['destination','Unbekanntes Ziel','Zielort'],
+  ['sheetCount',99,'Blätter']
+ ];
+ for(const [property,value,expectedFragment] of cases){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0][property]=value;
+  const issues=auditPrintManifest(plan,manifest);
+  assert.ok(issues.length>0,property+' must invalidate the manifest');
+  assert.ok(issues.some(issue=>issue.includes(expectedFragment)),property+': '+issues.join('; '));
+ }
+});
+
+test('Manipulierte Summen und fehlende Umschläge dürfen sich nicht gegenseitig ausgleichen',()=>{
+ const plan=createPlan(config);
+ const cases=[
+  manifest=>{manifest.envelopes.pop();manifest.taskSheets-=3;manifest.minimumSheets-=3;},
+  manifest=>{manifest.envelopes.splice(1,1,structuredClone(manifest.envelopes[0]));},
+  manifest=>{manifest.envelopes[0].sheetCount++;manifest.envelopes[1].sheetCount--;},
+  manifest=>{manifest.labelSheets++;manifest.organizerSheets--;},
+  manifest=>{manifest.envelopes[0].stationNumber=0;},
+  manifest=>{manifest.envelopes[0].stationNumber=1.5;}
+ ];
+ for(const [index,mutate] of cases.entries()){
+  const manifest=createPrintManifest(plan);
+  mutate(manifest);
+  assert.ok(auditPrintManifest(plan,manifest).length>0,'mutation '+index+' must be rejected');
+ }
+});
+
+test('Mehrseitige Wegrätsel bleiben pro Umschlag korrekt zugeordnet',()=>{
+ const longConfig={...config,locations:config.locations.map(location=>location.id==='b'?{...location,name:'Langer Geheimnisvoller Waldpfad'}:location),routeClueModes:{b:'questions'}};
+ const plan=createPlan(longConfig);
+ const manifest=createPrintManifest(plan,longConfig);
+ assert.deepEqual(auditPrintManifest(plan,manifest,longConfig),[]);
+ for(const envelope of manifest.envelopes){
+  const target=plan.teams[envelope.teamIndex].stations[envelope.stationNumber] ?.name ?? plan.teams[envelope.teamIndex].finish;
+  assert.equal(envelope.destination,target);
+  assert.equal(envelope.sheetCount,2+routeSheetCount(target,longConfig));
+ }
+ assert.ok(manifest.envelopes.some(envelope=>envelope.sheetCount>3));
+});
