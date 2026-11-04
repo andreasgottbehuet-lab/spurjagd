@@ -337,3 +337,11 @@ test('PDF keeps screen packing notes off A5 sheets',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes('A5 PDF unexpectedly includes screen-only packing guidance'));
 });
+
+test('Browser actually blocks printing on wrong labels and checklist counts',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('Corrupted A5 envelope label did not block the print button'));
+ assert.ok(script.includes('Corrupted A5 organizer packing count did not block printing'));
+ assert.ok(script.includes('Valid A5 envelope labels did not restore the print action'));
+ assert.ok(script.includes('Valid A5 organizer packing count did not restore printing'));
+});
