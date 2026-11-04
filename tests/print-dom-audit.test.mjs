@@ -212,7 +212,7 @@ test('Packliste und Etiketten müssen exakt zum Umschlagplan passen',()=>{
 
 test('A5 Packdaten ohne gueltige Nummern oder Namen verhindern Druck',()=>{
  const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
- for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',' '],['stationNumber',NaN],['stationNumber',1.5],['sheetCount',2],['sheetCount',Infinity]]){
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',' '],['stationNumber',NaN],['stationNumber',1.5],['sheetCount',2],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
   const changed={...good,[field]:value};
   assert.ok(auditRenderedPackingItems([good],[changed],[good]).some(issue=>issue.includes('ungültige Packdaten')),field);
  }
@@ -220,7 +220,7 @@ test('A5 Packdaten ohne gueltige Nummern oder Namen verhindern Druck',()=>{
 
 test('Ungueltige erwartete A5 Packdaten duerfen nicht durch identische Druckdaten durchrutschen',()=>{
  const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
- for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',''],['stationNumber',0],['stationNumber',NaN],['sheetCount',2],['sheetCount',Infinity]]){
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',''],['stationNumber',0],['stationNumber',NaN],['sheetCount',2],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
   const corrupt={...good,[field]:value};
   assert.ok(auditRenderedPackingItems([corrupt],[corrupt],[corrupt]).some(issue=>issue.includes('Druckmanifest: Umschlag 1 enthält ungültige Packdaten')),field);
  }
