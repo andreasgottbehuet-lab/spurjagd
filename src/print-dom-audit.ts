@@ -165,6 +165,12 @@ export interface RenderedPackingItem {
 }
 export function auditRenderedPackingItems(expected:RenderedPackingItem[],labels:RenderedPackingItem[],checklist:RenderedPackingItem[]):string[] {
  const issues:string[]=[];
+ if(new Set(expected.map(item=>item.envelopeId)).size!==expected.length)
+  issues.push('Druckmanifest: doppelte Umschlagkennung in der erwarteten Packliste.');
+ expected.forEach((item,index)=>{
+  if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<3)
+   issues.push('Druckmanifest: Umschlag '+(index+1)+' enthält ungültige Packdaten.');
+ });
  for(const [name,items] of [['Etiketten',labels],['Packliste',checklist]] as const){
   if(items.length!==expected.length) issues.push(name+': '+items.length+' von '+expected.length+' Umschlägen vorhanden.');
   if(new Set(items.map(item=>item.envelopeId)).size!==items.length) issues.push(name+': doppelte Umschlagkennung.');
