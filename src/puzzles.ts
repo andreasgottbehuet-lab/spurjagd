@@ -150,7 +150,7 @@ export interface RouteClue {mode: RouteClueMode; instruction: string; question: 
 const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:number}> = {
  A:{question:'Welche Frucht ist rot oder grün und wächst am Baum?',solution:'Apfel',letterIndex:0},
  B:{question:'Was liest du in der Schule mit vielen Seiten?',solution:'Buch',letterIndex:0},
- C:{question:'Wie heißt das englische Wort für Katze?',solution:'Cat',letterIndex:0},
+ C:{question:'Wie nennt man einen lustigen Spaßmacher mit roter Nase im Zirkus?',solution:'Clown',letterIndex:0},
  D:{question:'Welches Tier bellt?',solution:'Hund',letterIndex:3},
  E:{question:'Welches große Tier hat einen Rüssel?',solution:'Elefant',letterIndex:0},
  F:{question:'Welches Tier lebt im Wasser und hat Flossen?',solution:'Fisch',letterIndex:0},
