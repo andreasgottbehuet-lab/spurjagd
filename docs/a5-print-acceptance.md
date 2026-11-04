@@ -140,3 +140,6 @@ Im Repository auf dem Entwicklungszweig zunächst `powershell -ExecutionPolicy B
 
 ### Abnahme nach Löschen und Wiederherstellen
 Die Projektverwaltung setzt nach dem Löschen eines aktiven Projekts den Planer auf Schritt 1. Beim Löschen des letzten Projekts muss ein neuer Entwurf mit neutralem Titel und neuer Kennung entstehen; der Browser-Test lädt die Seite anschließend neu und kontrolliert, dass dieser Entwurf erhalten bleibt. Der Import einer ungültigen Sicherung darf weder die Projektanzahl noch den aktuell bearbeiteten Projekttitel verändern. Der Browserbericht enthält Start- und Endzeit sowie `passed`, das nur bei fehlerfreiem Ablauf wahr ist. Diese Kriterien sind implementiert, aber noch nicht durch einen erfolgreichen Browserlauf bestätigt.
+
+### Sofortaktionen ohne Wartezeit
+Die Browserabnahme prüft zwei weitere Datenverlust-Szenarien: Ein JSON-Export unmittelbar nach der Änderung des Projekttitels muss bereits den neuen Titel enthalten, ohne auf die 650-ms-Autospeicherung zu warten. Beim direkten Anlegen eines weiteren Projekts nach einer Änderung muss der vorherige Entwurf vollständig gespeichert bleiben. Beide Fälle sind als eigenständige Prüfungen im Browser-Skript enthalten; ein erfolgreicher Lauf steht noch aus.
