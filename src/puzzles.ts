@@ -222,6 +222,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
  if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
  if(mode==='custom') {
    if(!custom.trim()) throw new Error('Ein eigenes Wegrätsel fehlt');
+   if(custom.trim().length>400) throw new Error('Eigenes Wegrätsel ist zu lang (maximal 400 Zeichen).');
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
