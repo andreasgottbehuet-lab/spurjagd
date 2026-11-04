@@ -338,6 +338,7 @@ function App() {
                 </div>
               )}</div>
               {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
+              <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
               {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}</div>}
               {printIssues.length===0 && <p className="helper" role="status">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
