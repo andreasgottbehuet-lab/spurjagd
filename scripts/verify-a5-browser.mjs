@@ -199,9 +199,16 @@ try {
       const pageNumber = categories.organizer + i + 1;
       const content = pdfPageTexts[pageNumber - 1] ?? '';
       const kind = envelopePages[i].kind;
-      const marker = kind === 'answer' ? 'Antwortblatt' : kind === 'route' ? 'Wegrätsel' : '';
+      const marker = kind === 'task' ? 'Stationsaufgaben:' : kind === 'answer' ? 'Antwortblatt' : 'Wegrätsel';
       if (marker && !content.includes(marker))
         failures.push('PDF page ' + pageNumber + ' does not contain expected ' + kind + ' sheet heading');
+      // Check actual PDF sheet numbering against the DOM envelope sequence.
+      const envelopeSheets = envelopePages.filter(entry => entry.id === envelopePages[i].id);
+      const sheetIndex = envelopePages.slice(0, i + 1).filter(entry => entry.id === envelopePages[i].id).length;
+      if (!content.includes('Blatt ' + sheetIndex + '/' + envelopeSheets.length))
+        failures.push('PDF page ' + pageNumber + ' has incorrect envelope sheet numbering: ' + envelopePages[i].id);
+      if (kind === 'answer' && !content.includes('Unser Schloss-Code:'))
+        failures.push('PDF answer page ' + pageNumber + ' lacks code entry field');
     }
     for (let i = 0; i < categories.labels; i++) {
       const pageNumber = categories.organizer + categories.children + i + 1;
