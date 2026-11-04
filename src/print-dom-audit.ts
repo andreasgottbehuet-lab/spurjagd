@@ -197,6 +197,12 @@ export interface RenderedOrganizerSecret {
 }
 export function auditRenderedOrganizerSecrets(expected:RenderedOrganizerSecret[],actual:RenderedOrganizerSecret[]):string[] {
  const issues:string[]=[];
+ if(new Set(expected.map(item=>item.envelopeId)).size!==expected.length)
+  issues.push('Spielleitungs-Packliste: doppelte erwartete Umschlagkennung.');
+ expected.forEach((item,index)=>{
+  if(!item.envelopeId.trim()||!/^\d{3}$/.test(item.code)||!item.destination.trim()||item.destination!==item.destination.trim())
+   issues.push('Spielleitungs-Packliste: ungültige erwartete Daten für Umschlag '+(index+1)+'.');
+ });
  if(actual.length!==expected.length)
   issues.push('Spielleitungs-Packliste: Anzahl der Schloss-Codes und Zielorte stimmt nicht.');
  if(new Set(actual.map(item=>item.envelopeId)).size!==actual.length)
