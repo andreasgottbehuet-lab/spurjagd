@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createPlan, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
+import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
@@ -18,6 +18,7 @@ function App() {
   const [lang, setLang] = useState<Language>('de');
   const [players, setPlayers] = useState(12);
   const [groupSize, setGroupSize] = useState(3);
+  const groupDistribution = useMemo(()=>teamSizes(players,groupSize),[players,groupSize]);
   const [duration, setDuration] = useState(60);
   const [age, setAge] = useState('8–10');
   const [goal, setGoal] = useState<GameGoal>('locks');
@@ -311,8 +312,8 @@ function App() {
             {activeStep === 1 && <>
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
-              <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {Math.ceil(players/groupSize)}. {tx("Kinder in der letzten Gruppe", "Children in the final team")}: {plan.value?.teams.at(-1)?.memberCount??(players%groupSize||groupSize)}.</p>
-              {(plan.value?.teams.at(-1)?.memberCount??0)===1 && players>1 && <p className="warnings" role="status">{tx("Die letzte Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "The final team would contain only one child. Review the team size or participant count and adjust the grouping before the event.")}</p>}
+              <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.join(" / ")}.</p>
+              {groupDistribution.includes(1) && players>1 && <p className="warnings" role="status">{tx("Die letzte Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "The final team would contain only one child. Review the team size or participant count and adjust the grouping before the event.")}</p>}
               <div className="form-grid">
                 <label className="range-field"><span>{t.children}: <strong>{players}</strong></span><input min="1" max="100" type="range" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
                 <label className="range-field"><span>{t.size}: <strong>{groupSize}</strong></span><input min="1" max="10" type="range" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))}/></label>
