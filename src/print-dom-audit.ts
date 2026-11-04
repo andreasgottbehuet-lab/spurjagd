@@ -61,6 +61,7 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
   if(!['task','answer','route'].includes(sheet.kind)) issues.push('Druckblatt mit ungültiger Blattart: '+(sheet.kind||'(leer)'));
  }
  for(const envelope of expected){
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3) continue;
   const sheets=actual.filter(sheet=>sheet.envelopeId===envelope.id);
   const tasks=sheets.filter(sheet=>sheet.kind==='task').length;
   const answers=sheets.filter(sheet=>sheet.kind==='answer').length;
@@ -70,12 +71,15 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
   }
  }
  for(const envelope of expected){
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3) continue;
   const pages=actual.filter(sheet=>sheet.envelopeId===envelope.id&&sheet.kind==='route');
   pages.forEach((page,index)=>{
    if(page.routePage!==index+1) issues.push('Umschlag '+envelope.id+': Wegrätsel-Seitenfolge ist fehlerhaft.');
   });
  }
  // The packet must be packable in manifest order: task, answer, then route pages.
+ const validCounts=expected.every(envelope=>Number.isSafeInteger(envelope.sheetCount)&&envelope.sheetCount>=3);
+ if(!validCounts) return [...new Set(issues)];
  const expectedSequence=expected.flatMap(envelope=>[
   {envelopeId:envelope.id,kind:'task'},
   {envelopeId:envelope.id,kind:'answer'},
