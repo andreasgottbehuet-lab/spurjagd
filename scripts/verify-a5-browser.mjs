@@ -15,6 +15,11 @@ try {
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   for (let step = 0; step < 3; step++) {
     if (step === 2) {
+      // Exercise different group routes in the full browser-to-PDF reference case.
+      const routeDirection = page.locator('.route-options select').filter({ has: page.locator('option[value="varied"]') });
+      if (await routeDirection.count() !== 1) throw new Error('Route direction selector not found');
+      await routeDirection.selectOption('varied');
+      if (await routeDirection.inputValue() !== 'varied') throw new Error('Different group routes could not be selected');
       // Station codes are edited on wizard step 3, not on the landing screen.
       const codeInputs = page.locator('input[pattern="[0-9]{3}"]');
       const codeCount = await codeInputs.count();
@@ -36,6 +41,8 @@ try {
       for (let navigation = 0; navigation < 2; navigation++) {
         await page.locator('button.next').click();
       }
+      const persistedRouteDirection = page.locator('.route-options select').filter({ has: page.locator('option[value="varied"]') });
+      if (await persistedRouteDirection.inputValue() !== 'varied') throw new Error('Different group routes were lost after reload');
       const values = await page.locator('input[pattern="[0-9]{3}"]').evaluateAll(inputs => inputs.map(input => input.value));
       if (JSON.stringify(values) !== JSON.stringify(['007','000','123','987']))
         throw new Error('Saved lock codes differ after reload: ' + JSON.stringify(values));
