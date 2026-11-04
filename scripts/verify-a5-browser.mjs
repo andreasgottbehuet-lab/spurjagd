@@ -288,6 +288,32 @@ try {
     if (restoredSecret.calls !== 1 || restoredSecret.alerts.length)
       failures.push('Corrected A5 organizer '+field+' did not restore printing');
   }
+  // A mismatched organizer-only lock code must block the real print
+  // button, even if the child sheets and envelope labels are intact.
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row');
+    if (!row) throw new Error('Missing organizer checklist row for lock-code test');
+    row.dataset.testCode = row.dataset.code ?? '';
+    row.dataset.code = '999';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const wrongOrganizerCode = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (wrongOrganizerCode.calls !== 0 || wrongOrganizerCode.alerts.length === 0)
+    failures.push('Incorrect organizer-only lock code did not block printing');
+  await page.evaluate(() => {
+    const row = document.querySelector('.print-checklist-row[data-test-code]');
+    if (!row) throw new Error('Missing organizer checklist row for code restoration');
+    row.dataset.code = row.dataset.testCode ?? '';
+    delete row.dataset.testCode;
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredOrganizerCode = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredOrganizerCode.calls !== 1 || restoredOrganizerCode.alerts.length)
+    failures.push('A5 print did not recover after organizer code correction');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
