@@ -211,3 +211,21 @@ test('Mehrseitige Wegrätsel bleiben pro Umschlag korrekt zugeordnet',()=>{
  }
  assert.ok(manifest.envelopes.some(envelope=>envelope.sheetCount>3));
 });
+
+test('Ungültige Kennungen, Gruppenindizes und Blattzahlen werden vor dem Drucken zurückgewiesen',()=>{
+ const plan=createPlan(config);
+ const cases=[
+  ['id',' ','Leere Umschlagkennung'],
+  ['teamIndex',-1,'Gruppenindex'],
+  ['teamIndex',1.5,'Gruppenindex'],
+  ['teamIndex',999,'Gruppenindex'],
+  ['sheetCount',0,'ungültige Blattzahl'],
+  ['sheetCount',2.5,'ungültige Blattzahl'],
+  ['sheetCount',Number.NaN,'ungültige Blattzahl']
+ ];
+ for(const [field,value,fragment] of cases){
+  const manifest=createPrintManifest(plan);
+  manifest.envelopes[0][field]=value;
+  assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes(fragment)),field+': '+String(value));
+ }
+});
