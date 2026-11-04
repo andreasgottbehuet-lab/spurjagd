@@ -46,7 +46,8 @@ try {
   checks.push('Invalid backup rejected');
   await page.locator('input[type="file"]').setInputFiles('verification/project-backup.json');
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value.includes('Import'));
-  if (!(await page.locator('#projectTitle').inputValue()).includes('Import')) throw new Error('Backup import');
+  if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt (Import)') throw new Error('Backup import title mismatch');
+  if (await page.locator('.step-button.active').count() !== 1) throw new Error('Restored project has no active planning step');
   checks.push('JSON import');
   const importedId = await page.locator('#savedProjects').inputValue();
   if (importedId === originalId) throw new Error('Import overwrote original project');
