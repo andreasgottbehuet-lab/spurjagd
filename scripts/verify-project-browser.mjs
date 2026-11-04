@@ -27,6 +27,16 @@ try {
   if (backup.format !== 'spurjagd-backup-1' || backup.project?.id !== originalId || backup.project?.title !== 'Browser Testprojekt')
     throw new Error('Downloaded JSON does not contain the expected project');
   checks.push('JSON export');
+  await page.locator('#projectTitle').fill('Sicherung ohne Wartezeit');
+  const immediateDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Sichern' }).click();
+  const immediateFile = await immediateDownload;
+  await immediateFile.saveAs('verification/project-immediate-backup.json');
+  const immediateBackup = JSON.parse(readFileSync('verification/project-immediate-backup.json', 'utf8'));
+  if (immediateBackup.project?.title !== 'Sicherung ohne Wartezeit')
+    throw new Error('Immediate JSON export lost pending title edits');
+  await page.locator('#projectTitle').fill('Browser Testprojekt');
+  checks.push('Immediate export includes unsaved edits');
   await page.getByRole('button', { name: 'Neu', exact: true }).click();
   await page.waitForFunction(previous => document.querySelector('#savedProjects')?.value !== previous && document.querySelector('#savedProjects')?.value, originalId);
   if (await page.locator('#savedProjects').inputValue() === originalId) throw new Error('New project ID');
