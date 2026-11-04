@@ -591,3 +591,14 @@ test('Browser report records an explicit result and timestamps',()=>{
  assert.ok(script.includes('finishedAt'));
  assert.ok(script.includes('passed: errors.length === 0'));
 });
+
+test('Malformed local project JSON is rejected without being overwritten',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map([['spurjagd-projects-v1','{invalid']]);
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
+ try{
+  assert.throws(()=>loadGames(),/ungültiges JSON/);
+  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
+  assert.equal(entries.get('spurjagd-projects-v1'),'{invalid');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
