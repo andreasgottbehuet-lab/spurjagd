@@ -191,3 +191,9 @@ test('Unterschiedliche Routen mit nur einem Stopp werden als wirkungslos erklär
  const several=createPlan(config({durationMinutes:60,routeMode:'varied'}));
  assert.equal(several.cautions.some(message=>message.includes('keine unterschiedlichen Stationsfolgen')),false);
 });
+
+test('Stationskennungen dürfen sich nicht nur durch Leerzeichen unterscheiden',()=>{
+ const locations=config().locations.map(x=>({...x}));
+ locations[1].id=' '+locations[0].id+' ';
+ assert.throws(()=>createPlan(config({locations})),/Stations-IDs/);
+});
