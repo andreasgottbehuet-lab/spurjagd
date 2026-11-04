@@ -618,3 +618,18 @@ test('Optimistische Revisionsprüfung verhindert stilles Überschreiben fremder 
   assert.equal(loadGames().length,1);
  }finally{globalThis.localStorage=old;}
 });
+
+test('Löschen und Ersetzen des letzten Projekts prüfen die Revision',()=>{
+ const memory=new Map(),old=globalThis.localStorage;
+ globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+ try{
+  const original=sample();saveGame(original);
+  const newer={...original,updatedAt:'2026-11-04T16:00:00.000Z'};
+  saveGame(newer,original.updatedAt);
+  assert.throws(()=>deleteGame(original.id,original.updatedAt),/zwischenzeitlich verändert/);
+  assert.throws(()=>replaceLastGame(original.id,{...original,id:'replacement'},original.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames()[0].updatedAt,newer.updatedAt);
+  const result=replaceLastGame(original.id,{...original,id:'replacement'},newer.updatedAt);
+  assert.equal(result[0].id,'replacement');
+ }finally{globalThis.localStorage=old;}
+});
