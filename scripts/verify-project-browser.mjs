@@ -71,10 +71,13 @@ try {
   const remainingIds = await page.locator('#savedProjects').evaluate(select => [...select.options].map(option => option.value));
   for (const id of remainingIds.slice(1)) {
     await page.locator('#savedProjects').selectOption(id);
+    await page.waitForFunction(expected => document.querySelector('#savedProjects')?.value === expected, id);
     page.once('dialog', dialog => dialog.accept());
     const countBefore = await page.locator('#savedProjects option').count();
     await page.getByRole('button', { name: 'Löschen' }).click();
     await page.waitForFunction(expected => document.querySelectorAll('#savedProjects option').length === expected, countBefore - 1);
+    if ((await page.locator('#savedProjects option').evaluateAll(options => options.map(option => option.value))).includes(id))
+      throw new Error('Deleted project still present: ' + id);
   }
   const lastId = await page.locator('#savedProjects').inputValue();
   page.once('dialog', dialog => dialog.accept());
