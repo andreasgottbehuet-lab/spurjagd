@@ -121,6 +121,7 @@ export function auditPrintOverflow(sheets:PrintSheetGeometry[],tolerance=2):stri
  const issues:string[]=[];
  if(!Number.isFinite(tolerance)||tolerance<0) return ['Ungültige Messtoleranz für A5-Blätter.'];
  for(const sheet of sheets){
+  if(!sheet.id.trim()) issues.push('A5-Blatt ohne Kennung kann nicht zugeordnet werden.');
   if(![sheet.contentWidth,sheet.contentHeight,sheet.scrollWidth,sheet.scrollHeight].every(v=>Number.isFinite(v)&&v>0)){
    issues.push('A5-Blatt '+sheet.id+': Druckabmessungen konnten nicht geprüft werden.');
    continue;
