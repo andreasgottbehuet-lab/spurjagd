@@ -88,6 +88,8 @@ try {
   if (await page.locator('#savedProjects option').count() !== 1) throw new Error('Last-project deletion did not create a fresh draft');
   const freshTitle = await page.locator('#projectTitle').inputValue();
   if (freshTitle !== 'Meine Schnitzeljagd') throw new Error('Final deletion retained old project title');
+  const freshId = await page.locator('#savedProjects').inputValue();
+  if (freshId === originalId || freshId === importedId) throw new Error('Fresh draft reused deleted project ID');
   checks.push('Last project replacement');
   const otherTab = await page.context().newPage();
   try {
