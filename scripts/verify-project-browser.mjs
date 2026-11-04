@@ -31,6 +31,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Switch lost data');
   await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Browser Testprojekt');
   if (await page.locator('#projectTitle').inputValue() !== 'Browser Testprojekt') throw new Error('Reload lost data');
   checks.push('Switch and reload');
   writeFileSync('verification/project-invalid-backup.json', '{invalid');
