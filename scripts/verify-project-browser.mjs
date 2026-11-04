@@ -150,6 +150,24 @@ try {
     if (await otherTab.locator('#projectTitle').inputValue() !== 'Aenderung aus zweitem Tab')
       throw new Error('Stale tab overwrote newer project changes');
     checks.push('Concurrent tab change detected');
+    // A stale editor may still export its unsaved work, but must not create,
+    // import, switch or delete projects after another tab changed the list.
+    const staleTitle=await page.locator('#projectTitle').inputValue();
+    const staleProjectId=await page.locator('#savedProjects').inputValue();
+    await page.getByRole('button', { name: 'Neu', exact: true }).click();
+    if (await page.locator('#savedProjects').inputValue() !== staleProjectId)
+      throw new Error('Stale editor created a project despite storage conflict');
+    await page.getByRole('button', { name: 'Löschen' }).click();
+    if (await page.locator('#savedProjects').inputValue() !== staleProjectId)
+      throw new Error('Stale editor deleted a project despite storage conflict');
+    const staleExportPromise=page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Sichern' }).click();
+    const staleExport=await staleExportPromise;
+    await staleExport.saveAs('verification/project-stale-tab-backup.json');
+    const staleBackup=JSON.parse(readFileSync('verification/project-stale-tab-backup.json','utf8'));
+    if (staleBackup.project?.title !== staleTitle)
+      throw new Error('Stale editor cannot export its current unsaved draft');
+    checks.push('Stale tab blocks writes but permits emergency JSON export');
   } finally {
     await otherTab.close();
   }
