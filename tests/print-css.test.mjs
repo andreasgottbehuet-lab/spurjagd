@@ -134,3 +134,11 @@ test('Browser A5 smoke test is connected to CI',()=>{
  assert.ok(script.includes('pages !== expected'));
  assert.ok(workflow.includes('node scripts/verify-a5-browser.mjs'));
 });
+
+test('Browser PDF validation rejects blank pages and missing print content',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes("spawnSync('pdftotext'"));
+ assert.ok(script.includes('blankPages.length'));
+ assert.ok(script.includes("includes('Spielleitung')"));
+ assert.ok(script.includes("includes('Umschlag')"));
+});
