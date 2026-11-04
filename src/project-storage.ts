@@ -96,10 +96,14 @@ function persistProjects(next:SavedGame[],active:string|null):void {
   else localStorage.setItem(ACTIVE,active);
  }catch(error){
   try{
-   if(oldList===null)localStorage.removeItem(KEY);
-   else localStorage.setItem(KEY,oldList);
-   if(oldActive===null)localStorage.removeItem(ACTIVE);
-   else localStorage.setItem(ACTIVE,oldActive);
+   if(localStorage.getItem(KEY)!==oldList){
+    if(oldList===null)localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY,oldList);
+   }
+   if(localStorage.getItem(ACTIVE)!==oldActive){
+    if(oldActive===null)localStorage.removeItem(ACTIVE);
+    else localStorage.setItem(ACTIVE,oldActive);
+   }
   }catch{
    throw new Error('Speichern fehlgeschlagen; Wiederherstellung der Projektdaten ist nicht bestätigt.');
   }
