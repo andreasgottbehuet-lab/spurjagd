@@ -169,6 +169,8 @@ export function auditRenderedPackingItems(expected:RenderedPackingItem[],labels:
   if(items.length!==expected.length) issues.push(name+': '+items.length+' von '+expected.length+' Umschlägen vorhanden.');
   if(new Set(items.map(item=>item.envelopeId)).size!==items.length) issues.push(name+': doppelte Umschlagkennung.');
   items.forEach((item,index)=>{
+   if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<3)
+    issues.push(name+': Umschlag '+(index+1)+' enthält ungültige Packdaten.');
    const reference=expected[index];
    if(!reference || item.envelopeId!==reference.envelopeId ||
       item.team!==reference.team || item.stationName!==reference.stationName ||
