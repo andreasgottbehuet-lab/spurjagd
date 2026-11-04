@@ -282,7 +282,7 @@ export function verifyCreativeRouteClue(clue:RouteClue):boolean {
   return clue.question.trim().length>=12
    && !clueRevealsDestination(clue.question,destination);
  }
- if(clue.mode==='custom') return clue.question.trim().length>0 && !clueRevealsDestination(clue.question,destination);
+ if(clue.mode==='custom') return clue.question.trim().length>0 && clue.question.trim().length<=400 && !clueRevealsDestination(clue.question,destination);
  if(clue.mode==='letters') {
   const reverse=[...destination].reverse().join('');
   const vowels=destination.replace(/[AEIOUÄÖÜaeiouäöü]/g,'_');
