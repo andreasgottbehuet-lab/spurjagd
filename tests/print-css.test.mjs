@@ -371,3 +371,11 @@ test('Browser validates organizer-only lock codes and destinations before printi
  assert.ok(script.includes('Tampered A5 organizer'));
  assert.ok(script.includes('Corrected A5 organizer'));
 });
+
+test('Browser print gate checks organizer lock codes and next destinations',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('Incorrect organizer-only lock code did not block printing'));
+ assert.ok(script.includes('Incorrect organizer next destination did not block printing'));
+ assert.ok(script.includes('A5 print did not recover after organizer code correction'));
+ assert.ok(script.includes('A5 print did not recover after organizer destination correction'));
+});
