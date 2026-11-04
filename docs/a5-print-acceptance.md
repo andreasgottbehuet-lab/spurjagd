@@ -119,3 +119,6 @@ Der Assistent kennzeichnet noch nicht unterstützte Spielziele (Wort und Karten)
 
 ## Projektsicherung
 Vor dem Löschen sollte eine JSON-Sicherung erstellt und deren Wiederherstellung geprüft werden. Die automatische Browserablage ersetzt keine externe Sicherung.
+
+## Browserabnahme Projektverwaltung
+Das neue Skript `scripts/verify-project-browser.mjs` prüft mit Chromium einen vollständigen Projektablauf: automatische Speicherung, JSON-Download, neues Projekt, Wechsel und Neuladen, Ablehnung beschädigter JSON-Dateien, Wiederherstellung als separater Import sowie Abbruch und Bestätigung der Löschung. Es wird im Quality-Workflow vor dem A5-Probedruck ausgeführt. Die Belege werden als `verification/project-browser-report.json`, `verification/project-browser-tests.log` und im Fehlerfall als Screenshot archiviert. Der Browserlauf ist noch nicht als erfolgreich nachgewiesen; die Aufnahme in den Workflow ist keine Freigabe.
