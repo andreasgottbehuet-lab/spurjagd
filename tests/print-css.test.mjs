@@ -192,6 +192,9 @@ test('A5 PDF audit reconciles packing checklist and label descriptions',()=>{
  assert.ok(script.includes('A5 packing checklist has incorrect child sheet count'));
  assert.ok(script.includes("details.includes('Danach:')"));
  assert.ok(script.includes("details.includes('Schloss-Code:')"));
+ assert.ok(script.includes('A5 packing checklist has an invalid code or destination'));
+ assert.ok(script.includes('A5 organizer PDF is missing packing-list lock code'));
+ assert.ok(script.includes('A5 organizer PDF is missing packing-list destination'));
  assert.ok(script.includes('labelDescriptions.length'));
  assert.ok(script.includes('normalizedOrganizer.includes(part.trim())'));
  assert.ok(script.includes('printedPage.includes(expectedDescription)'));
