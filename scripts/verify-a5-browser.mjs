@@ -228,6 +228,17 @@ try {
         failures.push('PDF page ' + pageNumber + ' does not contain envelope labels');
     }
   }
+  const organizerText = pdfPageTexts.slice(0, categories.organizer).join(' ');
+  if (!organizerText.includes('Gruppen und Routen'))
+    failures.push('PDF organizer section is missing the route overview');
+  if (!organizerText.includes('Codes und Lösungen'))
+    failures.push('PDF organizer section is missing the code overview');
+  if (!organizerText.includes('Umschlagkontrolle'))
+    failures.push('PDF organizer section is missing the envelope checklist');
+  for (const code of ['007','000','123','987']) {
+    if (!organizerText.includes(code))
+      failures.push('PDF organizer section is missing code ' + code);
+  }
   if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
   for (const code of ['007','000','123','987']) {
     if (!extracted.stdout.includes(code)) failures.push('PDF text is missing configured three-digit code ' + code);
