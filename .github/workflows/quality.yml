@@ -42,6 +42,25 @@ jobs:
         run: |
           set -o pipefail
           npm run build 2>&1 | tee verification/build.log
+      - name: Install Chromium browser test tooling
+        if: success()
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils
+      - name: Verify generated A5 PDF in Chromium
+        if: success()
+        run: |
+          set -o pipefail
+          npm run preview -- --host 127.0.0.1 --port 4173 > verification/vite-preview.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/verify-a5-browser.mjs 2>&1 | tee verification/a5-browser-tests.log
       - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
