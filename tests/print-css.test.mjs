@@ -387,3 +387,14 @@ test('PDF verification binds organizer codes and destinations to the correct A5 
  assert.ok(script.includes("printedPage.includes('Schloss-Code: ' + code)"));
  assert.ok(script.includes("printedPage.includes('Danach: ' + destination)"));
 });
+
+test('Organizer packing preview is screen-only and verified in Chromium',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const app=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const browser=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(css.includes('@media print{.packing-preview{display:none!important}}'));
+ assert.ok(app.includes('className="packing-preview"'));
+ assert.ok(app.includes('printManifest.envelopes.filter(envelope=>envelope.team===team.name)'));
+ assert.ok(browser.includes('Organizer packing preview does not list all 12 envelopes'));
+ assert.ok(browser.includes('A5 PDF unexpectedly includes organizer-only on-screen packing preview'));
+});
