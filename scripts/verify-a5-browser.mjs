@@ -182,6 +182,31 @@ try {
   const restoredChild = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredChild.calls !== 1 || restoredChild.alerts.length)
     failures.push('A5 print did not recover after child envelope restoration');
+  // A missing route page must not silently produce an incomplete packet.
+  await page.evaluate(() => {
+    const route = document.querySelector('.print-child-sheet[data-sheet-kind="route"]');
+    if (!route) throw new Error('Missing A5 route page for omission test');
+    route.dataset.testOriginalKind = route.dataset.sheetKind ?? '';
+    route.dataset.sheetKind = 'answer';
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const wrongKind = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (wrongKind.calls !== 0 || wrongKind.alerts.length === 0)
+    failures.push('A5 route page mislabelled as answer did not block printing');
+  await page.evaluate(() => {
+    const route = document.querySelector('.print-child-sheet[data-test-original-kind]');
+    if (!route) throw new Error('Missing route page during restoration');
+    route.dataset.sheetKind = route.dataset.testOriginalKind ?? 'route';
+    delete route.dataset.testOriginalKind;
+    window.__a5PrintCalls = 0;
+    window.__a5Alerts = [];
+  });
+  await printButton.click();
+  const restoredKind = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
+  if (restoredKind.calls !== 1 || restoredKind.alerts.length)
+    failures.push('A5 print did not recover after route page kind restoration');
   const sheets = page.locator('.print-packet .print-sheet');
   const expected = await sheets.count();
   if (expected < 1) throw new Error('No generated A5 sheets');
