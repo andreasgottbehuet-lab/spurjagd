@@ -241,3 +241,18 @@ test('Spielleitungs-Packliste muss echte Codes und Zielorte enthalten',()=>{
  assert.ok(auditRenderedOrganizerSecrets(expected,expected.slice(1)).length>0);
  assert.ok(auditRenderedOrganizerSecrets(expected,[expected[0],expected[0]]).some(issue=>issue.includes('doppelte')));
 });
+
+test('Spielleitungs-Packliste prueft Schloss-Code und naechstes Ziel je Umschlag',()=>{
+ const expected=[
+  {envelopeId:'0-a',code:'007',destination:'Wiese'},
+  {envelopeId:'1-b',code:'000',destination:'Zuhause'}
+ ];
+ assert.deepEqual(auditRenderedOrganizerSecrets(expected,expected),[]);
+ for(const [field,value] of [['code','123'],['code','7'],['code','abc'],['destination','Falscher Ort'],['destination',' Wiese '],['envelopeId','falsch']]){
+  const changed=expected.map(item=>({...item}));
+  changed[0][field]=value;
+  assert.ok(auditRenderedOrganizerSecrets(expected,changed).length>0,field+': '+value);
+ }
+ assert.ok(auditRenderedOrganizerSecrets(expected,expected.slice(1)).length>0);
+ assert.ok(auditRenderedOrganizerSecrets(expected,[expected[0],expected[0]]).some(issue=>issue.includes('doppelte')));
+});
