@@ -74,6 +74,21 @@ try {
   const printButton = page.locator('button.print');
   if (await printButton.count() !== 1 || await printButton.isDisabled())
     throw new Error('A5 print button is missing or disabled after entering valid fixture codes');
+  const packingPreview = page.locator('.packing-preview');
+  if (await packingPreview.count() !== 1)
+    failures.push('Organizer packing preview is missing');
+  else {
+    await packingPreview.locator('summary').click();
+    const previewRows = packingPreview.locator('li');
+    if (await previewRows.count() !== 12)
+      failures.push('Organizer packing preview does not list all 12 envelopes');
+    const previewText = await packingPreview.innerText();
+    for (const code of ['007', '000', '123', '987'])
+      if (!previewText.includes(code))
+        failures.push('Organizer packing preview is missing lock code ' + code);
+    if (!previewText.includes('Danach:'))
+      failures.push('Organizer packing preview is missing next destinations');
+  }
   const packet = page.locator('.print-packet');
   if (await packet.count() !== 1) {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
