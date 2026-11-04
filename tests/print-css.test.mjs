@@ -253,3 +253,9 @@ test('Gruppenobergrenze und aktueller Produktstatus sind verständlich beschrift
  assert.ok(labels.includes('Maximum children per team'));
  assert.ok(!labels.includes('Rätsel, echte Wege und Codes werden in der nächsten Ausbaustufe ergänzt'));
 });
+
+test('Wegrätsel-Eingabe erklärt Geheimhaltung des Zielorts',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('Der Ortsname ist die Lösung des Wegrätsels'));
+ assert.ok(source.includes('Route clues – preview by destination'));
+});
