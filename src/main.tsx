@@ -312,7 +312,7 @@ function App() {
             {activeStep === 1 && <>
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
-              <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.join(" / ")}.</p>
+              <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.length <= 12 ? groupDistribution.join(" / ") : `${Math.min(...groupDistribution)}–${Math.max(...groupDistribution)} (${groupDistribution.length})`}.</p>
               {groupDistribution.includes(1) && players>1 && <p className="warnings" role="status">{tx("Die letzte Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "The final team would contain only one child. Review the team size or participant count and adjust the grouping before the event.")}</p>}
               <div className="form-grid">
                 <label className="range-field"><span>{t.children}: <strong>{players}</strong></span><input min="1" max="100" type="range" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
