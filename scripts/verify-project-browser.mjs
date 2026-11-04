@@ -62,6 +62,13 @@ try {
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForFunction(() => document.querySelector('#projectTitle')?.value === 'Sofortiger Seitenwechsel');
   checks.push('Immediate reload flushes pending edits');
+  // Repeated pagehide/visibility saves must not reuse a revision timestamp.
+  const revisionBefore=await page.evaluate(() => JSON.parse(localStorage.getItem('spurjagd-projects-v1'))[0].updatedAt);
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  const revisionAfter=await page.evaluate(() => JSON.parse(localStorage.getItem('spurjagd-projects-v1'))[0].updatedAt);
+  if (Date.parse(revisionAfter) <= Date.parse(revisionBefore))
+    throw new Error('Visibility flush did not advance the saved revision');
+  checks.push('Visibility flush advances project revision');
   await page.locator('#projectTitle').fill('Browser Testprojekt');
   await page.locator('#projectTitle').blur();
   await page.waitForFunction(() => [...document.querySelectorAll('#savedProjects option')].some(option => option.textContent?.includes('Browser Testprojekt')));
