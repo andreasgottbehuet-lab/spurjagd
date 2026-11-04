@@ -166,3 +166,10 @@ test('Ungültig große Blattzahlen erzeugen keine unbegrenzten Prüflisten',()=>
   assert.ok(issues.length<10);
  }
 });
+
+test('Extrem große gültige Einzelblattzahl wird vor der Sequenzbildung begrenzt',()=>{
+ const actual=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
+ const issues=auditRenderedEnvelopes([{id:'A',sheetCount:Number.MAX_SAFE_INTEGER}],actual);
+ assert.ok(issues.some(issue=>issue.includes('Umschlag-Reihenfolge')));
+ assert.ok(issues.length<10);
+});
