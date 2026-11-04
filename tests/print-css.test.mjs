@@ -323,3 +323,10 @@ test('A5 print instructions are visible on screen and absent from the physical p
  assert.ok(source.includes('Schloss-Codes am echten Schloss prüfen'));
  assert.ok(css.includes('.print-guidance{display:none!important}'));
 });
+
+test('Browser checks A5 screen packing totals against actual labels',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('A5 organizer print guidance is missing'));
+ assert.ok(script.includes('A5 screen packing overview does not match printed labels'));
+ assert.ok(script.includes("page.locator('.print-label').evaluateAll"));
+});
