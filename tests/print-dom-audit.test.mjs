@@ -157,3 +157,12 @@ test('Widersprüchliche Druckmanifest-Summen und ungültige Sollwerte sperren di
  assert.ok(auditRenderedPrintCategories({minimumSheets:53,organizerSheets:-1,taskSheets:51,labelSheets:3},actual).some(x=>x.includes('ungültige erwartete')));
  assert.ok(auditRenderedPrintCategories({minimumSheets:53,organizerSheets:14.5,taskSheets:35.5,labelSheets:3},actual).some(x=>x.includes('ungültige erwartete')));
 });
+
+test('Ungültig große Blattzahlen erzeugen keine unbegrenzten Prüflisten',()=>{
+ const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
+ for(const count of [Number.MAX_SAFE_INTEGER+1,Infinity,NaN,-100]){
+  const issues=auditRenderedEnvelopes([{id:'A',sheetCount:count}],sheets);
+  assert.ok(issues.some(x=>x.includes('ungültige Anzahl Kinderblätter')));
+  assert.ok(issues.length<10);
+ }
+});
