@@ -536,3 +536,14 @@ test('Partial project-list write is rolled back when storage throws',()=>{
   assert.equal(activeGameId(),'test-one');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
+
+test('Project list sorts timestamps with different UTC offsets correctly',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
+ try{
+  saveGame({...sample(),id:'older',updatedAt:'2026-11-02T20:00:00+02:00'});
+  saveGame({...sample(),id:'newer',updatedAt:'2026-11-02T19:30:00Z'});
+  assert.deepEqual(loadGames().map(x=>x.id),['newer','older']);
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
