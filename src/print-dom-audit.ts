@@ -80,6 +80,11 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
  // The packet must be packable in manifest order: task, answer, then route pages.
  const validCounts=expected.every(envelope=>Number.isSafeInteger(envelope.sheetCount)&&envelope.sheetCount>=3);
  if(!validCounts) return [...new Set(issues)];
+ const expectedCount=expected.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
+ if(!Number.isSafeInteger(expectedCount)||expectedCount!==actual.length){
+  issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Antwort, Wegrätsel) angeordnet.');
+  return [...new Set(issues)];
+ }
  const expectedSequence=expected.flatMap(envelope=>[
   {envelopeId:envelope.id,kind:'task'},
   {envelopeId:envelope.id,kind:'answer'},
