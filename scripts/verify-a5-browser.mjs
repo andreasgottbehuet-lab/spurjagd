@@ -243,6 +243,15 @@ try {
   for (const code of ['007','000','123','987']) {
     if (!extracted.stdout.includes(code)) failures.push('PDF text is missing configured three-digit code ' + code);
   }
+  // Every PDF child sheet must carry the same team as its DOM counterpart.
+  const printedTeams = await page.locator('.print-child-sheet').evaluateAll(elements =>
+    elements.map(element => element.querySelector('p strong')?.textContent?.trim() ?? ''));
+  for (let index = 0; index < printedTeams.length; index++) {
+    const team = printedTeams[index];
+    const pageNumber = categories.organizer + index + 1;
+    if (!team || !(pdfPageTexts[pageNumber - 1] ?? '').includes(team))
+      failures.push('A5 PDF page ' + pageNumber + ' has no matching team identification');
+  }
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   const labelText = pdfPageTexts.slice(categories.organizer + categories.children).join(' ');
   if (childText.includes('Codes und Lösungen') || childText.includes('Umschlagkontrolle'))
