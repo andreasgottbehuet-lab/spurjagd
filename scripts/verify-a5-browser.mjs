@@ -58,7 +58,16 @@ try {
   const a5 = size && Math.abs(Number(size[1]) - 419.53) < 2 && Math.abs(Number(size[2]) - 595.28) < 2;
   if (!a5) failures.push('PDF page size differs from A5 portrait: ' + (size?.[0] ?? 'unknown'));
   if (pages !== expected) failures.push('PDF pages ' + pages + ' do not match logical A5 sheets ' + expected);
-  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, measurements: measured, failures };
+  const extracted = spawnSync('pdftotext', ['-layout', 'verification/a5-browser-print.pdf', '-'], { encoding: 'utf8' });
+  if (extracted.status !== 0) throw new Error('pdftotext failed: ' + extracted.stderr);
+  const pdfPageTexts = extracted.stdout.split('\f');
+  if (pdfPageTexts.at(-1)?.trim() === '') pdfPageTexts.pop();
+  const blankPages = pdfPageTexts.flatMap((content, index) => content.trim() ? [] : [index + 1]);
+  if (pdfPageTexts.length !== pages) failures.push('PDF text extraction reports ' + pdfPageTexts.length + ' pages, expected ' + pages);
+  if (blankPages.length) failures.push('PDF contains blank pages: ' + blankPages.join(', '));
+  if (!extracted.stdout.includes('Spielleitung')) failures.push('PDF is missing organizer instructions');
+  if (!extracted.stdout.includes('Umschlag')) failures.push('PDF is missing envelope information');
+  const report = { expectedSheets: expected, pdfPages: pages, pdfA5Portrait: !!a5, blankPages, measurements: measured, failures };
   writeFileSync('verification/a5-browser-report.json', JSON.stringify(report, null, 2));
   if (browserErrors.length) failures.push(...browserErrors.map(error => 'Browser JavaScript: ' + error));
   if (failures.length) {
