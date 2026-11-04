@@ -292,3 +292,9 @@ test('Ältere Kinder erhalten keine Rechnung mit negativer Subtraktionszahl',()=
   assert.doesNotMatch(puzzle.question,/− -/);
  }
 });
+
+test('Buchstabe C ist ohne englische Vorkenntnisse lösbar',()=>{
+ const clue=generateCreativeRouteClue('Clown','', 'questions', 17);
+ assert.equal(clue.answer,'Clown');
+ assert.ok(verifyCreativeRouteClue(clue));
+});
