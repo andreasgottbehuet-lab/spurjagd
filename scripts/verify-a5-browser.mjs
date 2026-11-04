@@ -8,12 +8,14 @@ const failures = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
-  // A fresh browser has no saved lock codes; populate every visible station code first.
-  const codeInputs = page.locator('input[pattern="[0-9]{3}"]');
-  const codeCount = await codeInputs.count();
-  if (codeCount < 1) throw new Error('No station code inputs found');
-  for (let i = 0; i < codeCount; i++) await codeInputs.nth(i).fill(String(100 + i % 900));
   for (let step = 0; step < 3; step++) {
+    if (step === 2) {
+      // Station codes are edited on wizard step 3, not on the landing screen.
+      const codeInputs = page.locator('input[pattern="[0-9]{3}"]');
+      const codeCount = await codeInputs.count();
+      if (codeCount < 1) throw new Error('No station code inputs on wizard step 3');
+      for (let i = 0; i < codeCount; i++) await codeInputs.nth(i).fill(String(100 + i % 900));
+    }
     const next = page.locator('button.next');
     if (await next.count() !== 1) throw new Error('Wizard navigation not found at step ' + (step + 1));
     await next.click();
