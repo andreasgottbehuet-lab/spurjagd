@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditRenderedPackingItems,auditPrintOverflow,auditA5PageBounds} from '../src/print-dom-audit.ts';
+import {auditRenderedPrintSheets,auditRenderedPrintCategories,auditRenderedEnvelopes,auditRenderedLabels,auditRenderedPackingItems,auditRenderedOrganizerSecrets,auditPrintOverflow,auditA5PageBounds} from '../src/print-dom-audit.ts';
 
 test('Vollständig gerendertes A5-Paket wird freigegeben',()=>{
  for(const count of [1,3,53,200,1000]) assert.deepEqual(auditRenderedPrintSheets(count,count),[]);
@@ -225,4 +225,19 @@ test('Ungueltige erwartete A5 Packdaten duerfen nicht durch identische Druckdate
   assert.ok(auditRenderedPackingItems([corrupt],[corrupt],[corrupt]).some(issue=>issue.includes('Druckmanifest: Umschlag 1 enthält ungültige Packdaten')),field);
  }
  assert.ok(auditRenderedPackingItems([good,good],[good,good],[good,good]).some(issue=>issue.includes('Druckmanifest: doppelte Umschlagkennung')));
+});
+
+test('Spielleitungs-Packliste muss echte Codes und Zielorte enthalten',()=>{
+ const expected=[
+  {envelopeId:'0-a',code:'007',destination:'Spielplatz'},
+  {envelopeId:'1-b',code:'000',destination:'Zuhause'}
+ ];
+ assert.deepEqual(auditRenderedOrganizerSecrets(expected,expected),[]);
+ for(const [field,value] of [['code','123'],['code','7'],['code',''],['destination','Andere Wiese'],['destination',' '],['envelopeId','1-b']]){
+  const wrong=expected.map(item=>({...item}));
+  wrong[0][field]=value;
+  assert.ok(auditRenderedOrganizerSecrets(expected,wrong).length>0,field+': '+value);
+ }
+ assert.ok(auditRenderedOrganizerSecrets(expected,expected.slice(1)).length>0);
+ assert.ok(auditRenderedOrganizerSecrets(expected,[expected[0],expected[0]]).some(issue=>issue.includes('doppelte')));
 });
