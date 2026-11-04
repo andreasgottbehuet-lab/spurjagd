@@ -189,7 +189,7 @@ test('A5 PDF audit reconciles packing checklist and label descriptions',()=>{
  assert.ok(script.includes("page.locator('.print-label span')"));
  assert.ok(script.includes('checklistRows.length !== envelopeGroups.size'));
  assert.ok(script.includes('labelDescriptions.length'));
- assert.ok(script.includes('normalizedOrganizer.includes(row)'));
+ assert.ok(script.includes('normalizedOrganizer.includes(part.trim())'));
  assert.ok(script.includes('printedPage.includes(expectedDescription)'));
 });
 
