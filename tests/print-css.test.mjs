@@ -168,6 +168,18 @@ test('Chromium acceptance checks PDF content at individual page positions',()=>{
  assert.ok(script.includes('categories.organizer + categories.children + i + 1'));
 });
 
+test('Chromium PDF audit compares organizer, children and labels to rendered packet',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('Gruppen und Routen'));
+ assert.ok(script.includes('Codes und Lösungen'));
+ assert.ok(script.includes('Umschlagkontrolle'));
+ assert.ok(script.includes("page.locator('.print-child-sheet')"));
+ assert.ok(script.includes('printedHeaders[index]'));
+ assert.ok(script.includes("page.locator('.print-label strong')"));
+ assert.ok(script.includes('expectedLabel.replace'));
+ assert.ok(script.includes('Organizer-only solution or envelope checklist leaked'));
+});
+
 test('Chromium acceptance archives visual A5 page previews',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes("spawnSync('pdftoppm'"));
