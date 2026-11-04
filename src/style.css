@@ -205,3 +205,16 @@
 .route-answer-cell{display:inline-block;width:7mm;height:7mm;border:1px solid #9eacb6;box-sizing:border-box}
 .route-answer-highlight{background:#fff0bd;border-color:#8b9298}
 @media print{.route-answer-cell{width:6.5mm;height:6.5mm}.route-answer-highlight{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Grid-bearing station sheets must keep three tasks on one physical A5 page. */
+@media print {
+ .print-child-sheet[data-sheet-kind="task"] h1{font-size:16pt;margin:0 0 3mm}
+ .print-child-sheet[data-sheet-kind="task"] h2{font-size:12pt;margin:2mm 0}
+ .print-child-sheet[data-sheet-kind="task"]>p{margin:2mm 0;font-size:9.5pt;line-height:1.2}
+ .print-child-sheet[data-sheet-kind="task"] .print-task{padding:2mm 3mm;margin:2mm 0;line-height:1.15;font-size:9pt}
+ .print-child-sheet[data-sheet-kind="task"] .print-task h3{font-size:10pt;margin:0 0 1mm}
+ .print-child-sheet[data-sheet-kind="task"] .print-task p{margin:1mm 0}
+ .print-child-sheet[data-sheet-kind="task"] .print-task .print-question{font-size:11pt;line-height:1.15}
+ .print-child-sheet[data-sheet-kind="task"] .print-task .symbols{font-size:16pt;line-height:1.1}
+ .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid{margin:1mm 0}
+}
