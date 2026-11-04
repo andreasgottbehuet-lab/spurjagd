@@ -205,3 +205,11 @@ test('Zu lange Standortnamen werden vor der Routenberechnung abgewiesen',()=>{
  locations[0].name='A'.repeat(80);
  assert.doesNotThrow(()=>createPlan(config({locations})));
 });
+
+test('Rückkehr zum Start bei nur einer Station wird ausdrücklich gekennzeichnet',()=>{
+ const one=createPlan(config({durationMinutes:30,finishMode:'start'}));
+ assert.equal(one.stopsPerTeam,1);
+ assert.ok(one.cautions.some(message=>message.includes('Ziel identisch mit der einzigen Rätselstation')));
+ const longer=createPlan(config({durationMinutes:60,finishMode:'start'}));
+ assert.equal(longer.cautions.some(message=>message.includes('Ziel identisch mit der einzigen Rätselstation')),false);
+});
