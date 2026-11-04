@@ -64,7 +64,9 @@ export function isSavedGame(raw: unknown): raw is SavedGame {
 }
 export function parseGameBackup(raw: string): SavedGame {
   if (new TextEncoder().encode(raw).byteLength > MAX_FILE_BYTES) throw new Error('Die Sicherungsdatei ist zu groß.');
-  const value: unknown = JSON.parse(raw);
+  let value: unknown;
+  try { value = JSON.parse(raw); }
+  catch { throw new Error('Sicherungsdatei ist kein gültiges JSON.'); }
   if (!value || typeof value !== 'object' || (value as Record<string, unknown>).format !== 'spurjagd-backup-1') throw new Error('Kein Spurjagd-Backup.');
   const game = (value as { project?: unknown }).project;
   if (!isSavedGame(game)) throw new Error('Ungültige oder nicht unterstützte Projektdaten.');
