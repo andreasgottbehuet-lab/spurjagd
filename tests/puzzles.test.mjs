@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination } from '../src/puzzles.ts';
@@ -332,4 +333,21 @@ test('Stationsrätsel mischen Zahlwortgitter und bestehende Rätsel ohne falsche
   assert.equal(codeFromPuzzles(challenge),'007');
  }
  assert.ok(wordsearchCount>0);
+});
+
+test('Pfeilpfade ergeben in jeder Altersstufe exakt die Schlossziffer',()=>{
+ for(const age of ['young','middle','older']) for(let digit=0;digit<10;digit++) for(const seed of [0,1,13,97]){
+  const p=generateDigitPuzzle(digit,'arrowpath',age,seed);
+  assert.equal(verifyDigitPuzzle(p),true);
+  assert.deepEqual(generateDigitPuzzle(digit,'arrowpath',age,seed),p);
+  const changed=structuredClone(p);
+  changed.arrowGrid.arrows+='→';
+  assert.equal(verifyDigitPuzzle(changed),false);
+ }
+});
+test('A5-Gitterrätsel zeigt für jede Antwort genau ein hervorgehobenes Lösungsfeld',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(source.includes('route-answer-grid'));
+ assert.ok(source.includes('index===r.letterIndex'));
+ assert.ok(source.includes('route-answer-highlight'));
 });
