@@ -416,7 +416,7 @@ function App() {
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
-                    <p>Individuelle Alters- und Schwierigkeitsprofile sind für eine spätere Bezahlversion vorgesehen. Die derzeitigen Aufgaben verwenden weiterhin die gemeinsame Altersklasse.</p>
+                    <p>Alle Gruppen erhalten Aufgaben für die gemeinsam ausgewählte Altersklasse.</p>
                     {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p key={i}><strong>{team.name} ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
                   {Array.from({length:Math.ceil(challenges.filter(c=>plan.value.teams.some(team=>team.stations.some(station=>station.id===c.location.id))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
