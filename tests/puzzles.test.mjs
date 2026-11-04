@@ -303,3 +303,9 @@ test('Eigene Wegrätsel haben eine maximale Länge',()=>{
  assert.throws(()=>generateCreativeRouteClue('Spielplatz','','custom',1,'A'.repeat(401)),/400 Zeichen/);
  assert.equal(generateCreativeRouteClue('Spielplatz','','custom',1,'A'.repeat(400)).question.length,400);
 });
+
+test('Druckprüfung erkennt zu lange eigene Rätsel auch nach Änderung',()=>{
+ const clue=generateCreativeRouteClue('Spielplatz','','custom',1,'Hinweis zur Schaukel');
+ assert.equal(verifyCreativeRouteClue(clue),true);
+ assert.equal(verifyCreativeRouteClue({...clue,question:'X'.repeat(401)}),false);
+});
