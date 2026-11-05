@@ -778,6 +778,7 @@ try {
       page:index+1,
       heightMm:Math.round(el.getBoundingClientRect().height*25.4/96*100)/100,
       widthMm:Math.round(el.getBoundingClientRect().width*25.4/96*100)/100,
+      scrollWidthMm:Math.round(el.scrollWidth*25.4/96*100)/100,
       childBlocks:el.querySelectorAll(':scope > .print-packed-content').length,
       scrollHeightMm:Math.round(el.scrollHeight*25.4/96*100)/100,
       kind:el.getAttribute('data-sheet-kind'),
@@ -787,8 +788,8 @@ try {
     for(const sheet of packedGeometry){
       if(sheet.heightMm>190.01 || sheet.scrollHeightMm>190.01)
         failures.push('Packed PDF A5 page '+sheet.page+' exceeds 190 mm: box '+sheet.heightMm+' mm, content '+sheet.scrollHeightMm+' mm');
-      if(sheet.widthMm>128.5)
-        failures.push('Packed PDF A5 page '+sheet.page+' exceeds 128 mm content width: '+sheet.widthMm+' mm');
+      if(sheet.widthMm>128.01 || sheet.scrollWidthMm>128.01)
+        failures.push('Packed PDF A5 page '+sheet.page+' exceeds 128 mm content width: box '+sheet.widthMm+' mm, content '+sheet.scrollWidthMm+' mm');
     }
     const packedText=spawnSync('pdftotext',['-layout','verification/a5-browser-packed.pdf','-'],{encoding:'utf8'});
     const texts=packedText.stdout.split('\f').filter(text=>text.trim());
