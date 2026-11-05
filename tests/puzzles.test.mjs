@@ -450,3 +450,12 @@ test('Arrow verifier rejects a repeated cell even when the final digit matches',
  const invalidStart={...original,arrowGrid:{...original.arrowGrid,startRow:-1}};
  assert.equal(verifyDigitPuzzle(invalidStart),false);
 });
+
+test('Cipher verifier rejects zero and full-alphabet shifts that reveal the answer',()=>{
+ const original=generateDigitPuzzle(7,'cipher','older',hashSeed('cipher-shift-hardening'));
+ assert.equal(verifyDigitPuzzle(original),true);
+ for(const shift of [0,26,52]){
+  const tampered={...original,instruction:original.instruction.replace(/um \d+ Stelle(?:n)?/,'um '+shift+' Stellen'),question:'SIEBEN'};
+  assert.equal(verifyDigitPuzzle(tampered),false,'shift '+shift+' must not be accepted');
+ }
+});
