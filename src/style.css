@@ -211,7 +211,7 @@
  .print-child-sheet[data-sheet-kind="task"] h1{font-size:16pt;margin:0 0 3mm}
  .print-child-sheet[data-sheet-kind="task"] h2{font-size:12pt;margin:2mm 0}
  .print-child-sheet[data-sheet-kind="task"]>p{margin:2mm 0;font-size:9.5pt;line-height:1.2}
- .print-child-sheet[data-sheet-kind="task"] .print-task{padding:2mm 3mm;margin:2mm 0;line-height:1.15;font-size:9pt}
+ .print-child-sheet[data-sheet-kind="task"] .print-task{padding:1.5mm 3mm;margin:1mm 0;line-height:1.15;font-size:9pt}
  .print-child-sheet[data-sheet-kind="task"] .print-task h3{font-size:10pt;margin:0 0 1mm}
  .print-child-sheet[data-sheet-kind="task"] .print-task p{margin:1mm 0}
  .print-child-sheet[data-sheet-kind="task"] .print-task .print-question{font-size:11pt;line-height:1.15}
