@@ -75,3 +75,13 @@ test('Physical A5 manifest counts compacted organizer pages and isolated child e
  assert.deepEqual(physicalA5Manifest(pages,elements),{totalSheets:4,organizerSheets:1,childSheets:2,labelSheets:1,envelopeSheets:{'rot-1':1,'blau-1':1}});
  assert.throws(()=>physicalA5Manifest([{owner:'rot',section:'task',usedMm:80,blocks:[b('physical-2','rot',40),b('physical-3','rot',40)]}],elements),/Umschläge/);
 });
+
+test('A5 50-percent rule compacts compatible short pages without crossing ownership boundaries',()=>{
+ const compact=packA5Blocks([b('one','rot',70,'task'),b('two','rot',80,'task')]);
+ assert.equal(compact.length,1);
+ assert.equal(compact[0].usedMm,150);
+ const isolated=packA5Blocks([b('one','rot',70,'task'),b('two','blau',80,'task'),b('three','rot',60,'route')]);
+ assert.equal(isolated.length,3);
+ assert.deepEqual(underfilledA5Pages(isolated),[0,1,2]);
+ assert.deepEqual(compactableUnderfilledPages(isolated),[]);
+});
