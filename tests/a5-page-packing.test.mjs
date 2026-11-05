@@ -91,3 +91,14 @@ test('Different envelopes of the same team must remain separate physical pages',
  assert.equal(pages.length,2);
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['a'],['b','c']]);
 });
+
+test('Organizer and label sheets are never combined by the A5 packer',()=>{
+ const pages=packA5Blocks([
+  b('organizer-1','leitung',55,'fixed-sheet-0'),
+  b('organizer-2','leitung',60,'fixed-sheet-1'),
+  b('label-1','etiketten',50,'fixed-sheet-2'),
+  b('label-2','etiketten',50,'fixed-sheet-3')
+ ]);
+ assert.equal(pages.length,4);
+ assert.deepEqual(pages.map(page=>page.blocks.length),[1,1,1,1]);
+});
