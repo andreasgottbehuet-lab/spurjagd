@@ -118,6 +118,10 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
  // Reserve the 2 mm inter-block separator before the browser prints the copy.
  const packingBlocks=blocks.map(block=>({...block,heightMm:block.heightMm+2}));
  const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2);
+ // A single original block must fit on its own page; the separator allowance
+ // is only available between blocks and must not hide oversized originals.
+ const oversizedOriginals=blocks.filter(block=>block.heightMm>A5_USABLE_HEIGHT_MM);
+ if(oversizedOriginals.length)throw new Error('A5-Einzelblatt überschreitet 190 mm: '+oversizedOriginals.map(block=>block.id+' ('+block.heightMm.toFixed(1)+' mm)').join(', '));
  const problems=auditA5PackedPages(pages,A5_USABLE_HEIGHT_MM+2);
  if(problems.length)throw new Error(problems.join('; '));
  const manifest=physicalA5Manifest(pages,originals);
