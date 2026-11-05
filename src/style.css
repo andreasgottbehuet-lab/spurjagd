@@ -264,3 +264,13 @@
  .print-packet .print-sheet h1 { font-size:16pt; margin-bottom:6mm; }
  .print-packet .print-sheet h2 { font-size:12pt; }
 }
+
+/* Physical A5 compaction: only the measured print copy is printed. */
+@media print {
+ .print-packet.print-packet-source { display:none!important; }
+ .print-packet.print-packet-packed { display:block!important; }
+ .print-packed-page { break-after:page;page-break-after:always; }
+ .print-packed-page:last-child { break-after:auto;page-break-after:auto; }
+ .print-packed-content { display:flow-root; }
+ .print-packed-content + .print-packed-content { margin-top:2mm; }
+}
