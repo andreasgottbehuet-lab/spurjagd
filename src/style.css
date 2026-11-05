@@ -259,7 +259,7 @@
 
 /* Keep print DOM measurable without exposing it in the interactive wizard. */
 @media screen {
- .print-packet { display:block; position:absolute; left:-20000px; top:0; width:128mm; visibility:hidden; pointer-events:none; }
+ .print-packet { display:block; position:absolute; left:-20000px; top:0; width:128mm; opacity:0; pointer-events:none; }
  .print-packet .print-sheet { width:128mm; max-width:128mm; box-sizing:border-box; font-size:10pt; line-height:1.35; }
  .print-packet .print-sheet h1 { font-size:16pt; margin-bottom:6mm; }
  .print-packet .print-sheet h2 { font-size:12pt; }
