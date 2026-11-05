@@ -8,11 +8,17 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
  if(blocks.some(b=>!b.id.trim()||!b.owner.trim()||!b.section.trim()||!Number.isFinite(b.heightMm)||b.heightMm<=0||b.heightMm>usableHeightMm)) throw new Error('Ungültiger A5-Inhaltsblock');
  if(new Set(blocks.map(b=>b.id)).size!==blocks.length) throw new Error('Doppelte A5-Blockkennung');
  for(let i=0;i<blocks.length;i++){
-  const block=blocks[i],next=blocks[i+1],last=pages[pages.length-1];
+  const block=blocks[i],last=pages[pages.length-1];
   const same=last&&last.owner===block.owner&&last.section===block.section;
-  const pair=block.keepWithNext&&next&&next.owner===block.owner&&next.section===block.section?block.heightMm+next.heightMm:0;
-  if(block.keepWithNext&&next&&next.owner===block.owner&&next.section===block.section&&pair>usableHeightMm) throw new Error('Zusammengehörige A5-Blöcke überschreiten die Druckhöhe');
-  if(!last||!same||last.usedMm+block.heightMm>usableHeightMm||(pair>0&&pair<=usableHeightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
+  let pair=block.heightMm;
+  if(block.keepWithNext){
+   let j=i;
+   while(j+1<blocks.length&&blocks[j].keepWithNext&&blocks[j+1].owner===block.owner&&blocks[j+1].section===block.section){
+    j++;pair+=blocks[j].heightMm;
+   }
+  }
+  if(pair>usableHeightMm) throw new Error('Zusammengehörige A5-Blöcke überschreiten die Druckhöhe');
+  if(!last||!same||last.usedMm+block.heightMm>usableHeightMm||(pair>block.heightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
   const page=pages[pages.length-1];page.blocks.push(block);page.usedMm+=block.heightMm;
  }
  return pages;
