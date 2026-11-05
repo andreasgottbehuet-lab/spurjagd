@@ -436,3 +436,11 @@ test('A5 preflight measures the same packed task geometry used for printing',()=
  assert.match(css,/The A5 content width must match in preflight and PDF pagination\.\s*\*\/\s*@media screen, print/);
  assert.match(source,/const \{manifest:physical\}=buildPackedA5PrintCopy\(packet\)/);
 });
+
+test('Print action rejects overflowing packed content using the same 190 mm budget as Chromium',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const verifier=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.match(source,/sheet\.scrollHeight\*25\.4\/96/);
+ assert.match(source,/Math\.max\(height,content\)>A5_USABLE_HEIGHT_MM\+0\.01/);
+ assert.match(verifier,/sheet\.heightMm>190\.01 \|\| sheet\.scrollHeightMm>190\.01/);
+});
