@@ -284,3 +284,14 @@
  }
  .print-packet.print-packet-packed .print-sheet {width:auto!important;max-width:100%!important;}
 }
+
+/* Browser preflight must measure print-scale puzzles, not the larger editor preview. */
+@media screen {
+ .print-packet .wordsearch-cell {width:4.6mm;height:4.6mm;font-size:9pt;}
+ .print-packet .wordsearch-grid {margin:2mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task {padding:2mm 3mm;margin:2mm 0;line-height:1.15;font-size:9pt;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task h3 {font-size:10pt;margin:0 0 1mm;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task p {margin:1mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .print-question {font-size:11pt;line-height:1.15;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid {margin:1mm 0;}
+}
