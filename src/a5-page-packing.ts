@@ -76,3 +76,40 @@ export function measureA5Elements(elements:readonly HTMLElement[],cssPxPerMm=96/
  });
  return measureA5Sheets(sheets,cssPxPerMm);
 }
+
+/** Create a printable copy without changing React-owned source nodes.
+ * Only complete sheets of the same owner and section may share an A5 page.
+ * The caller must remove the returned copy after the print dialog closes.
+ */
+export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pageCount:number} {
+ const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
+ if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
+ const blocks=measureA5Elements(originals);
+ const pages=packA5Blocks(blocks);
+ const problems=auditA5PackedPages(pages);
+ if(problems.length)throw new Error(problems.join('; '));
+ const byId=new Map(blocks.map((block,index)=>[block.id,originals[index]]));
+ const copy=packet.cloneNode(false) as HTMLElement;
+ copy.classList.add('print-packet-packed');
+ copy.removeAttribute('aria-label');
+ copy.setAttribute('aria-label','A5-Druckausgabe');
+ for(const page of pages){
+  const first=byId.get(page.blocks[0].id);
+  if(!first)throw new Error('A5-Druckblock fehlt');
+  const sheet=first.cloneNode(false) as HTMLElement;
+  sheet.removeAttribute('data-envelope-id');
+  sheet.removeAttribute('data-sheet-kind');
+  sheet.removeAttribute('data-route-page');
+  sheet.classList.add('print-packed-page');
+  for(const block of page.blocks){
+   const source=byId.get(block.id);
+   if(!source)throw new Error('A5-Druckblock fehlt');
+   const section=document.createElement('div');
+   section.className='print-packed-content';
+   for(const child of Array.from(source.children))section.appendChild(child.cloneNode(true));
+   sheet.appendChild(section);
+  }
+  copy.appendChild(sheet);
+ }
+ return {copy,pageCount:pages.length};
+}
