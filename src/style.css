@@ -339,3 +339,13 @@
  }
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin-bottom:2mm;}
 }
+
+/* Printed A5 task sheets must fit the page after Chromium applies print pagination. */
+@media print {
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin:0 0 1mm;line-height:1.05;font-size:14pt;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h2 {margin:1mm 0;font-size:11pt;line-height:1.1;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > p {margin:1mm 0;line-height:1.1;font-size:9pt;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task {margin:0.8mm 0;padding:1mm 2mm;line-height:1.1;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task p {margin:0.5mm 0;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task h3 {margin:0 0 0.5mm;}
+}
