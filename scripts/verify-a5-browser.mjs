@@ -777,6 +777,8 @@ try {
     const packedGeometry = await page.locator('.print-packet-packed > .print-packed-page').evaluateAll(elements => elements.map((el,index) => ({
       page:index+1,
       heightMm:Math.round(el.getBoundingClientRect().height*25.4/96*100)/100,
+      widthMm:Math.round(el.getBoundingClientRect().width*25.4/96*100)/100,
+      childBlocks:el.querySelectorAll(':scope > .print-packed-content').length,
       scrollHeightMm:Math.round(el.scrollHeight*25.4/96*100)/100,
       kind:el.getAttribute('data-sheet-kind'),
       envelope:el.getAttribute('data-envelope-id')
