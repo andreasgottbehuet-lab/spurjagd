@@ -105,6 +105,27 @@ try {
   const routeSequences = routeLines.filter(line => /→/.test(line) && /\(.+\):/.test(line)).map(line => line.split(':').slice(1).join(':').trim());
   if (routeSequences.length !== 4 || new Set(routeSequences).size < 2)
     failures.push('A5 reference case must print four team routes with at least two different sequences');
+  // The new print contract never emits separate answer sheets.
+  if (await page.locator('.print-child-sheet[data-sheet-kind="answer"]').count() !== 0)
+    failures.push('Redundant answer sheet is still present in the A5 packet');
+  const organizerTitles=await page.locator('.print-organizer-sheet h1').allTextContents();
+  if (!organizerTitles[0]?.includes('Start und Sicherheit'))
+    failures.push('Organizer start and safety instructions are not the first printed page');
+  const organizerOrder=['Gruppenrouten','Codes und Lösungen','Wegrätsel-Lösungen','Umschlagkontrolle'];
+  let previous=-1;
+  for(const label of organizerOrder){
+    const position=organizerTitles.findIndex(title=>title.includes(label));
+    if(position<0 || position<=previous) failures.push('Organizer sections out of order: '+label);
+    else previous=position;
+  }
+  for(const team of ['rot','blau','grün','gelb']){
+    const sheets=page.locator('.print-child-sheet[data-team-color="'+team+'"]');
+    if(!await sheets.count()) failures.push('Missing child sheets for team '+team);
+    for(const sheet of await sheets.all()){
+      const color=await sheet.evaluate(el=>getComputedStyle(el).borderTopColor);
+      if(!color || color==='rgb(0, 0, 0)' || color==='rgba(0, 0, 0, 0)') failures.push('Missing team border for '+team);
+    }
+  }
   // Visual acceptance: three-word puzzle must replace, not supplement, three independent tasks.
   const wordSheets=page.locator('.print-child-sheet[data-sheet-kind="task"]:has(.print-three-word-grid)');
   if (await wordSheets.count() === 0) failures.push('No combined three-number word-search worksheet printed');
