@@ -179,10 +179,12 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     const g=puzzle.arrowGrid;
     if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||![3,5,7].includes([...g.arrows].length)||puzzle.question!==[...g.arrows].join(' ')) return false;
     let r=g.startRow,c=g.startCol;
-    if(!Number.isInteger(r)||!Number.isInteger(c)) return false;
+    if(!Number.isInteger(r)||!Number.isInteger(c)||r<0||c<0||r>=g.rows.length||c>=g.rows.length) return false;
+    const visited=new Set([r+':'+c]);
     for(const arrow of g.arrows){
       if(arrow==='→') c++;else if(arrow==='←') c--;else if(arrow==='↓') r++;else if(arrow==='↑') r--;else return false;
-      if(r<0||c<0||r>=g.rows.length||c>=g.rows.length) return false;
+      if(r<0||c<0||r>=g.rows.length||c>=g.rows.length||visited.has(r+':'+c)) return false;
+      visited.add(r+':'+c);
     }
     return Number(g.rows[r]?.[c])===target;
   }
