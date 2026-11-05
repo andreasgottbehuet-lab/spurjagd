@@ -77,11 +77,41 @@ export function measureA5Elements(elements:readonly HTMLElement[],cssPxPerMm=96/
  return measureA5Sheets(sheets,cssPxPerMm);
 }
 
+/** Physical page inventory after measured packing, separate from the logical envelope manifest. */
+export interface A5PhysicalManifest {
+ totalSheets:number;
+ organizerSheets:number;
+ childSheets:number;
+ labelSheets:number;
+ envelopeSheets:Record<string,number>;
+}
+export function physicalA5Manifest(pages:readonly A5PackedPage[],elements:readonly HTMLElement[]):A5PhysicalManifest {
+ const result:A5PhysicalManifest={totalSheets:pages.length,organizerSheets:0,childSheets:0,labelSheets:0,envelopeSheets:{}};
+ const lookup=new Map(elements.map((element,index)=>['physical-'+index,element]));
+ for(const page of pages){
+  const sources=page.blocks.map(block=>lookup.get(block.id));
+  if(sources.some(source=>!source))throw new Error('A5-Manifest: Inhaltsblock fehlt');
+  const types=new Set(sources.map(source=>source!.classList.contains('print-organizer-sheet')?'organizer':source!.classList.contains('print-label-sheet')?'label':'child'));
+  if(types.size!==1)throw new Error('A5-Manifest: Dokumenttypen vermischt');
+  const type=[...types][0];
+  if(type==='organizer')result.organizerSheets++;
+  else if(type==='label')result.labelSheets++;
+  else {
+   result.childSheets++;
+   const envelopeIds=new Set(sources.map(source=>source!.dataset.envelopeId??''));
+   if(envelopeIds.size!==1||envelopeIds.has(''))throw new Error('A5-Manifest: Umschläge auf einer Kinderseite vermischt');
+   const id=[...envelopeIds][0];
+   result.envelopeSheets[id]=(result.envelopeSheets[id]??0)+1;
+  }
+ }
+ return result;
+}
+
 /** Create a printable copy without changing React-owned source nodes.
  * Only complete sheets of the same owner and section may share an A5 page.
  * The caller must remove the returned copy after the print dialog closes.
  */
-export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pageCount:number} {
+export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pageCount:number;manifest:A5PhysicalManifest} {
  const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
  if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
  const blocks=measureA5Elements(originals);
@@ -90,6 +120,7 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
  const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2);
  const problems=auditA5PackedPages(pages,A5_USABLE_HEIGHT_MM+2);
  if(problems.length)throw new Error(problems.join('; '));
+ const manifest=physicalA5Manifest(pages,originals);
  const byId=new Map(blocks.map((block,index)=>[block.id,originals[index]]));
  const copy=packet.cloneNode(false) as HTMLElement;
  copy.classList.add('print-packet-packed');
@@ -114,5 +145,5 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
   sheet.dataset.packedBlockCount=String(page.blocks.length);
   copy.appendChild(sheet);
  }
- return {copy,pageCount:pages.length};
+ return {copy,pageCount:pages.length,manifest};
 }
