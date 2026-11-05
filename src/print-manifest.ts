@@ -20,7 +20,7 @@ export function organizerSheetCount(plan:GamePlan,config?:GameConfig):number {
  const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
  const codes=Math.ceil(stations/ORGANIZER_ITEMS_PER_A5_SHEET);
  const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));
- const solutionEntries=[...destinations].reduce((sum,destination)=>sum+routeSheetCount(destination,config),0);
+ const solutionEntries=destinations.size;
  const solutionSheets=Math.ceil(solutionEntries/ORGANIZER_ITEMS_PER_A5_SHEET);
  const envelopeCount=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
  const controlSheets=Math.max(1,Math.ceil(envelopeCount/ORGANIZER_ENVELOPES_PER_A5_SHEET));
