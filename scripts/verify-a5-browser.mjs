@@ -778,6 +778,17 @@ try {
     const texts=packedText.stdout.split('\f').filter(text=>text.trim());
     if(packedText.status!==0 || texts.length!==packedPageCount)
       failures.push('Packed PDF contains blank or unreadable A5 pages');
+    const packedPages=packedText.stdout.split('\\f').filter((_,index,array)=>index<array.length-1 || array[index].trim());
+    if(packedPages.length===packedExport.pages) {
+      const packedChildPages=packedPages.slice(packedSnapshot.organizer,packedSnapshot.organizer+packedSnapshot.child);
+      if(packedChildPages.length!==envelopePages.length) failures.push('Packed PDF child page count differs from envelope manifest');
+      for(let index=0;index<Math.min(packedChildPages.length,envelopePages.length);index++) {
+        const expectedKind=envelopePages[index].kind;
+        const heading=expectedKind==='task'?'Stationsaufgaben:':'Wegrätsel';
+        if(!packedChildPages[index].includes(heading))
+          failures.push('Packed PDF child page '+(index+1)+' is missing '+heading);
+      }
+    }
     if(!packedText.stdout.includes('Umschlag') || !packedText.stdout.includes('Stationsaufgaben:'))
       failures.push('Packed PDF is missing envelope or task content');
   }
