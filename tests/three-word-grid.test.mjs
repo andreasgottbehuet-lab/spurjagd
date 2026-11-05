@@ -19,12 +19,12 @@ test('Drei-Zahlwort-Gitter ist für identische Eingaben reproduzierbar',()=>{
 });
 
 import {readFileSync} from 'node:fs';
-test('A5-Druck, Antwortblatt und Spielleiterlösung verwenden dasselbe Drei-Zahlen-Gitter',()=>{
+test('A5-Aufgabenblatt und Spielleiterlösung verwenden denselben dreistelligen Code',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.match(source,/generateThreeDigitWordGrid\(challenge\.code,hashSeed\(projectId\+'\:'\+location\.id\)\)/);
  assert.ok(source.includes('Das Zahlwort, das am weitesten oben beginnt'));
  assert.ok(source.includes('Drei Zahlwörter im gemeinsamen Suchgitter'));
- assert.ok(source.includes('Tragt die drei gefundenen Zahlwörter von oben nach unten ein'));
+ assert.ok(source.includes('Unser Code von oben nach unten: □ □ □'));
 });
 
 test('Drei-Zahlwörter-Gitter bleibt bei verschiedenen Codes und Seeds eindeutig',()=>{
