@@ -274,3 +274,13 @@
  .print-packed-content { display:flow-root; }
  .print-packed-content + .print-packed-content { margin-top:2mm; }
 }
+
+/* Undo offscreen measurement styles in print media. */
+@media print {
+ .print-packet.print-packet-packed {
+  position:static!important;left:auto!important;top:auto!important;
+  width:auto!important;opacity:1!important;visibility:visible!important;
+  pointer-events:auto!important;
+ }
+ .print-packet.print-packet-packed .print-sheet {width:auto!important;max-width:100%!important;}
+}
