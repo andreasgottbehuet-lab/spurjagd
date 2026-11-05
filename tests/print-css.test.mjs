@@ -10,11 +10,10 @@ test('A5 print packet is isolated from interactive planner elements',()=>{
  assert.match(css,/\.print-sheet:last-child\s*\{\s*break-after:auto;/);
 });
 
-test('Child packet contains separate task, answer and route sheets',()=>{
+test('Child packet contains task and route sheets without redundant answer sheets',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('Blatt 1/{2+routeSheetCount'));
- assert.ok(source.includes('Blatt 2/{2+routeSheetCount'));
- assert.ok(source.includes('Blatt {3+routePage}'));
+ assert.ok(source.includes('Blatt 1/{1+routeSheetCount'));
+ assert.ok(source.includes('Blatt {2+routePage}'));
  assert.match(source,/printIssues\.length===0\s*&&\s*<section className="print-packet"/);
  assert.match(source,/disabled=\{printIssues\.length>0\}/);
 });
@@ -43,7 +42,7 @@ test('Vier Etiketten lassen auf A5 Platz für Titel und Seitenränder',()=>{
 
 test('Spielleitung nutzt dynamische A5-Seiten für Routen, Codes und Lösungen',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-'+destination+'-'+page}","Spielleitung – Start und Sicherheit"]){
+ for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-solutions-'+page}","Spielleitung – Start und Sicherheit"]){
   assert.ok(source.includes(marker),marker);
  }
 });
@@ -54,11 +53,11 @@ test('Mehrseitige Wegrätsel teilen Fragen in A5-Blöcke und nummerieren weiter'
 
 test('Fragen und Antwortzeilen bleiben beim A5-Druck zusammen',()=>{const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.match(css,/\.print-route-question\s*\{[^}]*break-inside:avoid;/);assert.ok(source.includes('className="print-route-question"'));});
 
-test('Lösungsschlüssel teilt lange Fragenrätsel in dieselben A5-Blöcke',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('clue.rows?.slice(page*ROUTE_QUESTIONS_PER_A5_SHEET'));assert.ok(source.includes("key={'clue-'+destination+'-'+page}"));});
+test('Lösungsschlüssel bündelt Ziele auf kompakten A5-Blättern',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('clue.rows?.map(row=>row.solution'));assert.ok(source.includes("key={'clue-'+destination+'-'+page}"));});
 
 test('Druck und Prüfcode lösen Stationsnamen mit Leerzeichen konsistent auf',()=>{const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const audit=readFileSync(new URL('../src/print-audit.ts',import.meta.url),'utf8');assert.ok(main.includes('l.name.trim()===destination.trim()'));assert.ok(audit.includes('location.name.trim()===destination.trim()'));});
 
-test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('Umschläge mit je mindestens 3 Blättern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} Kinderblätter'));});
+test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('Umschläge mit je mindestens 2 Blättern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} Kinderblätter'));});
 
 test('Kontrollliste verteilt Umschläge in vierer A5-Blöcken',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} Kinderblätter'));});
 
@@ -66,7 +65,7 @@ test('Sicherheitshinweise stehen auf eigener A5-Seite statt zwischen Packlisten'
 
 test('Spielleitungs-Kontrollliste enthält Code und tatsächliches Folgeziel, Kinderetiketten nicht',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const checklist=source.slice(source.indexOf("key={'control-'+page}"),source.indexOf('{plan.value.teams.map((team,teamIndex)'));const labels=source.slice(source.indexOf('className="print-label-grid"'));assert.ok(checklist.includes('stationCodes[envelope.stationId]'));assert.ok(checklist.includes('envelope.destination'));assert.ok(checklist.includes('envelope.sheetCount'));assert.equal(labels.includes('stationCodes[envelope.stationId]'),false);assert.equal(labels.includes('envelope.destination'),false);});
 
-test('Kontrollliste zerlegt jede Blattzahl in Aufgabe, Antwort und Wegrätsel',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('1 Aufgabe, 1 Antwort, {envelope.sheetCount-2} Wegrätsel'));});
+test('Kontrollliste zerlegt jede Blattzahl in Aufgabe und Wegrätsel',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('1 Aufgabe, {envelope.sheetCount-1} Wegrätsel'));});
 
 test('Druckvorschau erfordert Codes nur für tatsächlich besuchte Stationen',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('const visitedStationIds = new Set('));assert.ok(source.includes("visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]"));assert.ok(source.includes("visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]"));assert.ok(source.includes('Code optional.'));});
 
@@ -91,7 +90,7 @@ test('Druckknopf kontrolliert tatsächliche DOM-Blattzahl vor dem Öffnen des Dr
 test('Alle Druckseiten werden einer der drei geprüften Blattkategorien zugeordnet',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.equal((source.match(/className="print-sheet print-organizer-sheet"/g)??[]).length,6);
- assert.equal((source.match(/className="print-sheet print-child-sheet"/g)??[]).length,3);
+ assert.equal((source.match(/className="print-sheet print-child-sheet"/g)??[]).length,2);
  assert.ok(source.includes('className="print-sheet print-label-sheet"'));
  for(const name of ['print-organizer-sheet','print-child-sheet','print-label-sheet']){
   assert.ok(source.includes("packet?.querySelectorAll('."+name+"').length"));
@@ -100,8 +99,8 @@ test('Alle Druckseiten werden einer der drei geprüften Blattkategorien zugeordn
 
 test('A5-Kinderblätter tragen ihre Umschlagkennung und Blattart',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.equal((source.match(/data-envelope-id=\{teamIndex\+'-'\+location\.id\}/g)??[]).length,3);
- for(const kind of ['task','answer','route']) assert.ok(source.includes('data-sheet-kind="'+kind+'"'));
+ assert.equal((source.match(/data-envelope-id=\{teamIndex\+'-'\+location\.id\}/g)??[]).length,2);
+ for(const kind of ['task','route']) assert.ok(source.includes('data-sheet-kind="'+kind+'"'));
  assert.ok(source.includes('auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes)'));
  assert.ok(source.includes("sheet.dataset.envelopeId??''"));
  assert.ok(source.includes("sheet.dataset.sheetKind??''"));
@@ -150,20 +149,20 @@ test('Chromium A5 acceptance validates categories, envelopes and label order',()
  }
 });
 
-test('Default browser A5 fixture checks 12 envelopes and 36 child sheets',()=>{
+test('Default browser A5 fixture checks 12 envelopes and 24 child sheets',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes('envelopeGroups.size !== 12'));
- assert.ok(script.includes('categories.children !== 36'));
+ assert.ok(script.includes('categories.children !== 24'));
  assert.ok(script.includes('categories.labels !== 3'));
 });
 
 test('Chromium acceptance checks PDF content at individual page positions',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  assert.ok(script.includes('pdfPageTexts.length === expected'));
- assert.match(script,/kind === 'answer'[^;]*'Antwortblatt'/);
+ assert.ok(!script.includes("kind === 'answer' ? 'Antwortblatt'"));
  assert.match(script,/kind === 'route'[^;]*'Wegrätsel'/);
  assert.ok(script.includes("'Stationsaufgaben:'"));
- assert.ok(script.includes("'Unser Schloss-Code:'"));
+ assert.ok(script.includes('combinedWordGrid'));
  assert.ok(script.includes("'Aufgabe ' + number"));
  assert.ok(script.includes('categories.organizer + categories.children + i + 1'));
 });
