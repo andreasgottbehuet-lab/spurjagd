@@ -450,3 +450,12 @@ test('Source A5 task cards retain legible type while reducing excess vertical sp
  assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task\{padding:1\.5mm 3mm;margin:1mm 0;line-height:1\.15;font-size:9pt\}/);
  assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task \.print-question\{font-size:11pt/);
 });
+
+test('A5 print gate and Chromium PDF both reject content exceeding 128 mm width',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const verifier=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ assert.match(source,/Math\.max\(sheet\.getBoundingClientRect\(\)\.width,sheet\.scrollWidth\)\*25\.4\/96/);
+ assert.match(source,/width>128\.01/);
+ assert.match(verifier,/scrollWidthMm:Math\.round\(el\.scrollWidth\*25\.4\/96\*100\)\/100/);
+ assert.match(verifier,/sheet\.widthMm>128\.01 \|\| sheet\.scrollWidthMm>128\.01/);
+});
