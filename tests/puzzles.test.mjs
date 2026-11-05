@@ -440,3 +440,13 @@ test('Arrow paths remain in bounds and visit unique adjacent cells for all age l
   assert.equal(Number(grid.rows[row][col]),target);
  }
 });
+
+test('Arrow verifier rejects a repeated cell even when the final digit matches',()=>{
+ const original=generateDigitPuzzle(7,'arrowpath','young',hashSeed('arrow-tamper'));
+ assert.equal(verifyDigitPuzzle(original),true);
+ const rows=Array.from({length:5},()=> '77777');
+ const repeated={...original,question:'→ ← →',arrowGrid:{rows,startRow:2,startCol:2,arrows:'→←→'}};
+ assert.equal(verifyDigitPuzzle(repeated),false);
+ const invalidStart={...original,arrowGrid:{...original.arrowGrid,startRow:-1}};
+ assert.equal(verifyDigitPuzzle(invalidStart),false);
+});
