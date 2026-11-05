@@ -340,8 +340,8 @@
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin-bottom:2mm;}
 }
 
-/* Printed A5 task sheets must fit the page after Chromium applies print pagination. */
-@media print {
+/* Apply the same packed task geometry during screen preflight and printing. */
+@media screen, print {
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin:0 0 1mm;line-height:1.05;font-size:14pt;}
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h2 {margin:1mm 0;font-size:11pt;line-height:1.1;}
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > p {margin:1mm 0;line-height:1.1;font-size:9pt;}
@@ -350,8 +350,8 @@
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task h3 {margin:0 0 0.5mm;}
 }
 
-/* Print pagination uses the A5 content box, not the offscreen preview width. */
-@media print {
+/* The A5 content width must match in preflight and PDF pagination. */
+@media screen, print {
  .print-packet-packed > .print-packed-page {width:128mm!important;max-width:128mm!important;margin:0!important;padding:0!important;box-sizing:border-box;}
  .print-packet-packed > .print-packed-page .print-packed-content {margin-bottom:0;}
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content {font-size:9pt;line-height:1.12;}
