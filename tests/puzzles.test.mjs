@@ -459,3 +459,15 @@ test('Cipher verifier rejects zero and full-alphabet shifts that reveal the answ
   assert.equal(verifyDigitPuzzle(tampered),false,'shift '+shift+' must not be accepted');
  }
 });
+
+test('Wordsearch verifier rejects unsupported grid sizes without losing valid age grids',()=>{
+ for(const age of ['young','middle','older']){
+  const puzzle=generateDigitPuzzle(4,'wordsearch',age,hashSeed('grid-dimensions:'+age));
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  const original=puzzle.wordGrid;
+  const extra={...puzzle,wordGrid:{...original,rows:[...original.rows,original.rows[0]]}};
+  assert.equal(verifyDigitPuzzle(extra),false);
+  const empty={...puzzle,wordGrid:{...original,rows:[]}};
+  assert.equal(verifyDigitPuzzle(empty),false);
+ }
+});
