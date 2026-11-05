@@ -206,7 +206,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   }
   if (puzzle.kind === 'cipher') {
     const shift = puzzle.instruction.match(/um (\d+) Stelle(?:n)?/);
-    if (!shift || !/^[A-Z]+$/.test(puzzle.question)) return false;
+    if (!shift || !/^[A-Z]+$/.test(puzzle.question) || Number(shift[1])<1 || Number(shift[1])>25) return false;
     const decoded = [...puzzle.question].map(char => ALPHABET[(ALPHABET.indexOf(char) - Number(shift[1]) + 26) % 26]).join('');
     return decoded === DIGIT_WORDS[target];
   }
