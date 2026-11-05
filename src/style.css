@@ -307,3 +307,18 @@
  .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid {padding:1.5mm 2mm;margin:1mm 0;}
  .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid p {margin:1mm 0;}
 }
+
+/* Physical packed pages, not the original React sheets, own all page breaks. */
+@media print {
+ .print-packet-packed > .print-packed-page {
+  break-before:auto!important;
+  page-break-before:auto!important;
+  break-after:page!important;
+  page-break-after:always!important;
+ }
+ .print-packet-packed > .print-packed-page:last-child {
+  break-after:auto!important;
+  page-break-after:auto!important;
+ }
+ .print-packet-packed .print-packed-content {break-inside:avoid;page-break-inside:avoid;}
+}
