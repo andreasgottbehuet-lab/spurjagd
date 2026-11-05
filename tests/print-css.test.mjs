@@ -428,3 +428,11 @@ test('Packed A5 PDF has a fixed physical content width and source packet is hidd
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page\s*\{width:128mm!important;/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page:last-child\s*\{[\s\S]*?break-after:auto!important;/);
 });
+
+test('A5 preflight measures the same packed task geometry used for printing',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.match(css,/Apply the same packed task geometry during screen preflight and printing\.\s*\*\/\s*@media screen, print/);
+ assert.match(css,/The A5 content width must match in preflight and PDF pagination\.\s*\*\/\s*@media screen, print/);
+ assert.match(source,/const \{manifest:physical\}=buildPackedA5PrintCopy\(packet\)/);
+});
