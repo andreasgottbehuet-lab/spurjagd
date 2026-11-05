@@ -102,3 +102,20 @@ test('Organizer and label sheets are never combined by the A5 packer',()=>{
  assert.equal(pages.length,4);
  assert.deepEqual(pages.map(page=>page.blocks.length),[1,1,1,1]);
 });
+
+test('Randomized packing preserves every block, owner boundary and 190 mm limit',()=>{
+ let seed=0x12345678;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(let trial=0;trial<300;trial++){
+  const blocks=Array.from({length:10+Math.floor(random()*80)},(_,index)=>{
+   const owner=['rot','blau','gruen','leitung'][Math.floor(random()*4)];
+   const section=owner==='leitung'?'fixed-sheet-'+index:['task','route'][Math.floor(random()*2)];
+   return b('trial-'+trial+'-block-'+index,owner,1+Math.floor(random()*185),section);
+  });
+  const pages=packA5Blocks(blocks);
+  assert.deepEqual(pages.flatMap(page=>page.blocks.map(block=>block.id)),blocks.map(block=>block.id));
+  assert.deepEqual(auditA5PackedPages(pages),[]);
+  assert.ok(pages.every(page=>page.usedMm<=190));
+  assert.ok(pages.every(page=>page.blocks.every(block=>block.owner===page.owner&&block.section===page.section)));
+ }
+});
