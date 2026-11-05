@@ -85,8 +85,10 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
  const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
  if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
  const blocks=measureA5Elements(originals);
- const pages=packA5Blocks(blocks);
- const problems=auditA5PackedPages(pages);
+ // Reserve the 2 mm inter-block separator before the browser prints the copy.
+ const packingBlocks=blocks.map(block=>({...block,heightMm:block.heightMm+2}));
+ const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2);
+ const problems=auditA5PackedPages(pages,A5_USABLE_HEIGHT_MM+2);
  if(problems.length)throw new Error(problems.join('; '));
  const byId=new Map(blocks.map((block,index)=>[block.id,originals[index]]));
  const copy=packet.cloneNode(false) as HTMLElement;
