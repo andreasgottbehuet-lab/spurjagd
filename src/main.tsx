@@ -90,11 +90,7 @@ function App() {
     if(!packet)return;
     let next:{total:number;organizer:number;children:number;labels:number;error:string};
     try{
-      const elements=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
-      const measured=measureA5Elements(elements);
-      if(measured.some(block=>block.heightMm>A5_USABLE_HEIGHT_MM))throw new Error('Mindestens ein A5-Blatt überschreitet 190 mm');
-      const pages=packA5Blocks(measured.map(block=>({...block,heightMm:block.heightMm+2})),A5_USABLE_HEIGHT_MM+2);
-      const physical=physicalA5Manifest(pages,elements);
+      const {manifest:physical}=buildPackedA5PrintCopy(packet);
       next={total:physical.totalSheets,organizer:physical.organizerSheets,children:physical.childSheets,labels:physical.labelSheets,error:''};
     }catch(error){next={total:0,organizer:0,children:0,labels:0,error:String(error)};}
     setMeasuredPrintSummary(previous=>JSON.stringify(previous)===JSON.stringify(next)?previous:next);
