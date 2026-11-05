@@ -790,6 +790,11 @@ try {
     if(packedPages.length===packedExport.pages) {
       const packedChildPages=packedPages.slice(packedSnapshot.organizer,packedSnapshot.organizer+packedSnapshot.child);
       if(packedChildPages.length!==envelopePages.length) failures.push('Packed PDF child page count differs from envelope manifest');
+      for(let index=0;index<packedChildPages.length;index++){
+        const content=packedChildPages[index];
+        if(content.includes('Codes und Lösungen') || content.includes('Umschlagkontrolle'))
+          failures.push('Packed PDF child page '+(index+1)+' contains organizer-only answers');
+      }
       for(let index=0;index<Math.min(packedChildPages.length,envelopePages.length);index++) {
         const expectedKind=envelopePages[index].kind;
         const heading=expectedKind==='task'?'Stationsaufgaben:':'Wegrätsel';
