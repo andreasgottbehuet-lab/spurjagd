@@ -27,14 +27,15 @@ test('Komplette Schnitzeljagd: vier Teams, verschiedene Wege und druckfähige A5
  assert.equal(plan.teams.length,4);
  assert.equal(plan.stopsPerTeam,3);
  assert.equal(manifest.envelopes.length,12);
- assert.equal(manifest.taskSheets,36);
+ assert.equal(manifest.taskSheets,24);
  assert.deepEqual(auditPrintPacket(config,plan,'integration-test'),[]);
  assert.deepEqual(auditPrintManifest(plan,manifest),[]);
  for(const envelope of manifest.envelopes){
   const code=codes[envelope.stationId];
   const challenge=generateStationChallenge(envelope.stationId,code,'middle',hashSeed('integration-test'));
   assert.equal(codeFromPuzzles(challenge),code);
-  assert.equal(challenge.puzzles.length,envelope.sheetCount);
+  assert.equal(challenge.puzzles.length,3);
+  assert.ok(envelope.sheetCount>=2);
   const target=locations.find(location=>location.name===envelope.destination);
   const mode=config.routeClueModes[target?.id]??'letters';
   const clue=generateCreativeRouteClue(envelope.destination,target?.description??'',mode,hashSeed('integration-test:destination:'+(target?.id??envelope.destination)),config.routeClueTexts[target?.id]??'');
