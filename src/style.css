@@ -349,3 +349,12 @@
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task p {margin:0.5mm 0;}
  .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task h3 {margin:0 0 0.5mm;}
 }
+
+/* Print pagination uses the A5 content box, not the offscreen preview width. */
+@media print {
+ .print-packet-packed > .print-packed-page {width:128mm!important;max-width:128mm!important;margin:0!important;padding:0!important;box-sizing:border-box;}
+ .print-packet-packed > .print-packed-page .print-packed-content {margin-bottom:0;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content {font-size:9pt;line-height:1.12;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-question {font-size:10pt;line-height:1.12;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-hint {font-size:8.5pt;line-height:1.12;}
+}
