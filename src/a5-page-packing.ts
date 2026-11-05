@@ -18,3 +18,17 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=192):A5Pac
 export function underfilledA5Pages(pages:readonly A5PackedPage[],usableHeightMm=192):number[] {
  return pages.flatMap((page,i)=>page.usedMm<usableHeightMm/2?[i]:[]);
 }
+
+/** Browser measurement is in CSS pixels; physical A5 content height is 190 mm with 10 mm margins. */
+export interface A5MeasuredSheet { id:string; owner:string; section:string; heightPx:number }
+export function measureA5Sheets(sheets:readonly A5MeasuredSheet[],cssPxPerMm=96/25.4):A5Block[] {
+ if(!Number.isFinite(cssPxPerMm)||cssPxPerMm<=0)throw new Error('Ungültiger CSS-Maßstab');
+ return sheets.map(sheet=>({id:sheet.id,owner:sheet.owner,section:sheet.section,heightMm:sheet.heightPx/cssPxPerMm}));
+}
+/** A short page is a candidate for compaction only when a following block has the same owner/section. */
+export function compactableUnderfilledPages(pages:readonly A5PackedPage[],usableHeightMm=190):number[] {
+ return underfilledA5Pages(pages,usableHeightMm).filter(i=>{
+  const current=pages[i],next=pages[i+1];
+  return !!next&&current.owner===next.owner&&current.section===next.section&&current.usedMm+next.blocks[0].heightMm<=usableHeightMm;
+ });
+}
