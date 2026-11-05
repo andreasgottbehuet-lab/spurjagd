@@ -77,7 +77,7 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
   });
  }
  // The packet must be packable in manifest order: task, then route pages.
- const validCounts=expected.every(envelope=>Number.isSafeInteger(envelope.sheetCount)&&envelope.sheetCount>=3);
+ const validCounts=expected.every(envelope=>Number.isSafeInteger(envelope.sheetCount)&&envelope.sheetCount>=2);
  if(!validCounts) return [...new Set(issues)];
  const expectedCount=expected.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  if(!Number.isSafeInteger(expectedCount)||expectedCount!==actual.length){
