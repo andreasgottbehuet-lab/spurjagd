@@ -247,3 +247,12 @@
 .print-alphabet-guide{font-family:monospace;font-size:8pt;line-height:1.6;overflow-wrap:anywhere;margin:2mm 0;padding:2mm;border:1px solid #b9c4cb}
 .print-alphabet-guide span{display:block;letter-spacing:.15pt}
 @media print{.print-checklist-row[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-child-sheet[data-sheet-kind="route"]{border-top:4mm solid var(--team-accent);border-bottom:3mm solid var(--team-accent)}}
+
+/* Compact A5 print: answers stay on task sheets; organizer solutions use shared pages. */
+@media print{
+ .print-solution-entry{margin:3mm 0;padding:2mm 3mm;border-bottom:1px solid #bbb;break-inside:avoid}
+ .print-solution-entry p{margin:1mm 0}
+ .print-code-entry{font-size:12pt;font-weight:700;margin:4mm 0}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid{margin-left:auto;margin-right:auto;max-width:100%}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-grid{justify-content:center}
+}
