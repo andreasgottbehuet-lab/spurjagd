@@ -237,3 +237,13 @@
 .team-route-line[data-team-color]{border-left:4mm solid var(--team-accent);background:var(--team-tint);padding:2mm 3mm;margin:2mm 0}
 .print-label[data-team-color]{border-left:3mm solid var(--team-accent);background:var(--team-tint)}
 @media print{.print-child-sheet[data-team-color],.print-label[data-team-color],.team-route-line[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Unified team identity for organizer checklists and route clues. */
+.print-checklist-row[data-team-color]{--team-accent:#63788a;--team-tint:#f0f3f5;border-left:3mm solid var(--team-accent);background:var(--team-tint);padding:2mm 3mm}
+.print-checklist-row[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-checklist-row[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-checklist-row[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-checklist-row[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-alphabet-guide{font-family:monospace;font-size:8pt;line-height:1.6;overflow-wrap:anywhere;margin:2mm 0;padding:2mm;border:1px solid #b9c4cb}
+.print-alphabet-guide span{display:block;letter-spacing:.15pt}
+@media print{.print-checklist-row[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-child-sheet[data-sheet-kind="route"]{border-top:4mm solid var(--team-accent);border-bottom:3mm solid var(--team-accent)}}
