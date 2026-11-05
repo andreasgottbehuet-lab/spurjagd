@@ -5,7 +5,7 @@ import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGA
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
 import {generateCreativeRouteClue,verifyRouteQuestions,normalizeSolutionWord} from '../src/puzzles.ts';
 const config={players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Spielplatz',description:''},{id:'b',name:'Wiese',description:''},{id:'c',name:'Feuerwehr',description:''},{id:'d',name:'Sportplatz',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Zuhause'};
-test('Vier Gruppen mit drei Stationen brauchen 12 Umschläge und 36 Aufgabenblätter',()=>{const m=createPrintManifest(createPlan(config));assert.equal(m.envelopes.length,12);assert.equal(m.taskSheets,36);assert.ok(m.envelopes.every(e=>e.sheetCount===3));assert.equal(new Set(m.envelopes.map(e=>e.id)).size,m.envelopes.length);assert.equal(m.labelSheets,3);assert.equal(m.organizerSheets,14);assert.equal(m.minimumSheets,53);});
+test('Vier Gruppen mit drei Stationen brauchen 12 Umschläge und 24 Kinderblätter',()=>{const m=createPrintManifest(createPlan(config));assert.equal(m.envelopes.length,12);assert.equal(m.taskSheets,24);assert.ok(m.envelopes.every(e=>e.sheetCount===2));assert.equal(new Set(m.envelopes.map(e=>e.id)).size,m.envelopes.length);assert.equal(m.labelSheets,3);assert.equal(m.organizerSheets,7);assert.equal(m.minimumSheets,34);});
 test('Umschläge zeigen je Gruppe die korrekte Station und das korrekte Ziel',()=>{const plan=createPlan({...config,routeMode:'varied'});const m=createPrintManifest(plan);for(const team of plan.teams){for(let i=0;i<team.stations.length;i++){const e=m.envelopes.find(x=>x.team===team.name&&x.stationNumber===i+1);assert.equal(e.stationId,team.stations[i].id);assert.equal(e.destination,team.stations[i+1]?.name??team.finish);}}});
 
 test('Vollständige A5-Druckpakete bestehen die Plausibilitätsprüfung',()=>{const plan=createPlan(config);assert.deepEqual(auditPrintManifest(plan,createPrintManifest(plan)),[]);});
@@ -49,7 +49,7 @@ test('Etikettenseiten wachsen in Vierergruppen und werden geprüft',()=>{
 
 test('Spielleitungsseiten sind separat gezählt und geprüft',()=>{
  const plan=createPlan(config),m=createPrintManifest(plan);
- assert.equal(m.organizerSheets,14);
+ assert.equal(m.organizerSheets,7);
  m.organizerSheets=1;
  assert.ok(auditPrintManifest(plan,m).some(issue=>issue.includes('Spielleitungsseiten')));
 });
@@ -60,17 +60,17 @@ test('Vertauschte Umschlagnummern werden erkannt',()=>{const plan=createPlan(con
 
 test('Veränderte Etikettenreihenfolge wird erkannt',()=>{const plan=createPlan(config),m=createPrintManifest(plan);m.envelopes.reverse();assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Umschlagreihenfolge')));});
 
-test('Dynamischer Druckumfang berücksichtigt unterschiedliche Gruppenzahlen',()=>{for(const players of [1,3,12,24,60,100]){const plan=createPlan({...config,players});const m=createPrintManifest(plan);const routes=Math.ceil(plan.teams.length/2);const codes=Math.ceil(new Set(plan.teams.flatMap(t=>t.stations.map(s=>s.id))).size/2);const destinations=new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>t.stations[i+1]?.name??t.finish))).size;assert.equal(m.organizerSheets,routes+codes+destinations+Math.ceil(m.envelopes.length/4)+1+organizerCautionSheetCount(plan));assert.equal(m.minimumSheets,m.taskSheets+m.organizerSheets+m.labelSheets);assert.deepEqual(auditPrintManifest(plan,m),[]);}});
+test('Dynamischer Druckumfang berücksichtigt unterschiedliche Gruppenzahlen',()=>{for(const players of [1,3,12,24,60,100]){const plan=createPlan({...config,players});const m=createPrintManifest(plan);const routes=Math.ceil(plan.teams.length/4);const codes=Math.ceil(new Set(plan.teams.flatMap(t=>t.stations.map(s=>s.id))).size/2);const destinations=new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>t.stations[i+1]?.name??t.finish))).size;assert.equal(m.organizerSheets,routes+codes+Math.ceil(destinations/4)+Math.ceil(m.envelopes.length/4)+1+organizerCautionSheetCount(plan));assert.equal(m.minimumSheets,m.taskSheets+m.organizerSheets+m.labelSheets);assert.deepEqual(auditPrintManifest(plan,m),[]);}});
 
 test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschlagzahlen',()=>{
  const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'},durationMinutes:60};
  const plan=createPlan(c),m=createPrintManifest(plan,c);
- assert.ok(m.envelopes.some(e=>e.sheetCount>3));
- assert.ok(m.organizerSheets>createPrintManifest(plan).organizerSheets,'Auch der Lösungsschlüssel benötigt Fortsetzungsblätter');
+ assert.ok(m.envelopes.some(e=>e.sheetCount>2));
+ assert.equal(m.organizerSheets,createPrintManifest(plan).organizerSheets,'Kompakte Lösungsliste benötigt keine Fortsetzungsblätter');
  assert.equal(m.taskSheets,m.envelopes.reduce((sum,e)=>sum+e.sheetCount,0));
  assert.deepEqual(auditPrintManifest(plan,m,c),[]);
  const broken=createPrintManifest(plan,c);
- broken.envelopes.find(e=>e.sheetCount>3).sheetCount=3;
+ broken.envelopes.find(e=>e.sheetCount>2).sheetCount=3;
  assert.ok(auditPrintManifest(plan,broken,c).some(issue=>issue.includes('Anzahl A5-Blätter')));
 });
 
@@ -78,15 +78,15 @@ test('Fragenrätsel werden in Fünferblöcke aufgeteilt',()=>{const c={...config
 
 test('Umlautnamen werden für A5-Fragenseiten korrekt gezählt',()=>{const c={...config,locations:[{id:'a',name:'Ärger',description:''}],routeClueModes:{a:'questions'}};assert.equal(routeSheetCount('Ärger',c),2);assert.equal(routeSheetCount('Ärger',{...c,routeClueModes:{a:'letters'}}),1);});
 
-test('Zusätzliche Wegrätselseiten erhöhen Kinder- und Spielleitungsumfang gemeinsam',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const normal=createPrintManifest(plan);const extended=createPrintManifest(plan,c);const affected=extended.envelopes.filter(e=>e.destination==='ABCDEFGHIJKLMNOPQRSTUVWXYZ');assert.ok(affected.length>0);assert.ok(affected.every(e=>e.sheetCount===8));assert.equal(extended.taskSheets-normal.taskSheets,affected.length*5);assert.equal(extended.organizerSheets-normal.organizerSheets,5);assert.deepEqual(auditPrintManifest(plan,extended,c),[]);});
+test('Zusätzliche Wegrätselseiten erhöhen Kinder- und Spielleitungsumfang gemeinsam',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const normal=createPrintManifest(plan);const extended=createPrintManifest(plan,c);const affected=extended.envelopes.filter(e=>e.destination==='ABCDEFGHIJKLMNOPQRSTUVWXYZ');assert.ok(affected.length>0);assert.ok(affected.every(e=>e.sheetCount===7));assert.equal(extended.taskSheets-normal.taskSheets,affected.length*5);assert.equal(extended.organizerSheets-normal.organizerSheets,0);assert.deepEqual(auditPrintManifest(plan,extended,c),[]);});
 
-test('Unterschiedliche Gruppenrouten zählen jeden Zielort im Lösungsschlüssel nur einmal',()=>{const c={...config,routeMode:'varied',startMode:'distributed'};const plan=createPlan(c);const m=createPrintManifest(plan,c);const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));assert.equal(m.organizerSheets,Math.ceil(plan.teams.length/2)+Math.ceil(stations.size/2)+destinations.size+Math.ceil(m.envelopes.length/4)+1+organizerCautionSheetCount(plan));assert.deepEqual(auditPrintManifest(plan,m,c),[]);});
+test('Unterschiedliche Gruppenrouten zählen jeden Zielort im Lösungsschlüssel nur einmal',()=>{const c={...config,routeMode:'varied',startMode:'distributed'};const plan=createPlan(c);const m=createPrintManifest(plan,c);const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));assert.equal(m.organizerSheets,Math.ceil(plan.teams.length/4)+Math.ceil(stations.size/4)+destinations.size+Math.ceil(m.envelopes.length/4)+1+organizerCautionSheetCount(plan));assert.deepEqual(auditPrintManifest(plan,m,c),[]);});
 
 test('Leerzeichen am Stationsnamen verändern die Fragenrätsel-Seitenzahl nicht',()=>{const c={...config,locations:[{id:'a',name:'  Spielplatz  ',description:''}],routeClueModes:{a:'questions'}};assert.equal(routeSheetCount('Spielplatz',c),2);assert.equal(routeSheetCount(' Spielplatz ',c),2);});
 
 test('Fehlende Spielleitungs-Fortsetzungsseite blockiert Druckfreigabe',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const m=createPrintManifest(plan,c);m.organizerSheets--;assert.ok(auditPrintManifest(plan,m,c).some(issue=>issue.includes('Spielleitungsseiten')));});
 
-test('Kontrollliste erhält pro vier Umschläge ein eigenes A5-Blatt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan,config);assert.equal(m.envelopes.length,12);assert.equal(m.organizerSheets,14);assert.deepEqual(auditPrintManifest(plan,m,config),[]);});
+test('Kontrollliste erhält pro vier Umschläge ein eigenes A5-Blatt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan,config);assert.equal(m.envelopes.length,12);assert.equal(m.organizerSheets,7);assert.deepEqual(auditPrintManifest(plan,m,config),[]);});
 
 test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und Routen konsistent',()=>{
  for(const players of [1,2,7,12,25,100]){
@@ -101,9 +101,9 @@ test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und
      assert.equal(manifest.minimumSheets,manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets);
      const visited=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
      const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish))).size;
-     const expectedOrganizer=Math.ceil(plan.teams.length/2)+Math.ceil(visited/2)+destinations+Math.ceil(manifest.envelopes.length/4)+1+Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
+     const expectedOrganizer=Math.ceil(plan.teams.length/4)+Math.ceil(visited/4)+Math.ceil(destinations/4)+Math.ceil(manifest.envelopes.length/4)+1+Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
      assert.equal(manifest.organizerSheets,expectedOrganizer);
-     assert.ok(manifest.envelopes.every(envelope=>envelope.sheetCount>=3));
+     assert.ok(manifest.envelopes.every(envelope=>envelope.sheetCount>=2));
     }
    }
   }
@@ -120,7 +120,7 @@ test('Maximal langer Zielname mit 80 Buchstaben bleibt innerhalb der Blattzählu
  assert.equal(clue.rows.length,80);
  assert.ok(verifyRouteQuestions(clue));
  assert.equal(Math.ceil(normalizeSolutionWord(clue.answer).length/ROUTE_QUESTIONS_PER_A5_SHEET),16);
- assert.ok(manifest.envelopes.some(envelope=>envelope.destination===destination && envelope.sheetCount===18));
+ assert.ok(manifest.envelopes.some(envelope=>envelope.destination===destination && envelope.sheetCount===17));
  assert.deepEqual(auditPrintManifest(plan,manifest,c),[]);
 });
 
@@ -228,7 +228,7 @@ test('Mehrseitige Wegrätsel bleiben pro Umschlag korrekt zugeordnet',()=>{
   assert.equal(envelope.destination,target);
   assert.equal(envelope.sheetCount,2+routeSheetCount(target,longConfig));
  }
- assert.ok(manifest.envelopes.some(envelope=>envelope.sheetCount>3));
+ assert.ok(manifest.envelopes.some(envelope=>envelope.sheetCount>2));
 });
 
 test('Ungültige Kennungen, Gruppenindizes und Blattzahlen werden vor dem Drucken zurückgewiesen',()=>{
