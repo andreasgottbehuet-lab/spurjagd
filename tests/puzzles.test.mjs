@@ -412,3 +412,12 @@ test('Geheime Funkpost: Hinweise verraten keine Klartextbuchstaben',()=>{
   assert.ok(!puzzle.hint.includes(puzzle.explanation.split(' bedeutet ')[1]??'NO-SOLUTION'));
  }
 });
+
+test('Zero-digit lock codes never ask children to count an empty symbol box',()=>{
+ for(const age of ['young','middle','older'])for(let seed=0;seed<160;seed++){
+  const challenge=generateStationChallenge('zero-station','000',age,seed);
+  assert.equal(codeFromPuzzles(challenge),'000');
+  assert.ok(challenge.puzzles.every(puzzle=>puzzle.kind!=='symbols'));
+  assert.ok(challenge.puzzles.every(verifyDigitPuzzle));
+ }
+});
