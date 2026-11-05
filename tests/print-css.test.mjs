@@ -459,3 +459,8 @@ test('A5 print gate and Chromium PDF both reject content exceeding 128 mm width'
  assert.match(verifier,/scrollWidthMm:Math\.round\(el\.scrollWidth\*25\.4\/96\*100\)\/100/);
  assert.match(verifier,/sheet\.widthMm>128\.01 \|\| sheet\.scrollWidthMm>128\.01/);
 });
+
+test('Packed A5 pages reserve fractional CSS pixel space below the strict 128 mm width gate',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/\.print-packet-packed > \.print-packed-page \{width:127\.5mm!important;max-width:127\.5mm!important/);
+});
