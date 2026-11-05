@@ -193,7 +193,9 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     if(!g || g.word!==DIGIT_WORDS[target] || ![8,10,12].includes(g.rows.length) || g.rows.some(row=>row.length!==g.rows.length || !/^[A-Z]+$/.test(row))) return false;
     const {startRow:r,startCol:c,deltaRow:dr,deltaCol:dc}=g;
     if(!Number.isInteger(r)||!Number.isInteger(c)||!Number.isInteger(dr)||!Number.isInteger(dc)||(dr===0&&dc===0)||Math.abs(dr)>1||Math.abs(dc)>1) return false;
-    return [...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter) && findDigitWords(g.rows).length===1 && findDigitWords(g.rows)[0].digit===target;
+    if(![...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter)) return false;
+    const matches=findDigitWords(g.rows);
+    return matches.length===1 && matches[0].digit===target;
   }
   if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0 && puzzle.render.symbol.length <= 4 && puzzle.render.symbol.trim().length > 0;
   if (puzzle.kind === 'arithmetic') {
