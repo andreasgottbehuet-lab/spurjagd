@@ -785,7 +785,7 @@ try {
     })));
     writeFileSync('verification/a5-packed-geometry.json',JSON.stringify({packedPageCount,expected:packedExport.pages,pages:packedGeometry},null,2));
     for(const sheet of packedGeometry){
-      if(sheet.heightMm>190.5 || sheet.scrollHeightMm>190.5)
+      if(sheet.heightMm>190.01 || sheet.scrollHeightMm>190.01)
         failures.push('Packed PDF A5 page '+sheet.page+' exceeds 190 mm: box '+sheet.heightMm+' mm, content '+sheet.scrollHeightMm+' mm');
       if(sheet.widthMm>128.5)
         failures.push('Packed PDF A5 page '+sheet.page+' exceeds 128 mm content width: '+sheet.widthMm+' mm');
