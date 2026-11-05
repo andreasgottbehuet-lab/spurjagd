@@ -402,3 +402,13 @@ test('Manipulierte Schloss-Pakete mit fehlender Aufgabe oder abweichendem Code w
  assert.throws(()=>codeFromPuzzles({...original,code:'008'}),/Schloss-Code/);
  assert.throws(()=>codeFromPuzzles({...original,code:'07'}),/Rätselprüfung/);
 });
+
+test('Geheime Funkpost: Hinweise verraten keine Klartextbuchstaben',()=>{
+ for(const age of ['middle','older'])for(let digit=0;digit<=9;digit++){
+  const puzzle=generateDigitPuzzle(digit,'cipher',age,hashSeed('hint:'+age+':'+digit));
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  assert.match(puzzle.hint,/Alphabet/);
+  assert.doesNotMatch(puzzle.hint,/Der erste Buchstabe lautet/);
+  assert.ok(!puzzle.hint.includes(puzzle.explanation.split(' bedeutet ')[1]??'NO-SOLUTION'));
+ }
+});
