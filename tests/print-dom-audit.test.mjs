@@ -31,22 +31,18 @@ test('Nicht zugeordnete oder fehlende Druckblätter verhindern die Druckfreigabe
  assert.ok(auditRenderedPrintCategories(expected,{total:52,organizer:14,children:35,labels:3}).some(issue=>issue.includes('Kinderblätter')));
 });
 
-test('Jeder Umschlag benötigt genau ein Aufgaben- und Antwortblatt sowie alle Wegrätselblätter',()=>{
- const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:5}];
- const correct=[
-  {envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route',routePage:1},
-  {envelopeId:'1-b',kind:'task'},{envelopeId:'1-b',kind:'answer'},
-  ...Array.from({length:3},(_,index)=>({envelopeId:'1-b',kind:'route',routePage:index+1}))
- ];
+test('Jeder Umschlag benötigt genau ein Aufgabenblatt und alle Wegrätselblätter, niemals Antwortblätter',()=>{
+ const expected=[{id:'0-a',sheetCount:2},{id:'1-b',sheetCount:4}];
+ const correct=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'route',routePage:1},{envelopeId:'1-b',kind:'task'},...Array.from({length:3},(_,i)=>({envelopeId:'1-b',kind:'route',routePage:i+1}))];
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
- assert.ok(auditRenderedEnvelopes(expected,correct.filter(sheet=>!(sheet.envelopeId==='1-b'&&sheet.kind==='answer'))).some(issue=>issue.includes('Umschlag 1-b')));
- assert.ok(auditRenderedEnvelopes(expected,[...correct,{envelopeId:'0-a',kind:'answer'}]).some(issue=>issue.includes('Umschlag 0-a')));
+ assert.ok(auditRenderedEnvelopes(expected,correct.filter(x=>!(x.envelopeId==='1-b'&&x.routePage===2))).length>0);
+ assert.ok(auditRenderedEnvelopes(expected,[...correct,{envelopeId:'0-a',kind:'answer'}]).length>0);
 });
 
 test('Falsche Zuordnung bleibt gesperrt, auch wenn die Gesamtblattzahl unverändert ist',()=>{
- const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:3}];
+ const expected=[{id:'0-a',sheetCount:2},{id:'1-b',sheetCount:2}];
  const sheets=[
-  {envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},
+  {envelopeId:'0-a',kind:'task'},
   {envelopeId:'0-a',kind:'route'},{envelopeId:'0-a',kind:'route'},
   {envelopeId:'1-b',kind:'task'},{envelopeId:'1-b',kind:'answer'}
  ];
@@ -56,13 +52,13 @@ test('Falsche Zuordnung bleibt gesperrt, auch wenn die Gesamtblattzahl unveränd
 });
 
 test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
- const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:4}];
+ const expected=[{id:'0-a',sheetCount:2},{id:'1-b',sheetCount:4}];
  const correct=[
   {envelopeId:'0-a',kind:'task'},
-  {envelopeId:'0-a',kind:'answer'},
+  
   {envelopeId:'0-a',kind:'route',routePage:1},
   {envelopeId:'1-b',kind:'task'},
-  {envelopeId:'1-b',kind:'answer'},
+  
   {envelopeId:'1-b',kind:'route',routePage:1},
   {envelopeId:'1-b',kind:'route',routePage:2}
  ];
@@ -76,7 +72,7 @@ test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
 });
 
 test('Etiketten müssen genau einmal und in Umschlag-Reihenfolge vorkommen',()=>{
- const expected=[{id:'0-a',sheetCount:3},{id:'1-b',sheetCount:4},{id:'2-c',sheetCount:3}];
+ const expected=[{id:'0-a',sheetCount:2},{id:'1-b',sheetCount:4},{id:'2-c',sheetCount:2}];
  assert.deepEqual(auditRenderedLabels(expected,['0-a','1-b','2-c']),[]);
  for(const labels of [['1-b','0-a','2-c'],['0-a','1-b'],['0-a','1-b','1-b'],['0-a','1-b','falsch']]){
   assert.ok(auditRenderedLabels(expected,labels).length>0);
@@ -85,12 +81,12 @@ test('Etiketten müssen genau einmal und in Umschlag-Reihenfolge vorkommen',()=>
 });
 
 test('Unbeschriftete Etiketten und falsch einsortierte Mehrseiten-Wegrätsel werden abgewiesen',()=>{
- const expected=[{id:'0-a',sheetCount:5}];
+ const expected=[{id:'0-a',sheetCount:4}];
  assert.ok(auditRenderedLabels(expected,['']).some(issue=>issue.includes('unbekanntem Umschlag')));
  const sheets=[
   {envelopeId:'0-a',kind:'task'},
   {envelopeId:'0-a',kind:'route'},
-  {envelopeId:'0-a',kind:'answer'},
+  
   {envelopeId:'0-a',kind:'route'},
   {envelopeId:'0-a',kind:'route'}
  ];
@@ -99,8 +95,8 @@ test('Unbeschriftete Etiketten und falsch einsortierte Mehrseiten-Wegrätsel wer
 });
 
 test('Multi-page route puzzles reject swapped page indices',()=>{
- const expected=[{id:'0-a',sheetCount:5}];
- const sheets=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},
+ const expected=[{id:'0-a',sheetCount:4}];
+ const sheets=[{envelopeId:'0-a',kind:'task'},
   {envelopeId:'0-a',kind:'route',routePage:1},{envelopeId:'0-a',kind:'route',routePage:2},
   {envelopeId:'0-a',kind:'route',routePage:3}];
  assert.deepEqual(auditRenderedEnvelopes(expected,sheets),[]);
@@ -109,8 +105,8 @@ test('Multi-page route puzzles reject swapped page indices',()=>{
 });
 
 test('Route pages without a number block printing',()=>{
- const sheets=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'answer'},{envelopeId:'0-a',kind:'route'}];
- assert.ok(auditRenderedEnvelopes([{id:'0-a',sheetCount:3}],sheets).some(x=>x.includes('Wegrätsel-Seitenfolge')));
+ const sheets=[{envelopeId:'0-a',kind:'task'},{envelopeId:'0-a',kind:'route'}];
+ assert.ok(auditRenderedEnvelopes([{id:'0-a',sheetCount:2}],sheets).some(x=>x.includes('Wegrätsel-Seitenfolge')));
 });
 
 test('A5 overflow audit identifies height, width and invalid measurements',()=>{
@@ -138,17 +134,17 @@ test('A5 printable area catches over-wide and over-tall sheets',()=>{
 
 
 test('Doppelte Umschlagkennungen und ungültige Blattzahlen sperren den Druck',()=>{
- const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
- assert.ok(auditRenderedEnvelopes([{id:'A',sheetCount:3},{id:'A',sheetCount:3}],sheets).some(x=>x.includes('doppelte Umschlagkennungen')));
- for(const count of [0,2,-1,1.5,NaN,Infinity]){
+ const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'route',routePage:1}];
+ assert.ok(auditRenderedEnvelopes([{id:'A',sheetCount:2},{id:'A',sheetCount:2}],sheets).some(x=>x.includes('doppelte Umschlagkennungen')));
+ for(const count of [0,1,-1,1.5,NaN,Infinity]){
   assert.ok(auditRenderedEnvelopes([{id:'A',sheetCount:count}],sheets).some(x=>x.includes('ungültige Anzahl Kinderblätter')));
  }
- assert.ok(auditRenderedEnvelopes([{id:'',sheetCount:3}],[]).some(x=>x.includes('leere Umschlagkennung')));
+ assert.ok(auditRenderedEnvelopes([{id:'',sheetCount:2}],[]).some(x=>x.includes('leere Umschlagkennung')));
 });
 
 test('Etikettenprüfung akzeptiert keine doppelten oder leeren Manifestkennungen',()=>{
- assert.ok(auditRenderedLabels([{id:'A',sheetCount:3},{id:'A',sheetCount:3}],['A','A']).some(x=>x.includes('doppelte Umschlagkennungen')));
- assert.ok(auditRenderedLabels([{id:'',sheetCount:3}],['']).some(x=>x.includes('leere Umschlagkennung')));
+ assert.ok(auditRenderedLabels([{id:'A',sheetCount:2},{id:'A',sheetCount:2}],['A','A']).some(x=>x.includes('doppelte Umschlagkennungen')));
+ assert.ok(auditRenderedLabels([{id:'',sheetCount:2}],['']).some(x=>x.includes('leere Umschlagkennung')));
 });
 
 test('Widersprüchliche Druckmanifest-Summen und ungültige Sollwerte sperren die Freigabe',()=>{
@@ -159,7 +155,7 @@ test('Widersprüchliche Druckmanifest-Summen und ungültige Sollwerte sperren di
 });
 
 test('Ungültig große Blattzahlen erzeugen keine unbegrenzten Prüflisten',()=>{
- const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
+ const sheets=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'route',routePage:1}];
  for(const count of [Number.MAX_SAFE_INTEGER+1,Infinity,NaN,-100]){
   const issues=auditRenderedEnvelopes([{id:'A',sheetCount:count}],sheets);
   assert.ok(issues.some(x=>x.includes('ungültige Anzahl Kinderblätter')));
@@ -168,7 +164,7 @@ test('Ungültig große Blattzahlen erzeugen keine unbegrenzten Prüflisten',()=>
 });
 
 test('Extrem große gültige Einzelblattzahl wird vor der Sequenzbildung begrenzt',()=>{
- const actual=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'answer'},{envelopeId:'A',kind:'route',routePage:1}];
+ const actual=[{envelopeId:'A',kind:'task'},{envelopeId:'A',kind:'route',routePage:1}];
  const issues=auditRenderedEnvelopes([{id:'A',sheetCount:Number.MAX_SAFE_INTEGER}],actual);
  assert.ok(issues.some(issue=>issue.includes('Umschlag-Reihenfolge')));
  assert.ok(issues.length<10);
@@ -195,8 +191,8 @@ test('Leere A5-Geometriemessung darf nicht als erfolgreich gelten',()=>{
 
 test('Packliste und Etiketten müssen exakt zum Umschlagplan passen',()=>{
  const expected=[
-  {envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3},
-  {envelopeId:'1-b',team:'Blau',stationName:'Platz',stationNumber:2,sheetCount:5}
+  {envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:2},
+  {envelopeId:'1-b',team:'Blau',stationName:'Platz',stationNumber:2,sheetCount:4}
  ];
  assert.deepEqual(auditRenderedPackingItems(expected,expected,expected),[]);
  for(const field of ['envelopeId','team','stationName','stationNumber','sheetCount']){
@@ -211,16 +207,16 @@ test('Packliste und Etiketten müssen exakt zum Umschlagplan passen',()=>{
 });
 
 test('A5 Packdaten ohne gueltige Nummern oder Namen verhindern Druck',()=>{
- const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
- for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',' '],['stationNumber',NaN],['stationNumber',1.5],['sheetCount',2],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
+ const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:2};
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',' '],['stationNumber',NaN],['stationNumber',1.5],['sheetCount',1],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
   const changed={...good,[field]:value};
   assert.ok(auditRenderedPackingItems([good],[changed],[good]).some(issue=>issue.includes('ungültige Packdaten')),field);
  }
 });
 
 test('Ungueltige erwartete A5 Packdaten duerfen nicht durch identische Druckdaten durchrutschen',()=>{
- const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:3};
- for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',''],['stationNumber',0],['stationNumber',NaN],['sheetCount',2],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
+ const good={envelopeId:'0-a',team:'Rot',stationName:'Wiese',stationNumber:1,sheetCount:2};
+ for(const [field,value] of [['envelopeId',' '],['team',''],['stationName',''],['stationNumber',0],['stationNumber',NaN],['sheetCount',1],['sheetCount',Infinity],['team',' Rot '],['stationName','Wiese ']]){
   const corrupt={...good,[field]:value};
   assert.ok(auditRenderedPackingItems([corrupt],[corrupt],[corrupt]).some(issue=>issue.includes('Druckmanifest: Umschlag 1 enthält ungültige Packdaten')),field);
  }
