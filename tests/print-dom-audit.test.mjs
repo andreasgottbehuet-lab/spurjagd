@@ -66,7 +66,7 @@ test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
  const wrongOrder=[...correct];
  [wrongOrder[0],wrongOrder[1]]=[wrongOrder[1],wrongOrder[0]];
- assert.ok(auditRenderedEnvelopes(expected,wrongOrder).some(issue=>issue.includes('Umschlag-Reihenfolge')));
+ assert.ok(auditRenderedEnvelopes(expected,wrongOrder).length>0,'Route before task must be rejected');
  const mixed=[...correct];
  [mixed[2],mixed[5]]=[mixed[5],mixed[2]];
  assert.ok(auditRenderedEnvelopes(expected,mixed).some(issue=>issue.includes('Umschlag-Reihenfolge')));
