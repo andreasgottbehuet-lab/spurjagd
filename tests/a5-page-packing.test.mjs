@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {packA5Blocks,underfilledA5Pages} from '../src/a5-page-packing.ts';
+import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages} from '../src/a5-page-packing.ts';
 const b=(id,owner,heightMm,section='task',keepWithNext=false)=>({id,owner,section,heightMm,keepWithNext});
 test('Underfilled compatible blocks share A5 page',()=>{
  const pages=packA5Blocks([b('a','rot',60),b('b','rot',65),b('c','rot',40)]);
@@ -24,4 +24,14 @@ test('Content is not dropped when next group does not fit',()=>{
  const pages=packA5Blocks(blocks);
  assert.equal(pages.flatMap(p=>p.blocks).length,25);
  assert.ok(pages.every(p=>p.usedMm<=192));
+});
+
+test('Measured CSS pixels convert into physical A5 dimensions',()=>{
+ const blocks=measureA5Sheets([{id:'a',owner:'rot',section:'task',heightPx:96}]);
+ assert.ok(Math.abs(blocks[0].heightMm-25.4)<0.001);
+ assert.throws(()=>measureA5Sheets([],0));
+});
+test('Underfilled pages are only compactable for matching owner and section',()=>{
+ const pages=packA5Blocks([b('a','rot',40),b('b','blau',30),b('c','leitung',30,'routes')],190);
+ assert.deepEqual(compactableUnderfilledPages(pages,190),[]);
 });
