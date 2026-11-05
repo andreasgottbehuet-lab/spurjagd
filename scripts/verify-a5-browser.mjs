@@ -118,12 +118,15 @@ try {
     if(position<0 || position<=previous) failures.push('Organizer sections out of order: '+label);
     else previous=position;
   }
-  for(const team of ['rot','blau','grün','gelb']){
-    const sheets=page.locator('.print-child-sheet[data-team-color="'+team+'"]');
-    if(!await sheets.count()) failures.push('Missing child sheets for team '+team);
-    for(const sheet of await sheets.all()){
-      const color=await sheet.evaluate(el=>getComputedStyle(el).borderTopColor);
-      if(!color || color==='rgb(0, 0, 0)' || color==='rgba(0, 0, 0, 0)') failures.push('Missing team border for '+team);
+  const expectedTeamColors={rot:'rgb(183, 53, 58)',blau:'rgb(39, 102, 163)',grün:'rgb(40, 121, 77)',gelb:'rgb(153, 113, 0)'};
+  for(const [team,expectedColor] of Object.entries(expectedTeamColors)){
+    for(const [selector,property] of [['.print-child-sheet','borderTopColor'],['.print-label','borderLeftColor'],['.print-checklist-row','borderLeftColor'],['.team-route-line','borderLeftColor']]){
+      const sheets=page.locator(selector+'[data-team-color="'+team+'"]');
+      if(!await sheets.count()) {failures.push('Missing '+selector+' for team '+team);continue;}
+      for(const sheet of await sheets.all()){
+        const color=await sheet.evaluate((el,prop)=>getComputedStyle(el)[prop],property);
+        if(color!==expectedColor) failures.push('Incorrect '+selector+' team color for '+team+': '+color);
+      }
     }
   }
   // Visual acceptance: three-word puzzle must replace, not supplement, three independent tasks.
