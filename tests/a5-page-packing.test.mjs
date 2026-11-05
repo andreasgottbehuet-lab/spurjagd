@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages} from '../src/a5-page-packing.ts';
+import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages} from '../src/a5-page-packing.ts';
 const b=(id,owner,heightMm,section='task',keepWithNext=false)=>({id,owner,section,heightMm,keepWithNext});
 test('Underfilled compatible blocks share A5 page',()=>{
  const pages=packA5Blocks([b('a','rot',60),b('b','rot',65),b('c','rot',40)]);
@@ -58,4 +58,12 @@ test('Oversize linked chain is rejected even if adjacent pairs fit',()=>{
 test('Linked chain stops at section and owner boundaries',()=>{
  const pages=packA5Blocks([b('a','rot',80,'task',true),b('b','rot',80,'route'),b('c','blau',80,'route')]);
  assert.deepEqual(pages.map(page=>page.owner+':'+page.section),['rot:task','rot:route','blau:route']);
+});
+
+test('Independent page audit detects mixed teams, duplicated IDs and height discrepancies',()=>{
+ const valid=packA5Blocks([b('a','rot',80),b('b','rot',90)]);
+ assert.deepEqual(auditA5PackedPages(valid),[]);
+ assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:80,blocks:[b('a','blau',80)]}]).join(' '),/Team- oder Abschnittsvermischung/);
+ assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:80,blocks:[b('a','rot',80),b('a','rot',80)]}]).join(' '),/Doppelter A5-Block/);
+ assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:40,blocks:[b('a','rot',80)]}]).join(' '),/Seitenhöhe/);
 });
