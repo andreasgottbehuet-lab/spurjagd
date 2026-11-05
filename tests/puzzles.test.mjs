@@ -421,3 +421,22 @@ test('Zero-digit lock codes never ask children to count an empty symbol box',()=
   assert.ok(challenge.puzzles.every(verifyDigitPuzzle));
  }
 });
+
+test('Arrow paths remain in bounds and visit unique adjacent cells for all age levels',()=>{
+ const moves={'→':[0,1],'←':[0,-1],'↓':[1,0],'↑':[-1,0]};
+ for(const age of ['young','middle','older'])for(let seed=0;seed<120;seed++){
+  const target=seed%10;
+  const puzzle=generateDigitPuzzle(target,'arrowpath',age,hashSeed('arrow-boundary:'+age+':'+seed));
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  const grid=puzzle.arrowGrid;
+  let row=grid.startRow,col=grid.startCol;
+  const visited=new Set([row+':'+col]);
+  for(const arrow of grid.arrows){
+   const [dr,dc]=moves[arrow];row+=dr;col+=dc;
+   assert.ok(row>=0&&col>=0&&row<grid.rows.length&&col<grid.rows.length);
+   assert.ok(!visited.has(row+':'+col),'Arrow path must not revisit a cell');
+   visited.add(row+':'+col);
+  }
+  assert.equal(Number(grid.rows[row][col]),target);
+ }
+});
