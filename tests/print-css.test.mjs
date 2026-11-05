@@ -444,3 +444,9 @@ test('Print action rejects overflowing packed content using the same 190 mm budg
  assert.match(source,/Math\.max\(height,content\)>A5_USABLE_HEIGHT_MM\+0\.01/);
  assert.match(verifier,/sheet\.heightMm>190\.01 \|\| sheet\.scrollHeightMm>190\.01/);
 });
+
+test('Source A5 task cards retain legible type while reducing excess vertical spacing',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task\{padding:1\.5mm 3mm;margin:1mm 0;line-height:1\.15;font-size:9pt\}/);
+ assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task \.print-question\{font-size:11pt/);
+});
