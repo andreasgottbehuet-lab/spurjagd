@@ -185,7 +185,7 @@ try {
   await printButton.click();
   const restoredPrint = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredPrint.calls !== 1 || restoredPrint.alerts.length)
-    failures.push('Valid A5 envelope labels did not restore the print action');
+    failures.push('Valid A5 envelope labels did not restore the print action: '+JSON.stringify(restoredPrint));
   // The same gate must reject a packing-list count that disagrees with
   // the envelope manifest, even when the number of pages is unchanged.
   await page.evaluate(() => {
