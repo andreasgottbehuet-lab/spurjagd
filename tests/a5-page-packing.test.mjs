@@ -47,3 +47,15 @@ test('190 mm usable height is consistent across packing and underfill checks',()
  const pages=packA5Blocks([b('a','rot',100),b('b','rot',90)]);
  assert.equal(pages.length,1);assert.deepEqual(underfilledA5Pages(pages),[]);
 });
+
+test('A chain of three linked blocks is never split across physical pages',()=>{
+ const pages=packA5Blocks([b('prior','rot',100),b('a','rot',35,'task',true),b('b','rot',35,'task',true),b('c','rot',35)]);
+ assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['prior'],['a','b','c']]);
+});
+test('Oversize linked chain is rejected even if adjacent pairs fit',()=>{
+ assert.throws(()=>packA5Blocks([b('a','rot',70,'task',true),b('b','rot',70,'task',true),b('c','rot',70)]),/Zusammengehörige/);
+});
+test('Linked chain stops at section and owner boundaries',()=>{
+ const pages=packA5Blocks([b('a','rot',80,'task',true),b('b','rot',80,'route'),b('c','blau',80,'route')]);
+ assert.deepEqual(pages.map(page=>page.owner+':'+page.section),['rot:task','rot:route','blau:route']);
+});
