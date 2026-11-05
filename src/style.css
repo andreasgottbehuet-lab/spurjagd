@@ -322,3 +322,12 @@
  }
  .print-packet-packed .print-packed-content {break-inside:avoid;page-break-inside:avoid;}
 }
+
+/* Mirror the complete A5 task typography in the offscreen browser preflight. */
+@media screen {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] h1 {font-size:16pt;line-height:1.2;margin:0 0 3mm;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] h2 {font-size:12pt;margin:2mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] > p {margin:2mm 0;font-size:9.5pt;line-height:1.2;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .symbols {font-size:16pt;line-height:1.1;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .print-hint {font-size:9pt;line-height:1.3;}
+}
