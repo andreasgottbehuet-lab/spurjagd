@@ -174,6 +174,7 @@ try {
         organizer: Number(copy.dataset.organizerSheets),
         labels: Number(copy.dataset.labelSheets),
         empty: [...copy.querySelectorAll(':scope > .print-packed-page')].some(sheet => !sheet.textContent.trim()),
+        oversized: [...copy.querySelectorAll(':scope > .print-packed-page')].some(sheet => sheet.getBoundingClientRect().height > 190 * 96 / 25.4 + 4),
         mixed: [...copy.querySelectorAll(':scope > .print-packed-page')].some(sheet => {
           const colors = new Set([...sheet.querySelectorAll('.print-packed-content [data-team-color]')].map(el => el.getAttribute('data-team-color')).filter(Boolean));
           return colors.size > 1;
@@ -204,7 +205,7 @@ try {
   const packedSnapshot = await page.evaluate(() => window.__a5PackedSnapshot);
   if (restoredPrint.calls === 1 && (!packedSnapshot || packedSnapshot.total !== packedSnapshot.declared ||
       packedSnapshot.total !== packedSnapshot.child + packedSnapshot.organizer + packedSnapshot.labels ||
-      packedSnapshot.empty || packedSnapshot.mixed))
+      packedSnapshot.empty || packedSnapshot.oversized || packedSnapshot.mixed))
     failures.push('Invalid measured A5 print copy: ' + JSON.stringify(packedSnapshot));
   // The same gate must reject a packing-list count that disagrees with
   // the envelope manifest, even when the number of pages is unchanged.
