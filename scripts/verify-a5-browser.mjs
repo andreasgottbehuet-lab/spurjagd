@@ -164,7 +164,22 @@ try {
   await page.evaluate(() => {
     window.__a5PrintCalls = 0;
     window.__a5Alerts = [];
-    window.print = () => { window.__a5PrintCalls++; };
+    window.print = () => {
+      window.__a5PrintCalls++;
+      const copy = document.querySelector('.print-packet-packed');
+      window.__a5PackedSnapshot = copy ? {
+        total: copy.querySelectorAll(':scope > .print-packed-page').length,
+        declared: Number(copy.dataset.physicalSheets),
+        child: Number(copy.dataset.childSheets),
+        organizer: Number(copy.dataset.organizerSheets),
+        labels: Number(copy.dataset.labelSheets),
+        empty: [...copy.querySelectorAll(':scope > .print-packed-page')].some(sheet => !sheet.textContent.trim()),
+        mixed: [...copy.querySelectorAll(':scope > .print-packed-page')].some(sheet => {
+          const colors = new Set([...sheet.querySelectorAll('.print-packed-content [data-team-color]')].map(el => el.getAttribute('data-team-color')).filter(Boolean));
+          return colors.size > 1;
+        })
+      } : null;
+    };
     window.alert = message => { window.__a5Alerts.push(String(message)); };
     const label = document.querySelector('.print-label');
     if (!label) throw new Error('No A5 envelope label available for print gate test');
@@ -186,6 +201,11 @@ try {
   const restoredPrint = await page.evaluate(() => ({calls: window.__a5PrintCalls, alerts: window.__a5Alerts}));
   if (restoredPrint.calls !== 1 || restoredPrint.alerts.length)
     failures.push('Valid A5 envelope labels did not restore the print action: '+JSON.stringify(restoredPrint));
+  const packedSnapshot = await page.evaluate(() => window.__a5PackedSnapshot);
+  if (restoredPrint.calls === 1 && (!packedSnapshot || packedSnapshot.total !== packedSnapshot.declared ||
+      packedSnapshot.total !== packedSnapshot.child + packedSnapshot.organizer + packedSnapshot.labels ||
+      packedSnapshot.empty || packedSnapshot.mixed))
+    failures.push('Invalid measured A5 print copy: ' + JSON.stringify(packedSnapshot));
   // The same gate must reject a packing-list count that disagrees with
   // the envelope manifest, even when the number of pages is unchanged.
   await page.evaluate(() => {
