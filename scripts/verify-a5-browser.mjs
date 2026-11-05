@@ -771,11 +771,11 @@ try {
   else {
     await page.pdf({path:'verification/a5-browser-packed.pdf',format:'A5',printBackground:true,preferCSSPageSize:true});
     const packedInfo=spawnSync('pdfinfo',['verification/a5-browser-packed.pdf'],{encoding:'utf8'});
-    const packedPageCount=Number(packedInfo.stdout.match(/^Pages:\\s*(\\d+)/m)?.[1]);
+    const packedPageCount=Number(packedInfo.stdout.match(/^Pages:\s*(\d+)/m)?.[1]);
     if(packedInfo.status!==0 || packedPageCount!==packedExport.pages)
       failures.push('Packed PDF has '+packedPageCount+' pages instead of '+packedExport.pages+' physical A5 pages');
     const packedText=spawnSync('pdftotext',['-layout','verification/a5-browser-packed.pdf','-'],{encoding:'utf8'});
-    const texts=packedText.stdout.split('\\f').filter(text=>text.trim());
+    const texts=packedText.stdout.split('\f').filter(text=>text.trim());
     if(packedText.status!==0 || texts.length!==packedPageCount)
       failures.push('Packed PDF contains blank or unreadable A5 pages');
     if(!packedText.stdout.includes('Umschlag') || !packedText.stdout.includes('Stationsaufgaben:'))
