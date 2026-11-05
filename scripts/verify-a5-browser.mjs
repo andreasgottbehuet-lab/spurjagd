@@ -784,6 +784,10 @@ try {
     writeFileSync('verification/a5-packed-geometry.json',JSON.stringify({packedPageCount,expected:packedExport.pages,pages:packedGeometry},null,2));
     const packedText=spawnSync('pdftotext',['-layout','verification/a5-browser-packed.pdf','-'],{encoding:'utf8'});
     const texts=packedText.stdout.split('\f').filter(text=>text.trim());
+    writeFileSync('verification/a5-packed-page-texts.json',JSON.stringify({
+      expected:packedExport.pages,actual:packedPageCount,
+      pages:texts.map((content,index)=>({page:index+1,characters:content.trim().length,preview:content.trim().slice(0,180),task:content.includes('Stationsaufgaben:'),route:content.includes('Wegrätsel')}))
+    },null,2));
     if(packedText.status!==0 || texts.length!==packedPageCount)
       failures.push('Packed PDF contains blank or unreadable A5 pages');
     const packedPages=packedText.stdout.split('\f').filter((_,index,array)=>index<array.length-1 || array[index].trim());
