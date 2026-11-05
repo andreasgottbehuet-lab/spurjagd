@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages,physicalA5Manifest} from '../src/a5-page-packing.ts';
+import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages,physicalA5Manifest,measureA5Elements} from '../src/a5-page-packing.ts';
 const b=(id,owner,heightMm,section='task',keepWithNext=false)=>({id,owner,section,heightMm,keepWithNext});
 test('Underfilled compatible blocks share A5 page',()=>{
  const pages=packA5Blocks([b('a','rot',60),b('b','rot',65),b('c','rot',40)]);
@@ -118,4 +118,15 @@ test('Randomized packing preserves every block, owner boundary and 190 mm limit'
   assert.ok(pages.every(page=>page.usedMm<=190));
   assert.ok(pages.every(page=>page.blocks.every(block=>block.owner===page.owner&&block.section===page.section)));
  }
+});
+
+test('DOM measurement rejects content overflow beyond the border box',()=>{
+ const original=globalThis.getComputedStyle;
+ globalThis.getComputedStyle=()=>({marginTop:'0px',marginBottom:'0px'});
+ try{
+  const element={getBoundingClientRect:()=>({height:200}),scrollHeight:800,classList:{contains:()=>false},dataset:{teamColor:'rot',envelopeId:'1',sheetKind:'task'}};
+  const measured=measureA5Elements([element]);
+  assert.ok(measured[0].heightMm>190);
+  assert.ok(Math.abs(measured[0].heightMm-800*25.4/96)<0.001);
+ }finally{if(original===undefined)delete globalThis.getComputedStyle;else globalThis.getComputedStyle=original;}
 });
