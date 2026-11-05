@@ -295,3 +295,15 @@
  .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .print-question {font-size:11pt;line-height:1.15;}
  .print-packet .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid {margin:1mm 0;}
 }
+
+/* Three-number grids must fit the 190 mm A5 content box at print and measurement scale. */
+@media print {
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell {width:3.5mm;height:3.5mm;font-size:8pt;}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid {padding:1.5mm 2mm;margin:1mm 0;}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid p {margin:1mm 0;}
+}
+@media screen {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell {width:3.5mm;height:3.5mm;font-size:8pt;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid {padding:1.5mm 2mm;margin:1mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid p {margin:1mm 0;}
+}
