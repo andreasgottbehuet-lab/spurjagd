@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages} from '../src/a5-page-packing.ts';
+import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages,physicalA5Manifest} from '../src/a5-page-packing.ts';
 const b=(id,owner,heightMm,section='task',keepWithNext=false)=>({id,owner,section,heightMm,keepWithNext});
 test('Underfilled compatible blocks share A5 page',()=>{
  const pages=packA5Blocks([b('a','rot',60),b('b','rot',65),b('c','rot',40)]);
@@ -66,4 +66,12 @@ test('Independent page audit detects mixed teams, duplicated IDs and height disc
  assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:80,blocks:[b('a','blau',80)]}]).join(' '),/Team- oder Abschnittsvermischung/);
  assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:80,blocks:[b('a','rot',80),b('a','rot',80)]}]).join(' '),/Doppelter A5-Block/);
  assert.match(auditA5PackedPages([{owner:'rot',section:'task',usedMm:40,blocks:[b('a','rot',80)]}]).join(' '),/Seitenhöhe/);
+});
+
+test('Physical A5 manifest counts compacted organizer pages and isolated child envelopes',()=>{
+ const element=(type,id='')=>({classList:{contains:(name)=>name==='print-'+type+'-sheet'},dataset:{envelopeId:id}});
+ const elements=[element('organizer'),element('organizer'),element('child','rot-1'),element('child','blau-1'),element('label')];
+ const pages=packA5Blocks([b('physical-0','leitung',35,'safety'),b('physical-1','leitung',40,'safety'),b('physical-2','rot',80,'task'),b('physical-3','blau',90,'task'),b('physical-4','etiketten',50,'labels')]);
+ assert.deepEqual(physicalA5Manifest(pages,elements),{totalSheets:4,organizerSheets:1,childSheets:2,labelSheets:1,envelopeSheets:{'rot-1':1,'blau-1':1}});
+ assert.throws(()=>physicalA5Manifest([{owner:'rot',section:'task',usedMm:80,blocks:[b('physical-2','rot',40),b('physical-3','rot',40)]}],elements),/Umschläge/);
 });
