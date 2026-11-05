@@ -774,6 +774,14 @@ try {
     const packedPageCount=Number(packedInfo.stdout.match(/^Pages:\s*(\d+)/m)?.[1]);
     if(packedInfo.status!==0 || packedPageCount!==packedExport.pages)
       failures.push('Packed PDF has '+packedPageCount+' pages instead of '+packedExport.pages+' physical A5 pages');
+    const packedGeometry = await page.locator('.print-packet-packed > .print-packed-page').evaluateAll(elements => elements.map((el,index) => ({
+      page:index+1,
+      heightMm:Math.round(el.getBoundingClientRect().height*25.4/96*100)/100,
+      scrollHeightMm:Math.round(el.scrollHeight*25.4/96*100)/100,
+      kind:el.getAttribute('data-sheet-kind'),
+      envelope:el.getAttribute('data-envelope-id')
+    })));
+    writeFileSync('verification/a5-packed-geometry.json',JSON.stringify({packedPageCount,expected:packedExport.pages,pages:packedGeometry},null,2));
     const packedText=spawnSync('pdftotext',['-layout','verification/a5-browser-packed.pdf','-'],{encoding:'utf8'});
     const texts=packedText.stdout.split('\f').filter(text=>text.trim());
     if(packedText.status!==0 || texts.length!==packedPageCount)
