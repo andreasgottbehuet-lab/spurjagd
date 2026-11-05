@@ -44,6 +44,27 @@ export function compactableUnderfilledPages(pages:readonly A5PackedPage[],usable
  });
 }
 
+/** Audit page occupancy independently from the packing algorithm. */
+export function auditA5PackedPages(pages:readonly A5PackedPage[],usableHeightMm=A5_USABLE_HEIGHT_MM):string[] {
+ const errors:string[]=[];
+ if(!Number.isFinite(usableHeightMm)||usableHeightMm<=0)return ['Ungültige A5-Druckhöhe'];
+ const ids=new Set<string>();
+ for(const [index,page] of pages.entries()){
+  if(!page.owner.trim()||!page.section.trim()||!page.blocks.length)errors.push('Leere oder unvollständige A5-Seite '+(index+1));
+  let total=0;
+  for(const block of page.blocks){
+   if(ids.has(block.id))errors.push('Doppelter A5-Block '+block.id);
+   ids.add(block.id);
+   if(block.owner!==page.owner||block.section!==page.section)errors.push('Team- oder Abschnittsvermischung auf A5-Seite '+(index+1));
+   if(!Number.isFinite(block.heightMm)||block.heightMm<=0)errors.push('Ungültige A5-Blockhöhe '+block.id);
+   total+=block.heightMm;
+  }
+  if(!Number.isFinite(total)||total>usableHeightMm+0.001)errors.push('A5-Seite '+(index+1)+' überschreitet die Druckhöhe');
+  if(Math.abs(total-page.usedMm)>0.001)errors.push('A5-Seitenhöhe stimmt nicht mit den Blöcken überein');
+ }
+ return errors;
+}
+
 /** Measures the rendered border box plus vertical margins; rejects unmeasurable sheets. */
 export function measureA5Elements(elements:readonly HTMLElement[],cssPxPerMm=96/25.4):A5Block[] {
  const sheets=elements.map((element,index)=>{
