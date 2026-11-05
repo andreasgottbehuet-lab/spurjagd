@@ -53,46 +53,44 @@ export function auditRenderedEnvelopes(expected:ExpectedEnvelope[],actual:Render
  if(expectedIds.size!==expected.length) issues.push('Druckmanifest enthält doppelte Umschlagkennungen.');
  for(const envelope of expected){
   if(!envelope.id.trim()) issues.push('Druckmanifest enthält eine leere Umschlagkennung.');
-  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3)
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<2)
    issues.push('Umschlag '+(envelope.id||'(leer)')+': ungültige Anzahl Kinderblätter.');
  }
  for(const sheet of actual){
   if(!expectedIds.has(sheet.envelopeId)) issues.push('Druckblatt ohne gültige Umschlagzuordnung: '+(sheet.envelopeId||'(leer)'));
-  if(!['task','answer','route'].includes(sheet.kind)) issues.push('Druckblatt mit ungültiger Blattart: '+(sheet.kind||'(leer)'));
+  if(!['task','route'].includes(sheet.kind)) issues.push('Druckblatt mit ungültiger Blattart: '+(sheet.kind||'(leer)'));
  }
  for(const envelope of expected){
-  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3) continue;
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<2) continue;
   const sheets=actual.filter(sheet=>sheet.envelopeId===envelope.id);
   const tasks=sheets.filter(sheet=>sheet.kind==='task').length;
-  const answers=sheets.filter(sheet=>sheet.kind==='answer').length;
   const routes=sheets.filter(sheet=>sheet.kind==='route').length;
-  if(tasks!==1||answers!==1||routes!==envelope.sheetCount-2){
-   issues.push('Umschlag '+envelope.id+': '+tasks+' Aufgaben-, '+answers+' Antwort- und '+routes+' Wegrätselblätter statt 1/1/'+(envelope.sheetCount-2)+'.');
+  if(tasks!==1||routes!==envelope.sheetCount-1){
+   issues.push('Umschlag '+envelope.id+': '+tasks+' Aufgaben-, '+routes+' Wegrätselblätter statt 1/'+(envelope.sheetCount-1)+'.');
   }
  }
  for(const envelope of expected){
-  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<3) continue;
+  if(!Number.isSafeInteger(envelope.sheetCount)||envelope.sheetCount<2) continue;
   const pages=actual.filter(sheet=>sheet.envelopeId===envelope.id&&sheet.kind==='route');
   pages.forEach((page,index)=>{
    if(page.routePage!==index+1) issues.push('Umschlag '+envelope.id+': Wegrätsel-Seitenfolge ist fehlerhaft.');
   });
  }
- // The packet must be packable in manifest order: task, answer, then route pages.
+ // The packet must be packable in manifest order: task, then route pages.
  const validCounts=expected.every(envelope=>Number.isSafeInteger(envelope.sheetCount)&&envelope.sheetCount>=3);
  if(!validCounts) return [...new Set(issues)];
  const expectedCount=expected.reduce((sum,envelope)=>sum+envelope.sheetCount,0);
  if(!Number.isSafeInteger(expectedCount)||expectedCount!==actual.length){
-  issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Antwort, Wegrätsel) angeordnet.');
+  issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Wegrätsel) angeordnet.');
   return [...new Set(issues)];
  }
  const expectedSequence=expected.flatMap(envelope=>[
   {envelopeId:envelope.id,kind:'task'},
-  {envelopeId:envelope.id,kind:'answer'},
-  ...Array.from({length:Math.max(0,envelope.sheetCount-2)},()=>({envelopeId:envelope.id,kind:'route'}))
+  ...Array.from({length:Math.max(0,envelope.sheetCount-1)},()=>({envelopeId:envelope.id,kind:'route'}))
  ]);
  if(expectedSequence.length!==actual.length || expectedSequence.some((sheet,index)=>
    actual[index]?.envelopeId!==sheet.envelopeId || actual[index]?.kind!==sheet.kind
- )) issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Antwort, Wegrätsel) angeordnet.');
+ )) issues.push('Kinderblätter sind nicht in Umschlag-Reihenfolge (Aufgabe, Wegrätsel) angeordnet.');
  return [...new Set(issues)];
 }
 
@@ -168,14 +166,14 @@ export function auditRenderedPackingItems(expected:RenderedPackingItem[],labels:
  if(new Set(expected.map(item=>item.envelopeId)).size!==expected.length)
   issues.push('Druckmanifest: doppelte Umschlagkennung in der erwarteten Packliste.');
  expected.forEach((item,index)=>{
-  if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||[item.envelopeId,item.team,item.stationName].some(value=>value!==value.trim())||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<3)
+  if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||[item.envelopeId,item.team,item.stationName].some(value=>value!==value.trim())||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<2)
    issues.push('Druckmanifest: Umschlag '+(index+1)+' enthält ungültige Packdaten.');
  });
  for(const [name,items] of [['Etiketten',labels],['Packliste',checklist]] as const){
   if(items.length!==expected.length) issues.push(name+': '+items.length+' von '+expected.length+' Umschlägen vorhanden.');
   if(new Set(items.map(item=>item.envelopeId)).size!==items.length) issues.push(name+': doppelte Umschlagkennung.');
   items.forEach((item,index)=>{
-   if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||[item.envelopeId,item.team,item.stationName].some(value=>value!==value.trim())||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<3)
+   if(!item.envelopeId.trim()||!item.team.trim()||!item.stationName.trim()||[item.envelopeId,item.team,item.stationName].some(value=>value!==value.trim())||!Number.isSafeInteger(item.stationNumber)||item.stationNumber<1||!Number.isSafeInteger(item.sheetCount)||item.sheetCount<2)
     issues.push(name+': Umschlag '+(index+1)+' enthält ungültige Packdaten.');
    const reference=expected[index];
    if(!reference || item.envelopeId!==reference.envelopeId ||
