@@ -451,16 +451,16 @@ try {
   const envelopeGroups = new Map();
   for (const entry of envelopePages) {
     if (!entry.id) failures.push('A5 child sheet without envelope identifier');
-    if (!['task','answer','route'].includes(entry.kind)) failures.push('A5 child sheet with invalid kind: ' + entry.kind);
+    if (!['task','route'].includes(entry.kind)) failures.push('A5 child sheet with invalid kind: ' + entry.kind);
     const entries = envelopeGroups.get(entry.id) ?? [];
     entries.push(entry);
     envelopeGroups.set(entry.id, entries);
   }
   for (const [id, entries] of envelopeGroups) {
     if (!id.trim() || id !== id.trim()) failures.push('Invalid envelope identifier: ' + id);
-    if (entries.filter(entry => entry.kind === 'task').length !== 1 || entries.filter(entry => entry.kind === 'answer').length !== 1 || entries.filter(entry => entry.kind === 'route').length < 1)
+    if (entries.filter(entry => entry.kind === 'task').length !== 1 || entries.filter(entry => entry.kind === 'route').length < 1)
       failures.push('Incomplete A5 envelope: ' + id);
-    if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'answer' || entries.slice(2).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
+    if (entries[0]?.kind !== 'task' || entries[1]?.kind !== 'route' || entries.slice(1).some((entry,index) => entry.kind !== 'route' || entry.routePage !== String(index + 1)))
       failures.push('Incorrect A5 envelope page order: ' + id);
   }
   const expectedEnvelopeOrder = [...envelopeGroups.entries()].flatMap(([id, entries]) => entries.map(() => id));
@@ -470,13 +470,11 @@ try {
   if (labelIds.length !== envelopeGroups.size || labelIds.some((id,index) => id !== [...envelopeGroups.keys()][index]))
     failures.push('A5 envelope labels do not match child packet order');
   const taskIds = envelopePages.filter(entry => entry.kind === 'task').map(entry => entry.id);
-  const answerIds = envelopePages.filter(entry => entry.kind === 'answer').map(entry => entry.id);
-  if (new Set(taskIds).size !== taskIds.length || new Set(answerIds).size !== answerIds.length)
-    failures.push('Duplicate task or answer sheets for an envelope');
-  if (taskIds.join('|') !== answerIds.join('|')) failures.push('Task and answer envelope sequence differs');
-  if (taskIds.length !== 12 || answerIds.length !== 12) failures.push('Expected exactly 12 task and 12 answer sheets');
-  if (envelopeGroups.size !== 12 || categories.children !== 36 || categories.labels !== 3)
-    failures.push('Default 12-child A5 fixture differs from 12 envelopes / 36 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
+  if (new Set(taskIds).size !== taskIds.length)
+    failures.push('Duplicate task sheets for an envelope');
+  if (taskIds.length !== 12 || envelopePages.some(entry => entry.kind === 'answer')) failures.push('Expected exactly 12 task sheets and no answer sheets');
+  if (envelopeGroups.size !== 12 || categories.children !== 24 || categories.labels !== 3)
+    failures.push('Default 12-child A5 fixture differs from 12 envelopes / 24 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
@@ -544,7 +542,7 @@ try {
       const pageNumber = categories.organizer + i + 1;
       const content = pdfPageTexts[pageNumber - 1] ?? '';
       const kind = envelopePages[i].kind;
-      const marker = kind === 'route' ? 'Wegrätsel' : kind === 'answer' ? 'Antwortblatt' : 'Stationsaufgaben:';
+      const marker = kind === 'route' ? 'Wegrätsel' : 'Stationsaufgaben:';
       if (marker && !content.includes(marker))
         failures.push('PDF page ' + pageNumber + ' does not contain expected ' + kind + ' sheet heading');
       // Check actual PDF sheet numbering against the DOM envelope sequence.
@@ -552,8 +550,6 @@ try {
       const sheetIndex = envelopePages.slice(0, i + 1).filter(entry => entry.id === envelopePages[i].id).length;
       if (!content.includes('Blatt ' + sheetIndex + '/' + envelopeSheets.length))
         failures.push('PDF page ' + pageNumber + ' has incorrect envelope sheet numbering: ' + envelopePages[i].id);
-      if (kind === 'answer' && !content.includes('Unser Schloss-Code:'))
-        failures.push('PDF answer page ' + pageNumber + ' lacks code entry field');
       const combinedWordGrid = envelopeSheets.some(entry => entry.kind === 'task' && entry.combinedWordGrid);
       if (kind === 'task') {
         if (combinedWordGrid) {
@@ -566,12 +562,7 @@ try {
           }
         }
       }
-      if (kind === 'answer') {
-        for (const number of [1, 2, 3]) {
-          if (!content.includes((combinedWordGrid ? 'Zahlwort ' : 'Aufgabe ') + number + ':'))
-            failures.push('PDF answer page ' + pageNumber + ' is missing response space ' + number);
-        }
-      }
+
     }
     for (let i = 0; i < categories.labels; i++) {
       const pageNumber = categories.organizer + categories.children + i + 1;
