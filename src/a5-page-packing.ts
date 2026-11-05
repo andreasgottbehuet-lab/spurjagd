@@ -17,7 +17,7 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
  }
  return pages;
 }
-export function underfilledA5Pages(pages:readonly A5PackedPage[],usableHeightMm=192):number[] {
+export function underfilledA5Pages(pages:readonly A5PackedPage[],usableHeightMm=A5_USABLE_HEIGHT_MM):number[] {
  return pages.flatMap((page,i)=>page.usedMm<usableHeightMm/2?[i]:[]);
 }
 
