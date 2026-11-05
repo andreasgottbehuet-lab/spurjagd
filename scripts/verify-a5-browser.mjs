@@ -108,7 +108,7 @@ try {
   // The new print contract never emits separate answer sheets.
   if (await page.locator('.print-child-sheet[data-sheet-kind="answer"]').count() !== 0)
     failures.push('Redundant answer sheet is still present in the A5 packet');
-  const organizerTitles=await page.locator('.print-organizer-sheet h1').allTextContents();
+  const organizerTitles=await page.locator('.print-organizer-sheet').evaluateAll(sheets=>sheets.map(sheet=>sheet.textContent??''));
   if (!organizerTitles[0]?.includes('Start und Sicherheit'))
     failures.push('Organizer start and safety instructions are not the first printed page');
   const organizerOrder=['Gruppenrouten','Codes und Lösungen','Wegrätsel-Lösungen','Umschlagkontrolle'];
