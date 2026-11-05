@@ -130,9 +130,13 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
   const first=byId.get(page.blocks[0].id);
   if(!first)throw new Error('A5-Druckblock fehlt');
   const sheet=first.cloneNode(false) as HTMLElement;
-  sheet.removeAttribute('data-envelope-id');
-  sheet.removeAttribute('data-sheet-kind');
-  sheet.removeAttribute('data-route-page');
+  // Preserve envelope and sheet-kind attributes: print CSS uses them for
+  // compact task typography, and the browser audit uses them for ownership.
+  if(page.blocks.some(block=>{
+    const source=byId.get(block.id);
+    return source?.dataset.envelopeId!==first.dataset.envelopeId ||
+      source?.dataset.sheetKind!==first.dataset.sheetKind;
+  }))throw new Error('A5-Seite enthält unterschiedliche Umschläge oder Blattarten');
   sheet.classList.add('print-packed-page');
   for(const block of page.blocks){
    const source=byId.get(block.id);
