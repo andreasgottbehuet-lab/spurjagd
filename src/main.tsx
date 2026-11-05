@@ -464,6 +464,18 @@ function App() {
                 </div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
+                  <article className="print-sheet print-organizer-sheet" key="safety-check">
+                    <h1>Spielleitung – Start und Sicherheit</h1>
+                    <h2>Vor der Ausgabe</h2>
+                    <p>Pro Umschlag: ein A5-Aufgabenblatt mit Antwortfeldern und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
+                    <p>Schlösser auf die Codes einstellen und an den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden.</p>
+                    <h2>Vor Ort kontrollieren</h2>
+                    <p>Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Den Kindern den nächsten Zielort nicht vor dem Rätsel verraten.</p>
+                    <h2>Hinweise aus der Routenplanung</h2>
+                    {plan.value.cautions.length===0?<p>Keine zusätzlichen Planungshinweise ermittelt. Örtliche Gefahren trotzdem prüfen.</p>:<p>Die vollständigen Planungshinweise auf den nachfolgenden A5-Blättern vor dem Start durchgehen und die örtlichen Bedingungen kontrollieren.</p>}
+                    <h2>Zum Spielende</h2>
+                    <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
+                  </article>
                   {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
@@ -485,18 +497,6 @@ function App() {
                       return <div className="print-solution-entry" key={destination}><strong>Ziel: {destination}</strong>{clue.mode==='questions'?<p>{clue.rows?.map(row=>row.solution+' ('+(row.letterIndex+1)+')').join(' · ')}</p>:<p>{clue.mode==='letters'?'Buchstabenspiel':clue.mode==='description'?'Ortsbeschreibung':'Eigener Rätseltext'}</p>}</div>;
                     })}
                   </article>)}
-                  <article className="print-sheet print-organizer-sheet" key="safety-check">
-                    <h1>Spielleitung – Start und Sicherheit</h1>
-                    <h2>Vor der Ausgabe</h2>
-                    <p>Pro Umschlag: ein A5-Aufgabenblatt mit Antwortfeldern und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
-                    <p>Schlösser auf die Codes einstellen und an den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden.</p>
-                    <h2>Vor Ort kontrollieren</h2>
-                    <p>Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Den Kindern den nächsten Zielort nicht vor dem Rätsel verraten.</p>
-                    <h2>Hinweise aus der Routenplanung</h2>
-                    {plan.value.cautions.length===0?<p>Keine zusätzlichen Planungshinweise ermittelt. Örtliche Gefahren trotzdem prüfen.</p>:<p>Die vollständigen Planungshinweise auf den nachfolgenden A5-Blättern vor dem Start durchgehen und die örtlichen Bedingungen kontrollieren.</p>}
-                    <h2>Zum Spielende</h2>
-                    <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
-                  </article>
                   {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'cautions-'+page}>
                     <h1>Spielleitung – Planungshinweise {page+1}</h1>
                     <p>Diese Hinweise sind Annahmen aus der Routenplanung und müssen vor Ort überprüft werden.</p>
