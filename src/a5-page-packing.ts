@@ -43,3 +43,15 @@ export function compactableUnderfilledPages(pages:readonly A5PackedPage[],usable
   return !!next&&current.owner===next.owner&&current.section===next.section&&current.usedMm+next.blocks[0].heightMm<=usableHeightMm;
  });
 }
+
+/** Measures the rendered border box plus vertical margins; rejects unmeasurable sheets. */
+export function measureA5Elements(elements:readonly HTMLElement[],cssPxPerMm=96/25.4):A5Block[] {
+ const sheets=elements.map((element,index)=>{
+  const style=getComputedStyle(element);
+  const marginTop=parseFloat(style.marginTop),marginBottom=parseFloat(style.marginBottom);
+  const rect=element.getBoundingClientRect();
+  if(!Number.isFinite(marginTop)||!Number.isFinite(marginBottom)||marginTop<0||marginBottom<0)throw new Error('Ungültiger A5-Seitenabstand');
+  return {id:'physical-'+index,owner:element.classList.contains('print-organizer-sheet')?'leitung':element.classList.contains('print-label-sheet')?'etiketten':element.dataset.teamColor??'',section:element.classList.contains('print-organizer-sheet')?'organizer':element.dataset.sheetKind??'labels',heightPx:rect.height+marginTop+marginBottom};
+ });
+ return measureA5Sheets(sheets,cssPxPerMm);
+}
