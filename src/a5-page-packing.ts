@@ -109,6 +109,7 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
    for(const child of Array.from(source.children))section.appendChild(child.cloneNode(true));
    sheet.appendChild(section);
   }
+  sheet.dataset.packedBlockCount=String(page.blocks.length);
   copy.appendChild(sheet);
  }
  return {copy,pageCount:pages.length};
