@@ -46,7 +46,7 @@ test('Falsche Zuordnung bleibt gesperrt, auch wenn die Gesamtblattzahl unveränd
   {envelopeId:'0-a',kind:'route'},{envelopeId:'0-a',kind:'route'},
   {envelopeId:'1-b',kind:'task'},{envelopeId:'1-b',kind:'answer'}
  ];
- assert.equal(sheets.length,6);
+ assert.equal(sheets.length,5);
  assert.ok(auditRenderedEnvelopes(expected,sheets).length>0);
  assert.ok(auditRenderedEnvelopes(expected,[...sheets,{envelopeId:'unbekannt',kind:'route'}]).some(issue=>issue.includes('ohne gültige Umschlagzuordnung')));
 });
@@ -60,7 +60,8 @@ test('Umschläge werden in exakter Druck- und Packreihenfolge geprüft',()=>{
   {envelopeId:'1-b',kind:'task'},
   
   {envelopeId:'1-b',kind:'route',routePage:1},
-  {envelopeId:'1-b',kind:'route',routePage:2}
+  {envelopeId:'1-b',kind:'route',routePage:2},
+  {envelopeId:'1-b',kind:'route',routePage:3}
  ];
  assert.deepEqual(auditRenderedEnvelopes(expected,correct),[]);
  const wrongOrder=[...correct];
@@ -90,8 +91,8 @@ test('Unbeschriftete Etiketten und falsch einsortierte Mehrseiten-Wegrätsel wer
   {envelopeId:'0-a',kind:'route'},
   {envelopeId:'0-a',kind:'route'}
  ];
- assert.equal(sheets.length,5);
- assert.ok(auditRenderedEnvelopes(expected,sheets).some(issue=>issue.includes('Umschlag-Reihenfolge')));
+ assert.equal(sheets.length,4);
+ assert.ok(auditRenderedEnvelopes(expected,sheets).some(issue=>issue.includes('Wegrätsel-Seitenfolge')));
 });
 
 test('Multi-page route puzzles reject swapped page indices',()=>{
@@ -100,7 +101,7 @@ test('Multi-page route puzzles reject swapped page indices',()=>{
   {envelopeId:'0-a',kind:'route',routePage:1},{envelopeId:'0-a',kind:'route',routePage:2},
   {envelopeId:'0-a',kind:'route',routePage:3}];
  assert.deepEqual(auditRenderedEnvelopes(expected,sheets),[]);
- const changed=sheets.map(x=>({...x}));changed[3].routePage=3;changed[4].routePage=2;
+ const changed=sheets.map(x=>({...x}));changed[2].routePage=3;changed[3].routePage=2;
  assert.ok(auditRenderedEnvelopes(expected,changed).some(x=>x.includes('Wegrätsel-Seitenfolge')));
 });
 
