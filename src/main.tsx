@@ -7,7 +7,7 @@ import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode, type AgeLevel } from './puzzles';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
-import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
+import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy, physicalA5Manifest } from './a5-page-packing';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabels, auditRenderedPackingItems, auditRenderedOrganizerSecrets } from './print-dom-audit';
@@ -83,6 +83,22 @@ function App() {
       return {location:l,challenge};
     });
   },[locations,stationCodes,ageLevel,projectId,goal,printIssues.length,plan.value]);
+  const [measuredPrintSummary,setMeasuredPrintSummary] = useState<{total:number;organizer:number;children:number;labels:number;error:string}|null>(null);
+  useEffect(()=>{
+    if(activeStep!==4 || !printManifest || printIssues.length){if(measuredPrintSummary!==null)setMeasuredPrintSummary(null);return;}
+    const packet=document.querySelector<HTMLElement>('.print-packet');
+    if(!packet)return;
+    let next:{total:number;organizer:number;children:number;labels:number;error:string};
+    try{
+      const elements=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
+      const measured=measureA5Elements(elements);
+      if(measured.some(block=>block.heightMm>A5_USABLE_HEIGHT_MM))throw new Error('Mindestens ein A5-Blatt überschreitet 190 mm');
+      const pages=packA5Blocks(measured.map(block=>({...block,heightMm:block.heightMm+2})),A5_USABLE_HEIGHT_MM+2);
+      const physical=physicalA5Manifest(pages,elements);
+      next={total:physical.totalSheets,organizer:physical.organizerSheets,children:physical.childSheets,labels:physical.labelSheets,error:''};
+    }catch(error){next={total:0,organizer:0,children:0,labels:0,error:String(error)};}
+    setMeasuredPrintSummary(previous=>JSON.stringify(previous)===JSON.stringify(next)?previous:next);
+  });
   const updateLocation = (id: string, field: 'name' | 'description', value: string) => {
     setLocations(old => old.map(location => location.id === id ? { ...location, [field]: value } : location));
   };
@@ -443,7 +459,7 @@ function App() {
                   }
                 })}</section>}
                 {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge})=><article className="location-card" key={location.id}><strong>{location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label="Buchstabengitter">{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid" aria-label="Pfeilpfad-Zahlengitter">{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className="wordsearch-cell" key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'S':digit}</span>)}</div>)}</div>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
-                {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. Die tatsächliche Seitenzahl kann durch Zusammenfassen passender Spielleitungs- und Etikettenblätter geringer ausfallen; überlange Seiten sperren den Druck.</p></div>}
+                {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. {measuredPrintSummary?.error ? 'A5-Messung: '+measuredPrintSummary.error : measuredPrintSummary ? 'Nach der Browsermessung: '+measuredPrintSummary.total+' A5-Seiten ('+measuredPrintSummary.children+' Kinder, '+measuredPrintSummary.organizer+' Spielleitung, '+measuredPrintSummary.labels+' Etiketten).' : 'Die tatsächliche Seitenzahl wird auf der Druckseite im Browser gemessen.'}</p></div>}
                 {printManifest && <div className="print-guidance" aria-label="A5-Druckanleitung">
                   <strong>{tx('Druckeinstellungen und Packen','Print settings and packing')}</strong>
                   <p>{tx('A5 Hochformat · Maßstab 100 % · Browser-Kopf- und Fußzeilen ausschalten. Prüfe die Druckvorschau auf abgeschnittene Texte und zusätzliche Seiten.','A5 portrait · 100% scale · disable browser headers and footers. Check the preview for clipped text and extra pages.')}</p>
