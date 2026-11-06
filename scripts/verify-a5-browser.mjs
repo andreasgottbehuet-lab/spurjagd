@@ -141,6 +141,20 @@ try {
       }
     }
   }
+  for(const [team,ageGroup] of Object.entries(expectedTeamAges)){
+    const teamSheets=page.locator('.print-child-sheet[data-team-color="'+team+'"]');
+    if(!await teamSheets.count()) failures.push('No child pages for age group '+ageGroup);
+    for(const sheet of await teamSheets.all()){
+      if(await sheet.getAttribute('data-age-group')!==ageGroup || !(await sheet.innerText()).includes(ageGroup+' Jahre'))
+        failures.push('Team '+team+' page is missing its '+ageGroup+' age label');
+    }
+    const label=page.locator('.print-label[data-team-color="'+team+'"]').first();
+    if(await label.getAttribute('data-age-group')!==ageGroup || !(await label.innerText()).includes(ageGroup))
+      failures.push('Team '+team+' label is missing its '+ageGroup+' age label');
+    const codeLine=page.locator('.print-code-line[data-team-color="'+team+'"]').first();
+    if(!(await codeLine.innerText()).includes(ageGroup+' Jahre'))
+      failures.push('Organizer code line is missing age group '+ageGroup);
+  }
   // Visual acceptance: three-word puzzle must replace, not supplement, three independent tasks.
   const wordSheets=page.locator('.print-child-sheet[data-sheet-kind="task"]:has(.print-three-word-grid)');
   if (await wordSheets.count() === 0) failures.push('No combined three-number word-search worksheet printed');
@@ -869,6 +883,8 @@ try {
     {key:'blau',name:'SPURJAGD_Team_Blau_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='blau').map(page=>page.page)},
     {key:'grün',name:'SPURJAGD_Team_Gruen_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='grün').map(page=>page.page)},
     {key:'gelb',name:'SPURJAGD_Team_Gelb_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='gelb').map(page=>page.page)},
+    {key:'orange',name:'SPURJAGD_Team_Orange_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='orange').map(page=>page.page)},
+    {key:'lila',name:'SPURJAGD_Team_Lila_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='lila').map(page=>page.page)},
     {key:'labels',name:'SPURJAGD_Umschlagetiketten_A5.pdf',pages:packedPageGroups.filter(page=>page.label).map(page=>page.page)}
   ];
   const separatedPdfs=[];
@@ -887,8 +903,10 @@ try {
     const pageTexts=extracted.stdout.split('\f').filter((value,index,array)=>index<array.length-1||value.trim());
     if(extracted.status!==0||pageTexts.length!==spec.pages.length||pageTexts.some(value=>!value.trim()))failures.push('Separated PDF contains blank or unreadable pages: '+spec.name);
     if(spec.key==='organizer'&&(!extracted.stdout.includes('Start und Sicherheit')||!extracted.stdout.includes('Codes und Lösungen')||!extracted.stdout.includes('Umschlagkontrolle')))failures.push('Organizer PDF is missing a required section');
-    if(['rot','blau','grün','gelb'].includes(spec.key)){
-      const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb'}[spec.key];
+    if(['rot','blau','grün','gelb','orange','lila'].includes(spec.key)){
+      const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb',orange:'Team Orange',lila:'Team Lila'}[spec.key];
+      const ageGroup=expectedTeamAges[spec.key];
+      if(pageTexts.some(value=>!value.includes(ageGroup+' Jahre'))) failures.push('Team PDF is missing its matching age group: '+spec.name);
       if(pageTexts.some(value=>!value.includes(teamLabel)))failures.push('Team PDF contains a page without its matching team: '+spec.name);
       if(/Codes und Lösungen|Schloss-Code:\s*(?:007|000|123|987)/.test(extracted.stdout))failures.push('Team PDF contains organizer-only codes: '+spec.name);
     }
