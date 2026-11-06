@@ -18,7 +18,7 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
    }
   }
   if(pair>usableHeightMm) throw new Error('Zusammengehörige A5-Blöcke überschreiten die Druckhöhe');
-  const eligibleForCompaction=block.owner!=='leitung'||(block.heightMm<usableHeightMm/2&&!!last&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2));
+  const eligibleForCompaction=block.owner!=='leitung'||(block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2));
   if(!last||!same||!eligibleForCompaction||last.usedMm+block.heightMm>usableHeightMm||(pair>block.heightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
   const page=pages[pages.length-1];page.blocks.push(block);page.usedMm+=block.heightMm;
  }

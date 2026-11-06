@@ -132,3 +132,8 @@ test('DOM measurement rejects content overflow beyond the border box',()=>{
   assert.ok(Math.abs(measured[0].heightMm-800*25.4/96)<0.001);
  }finally{if(original===undefined)delete globalThis.getComputedStyle;else globalThis.getComputedStyle=original;}
 });
+
+test('Organizer 50-percent compaction pairs at most two short pages and preserves order',()=>{
+ const pages=packA5Blocks([b('one','leitung',60,'organizer'),b('two','leitung',60,'organizer'),b('three','leitung',60,'organizer')]);
+ assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['one','two'],['three']]);
+});
