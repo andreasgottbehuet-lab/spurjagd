@@ -22,7 +22,7 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
   const excludedBoundary=excluded.has(block.id)||!!last?.blocks.some(previous=>excluded.has(previous.id));
   const eligibleForCompaction=options.compactAll!==false&&!excludedBoundary&&(block.owner!=='leitung'||(options.compactOrganizer!==false&&block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2)));
   // Print wrappers and non-collapsing margins add measurable height after DOM packing.
-  const organizerReserveExceeded=block.owner==='leitung'&&!!last&&last.usedMm+pair>usableHeightMm-24;
+  const organizerReserveExceeded=block.owner==='leitung'&&!!last&&last.usedMm+pair>usableHeightMm-36;
   if(!last||!same||!eligibleForCompaction||organizerReserveExceeded||last.usedMm+block.heightMm>usableHeightMm||(pair>block.heightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
   const page=pages[pages.length-1];page.blocks.push(block);page.usedMm+=block.heightMm;
  }
