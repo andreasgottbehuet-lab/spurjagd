@@ -149,3 +149,9 @@ test('Overflow recovery can disable every packing group while preserving source 
  const pages=packA5Blocks(blocks,190,{compactAll:false});
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['org'],['r1'],['r2']]);
 });
+
+test('Only overflowing packed blocks are excluded while safe short pairs still compact',()=>{
+ const blocks=[b('overflow-a','leitung',60,'organizer'),b('overflow-b','leitung',60,'organizer'),b('safe-a','leitung',40,'organizer'),b('safe-b','leitung',40,'organizer')];
+ const pages=packA5Blocks(blocks,190,{noCompactBlockIds:['overflow-a','overflow-b']});
+ assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['overflow-a'],['overflow-b'],['safe-a','safe-b']]);
+});

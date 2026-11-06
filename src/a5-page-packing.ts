@@ -2,7 +2,7 @@
 export const A5_USABLE_HEIGHT_MM = 190;
 export interface A5Block { id:string; owner:string; section:string; heightMm:number; keepWithNext?:boolean }
 export interface A5PackedPage { owner:string; section:string; blocks:A5Block[]; usedMm:number }
-export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_HEIGHT_MM,options:{compactOrganizer?:boolean;compactAll?:boolean}={}):A5PackedPage[] {
+export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_HEIGHT_MM,options:{compactOrganizer?:boolean;compactAll?:boolean;noCompactBlockIds?:readonly string[]}={}):A5PackedPage[] {
  if(!Number.isFinite(usableHeightMm)||usableHeightMm<=0) throw new Error('Ungültige A5-Druckhöhe');
  const pages:A5PackedPage[]=[];
  if(blocks.some(b=>!b.id.trim()||!b.owner.trim()||!b.section.trim()||!Number.isFinite(b.heightMm)||b.heightMm<=0||b.heightMm>usableHeightMm)) throw new Error('Ungültiger A5-Inhaltsblock');
@@ -18,7 +18,9 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
    }
   }
   if(pair>usableHeightMm) throw new Error('Zusammengehörige A5-Blöcke überschreiten die Druckhöhe');
-  const eligibleForCompaction=options.compactAll!==false&&(block.owner!=='leitung'||(options.compactOrganizer!==false&&block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2)));
+  const excluded=new Set(options.noCompactBlockIds??[]);
+  const excludedBoundary=excluded.has(block.id)||!!last?.blocks.some(previous=>excluded.has(previous.id));
+  const eligibleForCompaction=options.compactAll!==false&&!excludedBoundary&&(block.owner!=='leitung'||(options.compactOrganizer!==false&&block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2)));
   if(!last||!same||!eligibleForCompaction||last.usedMm+block.heightMm>usableHeightMm||(pair>block.heightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
   const page=pages[pages.length-1];page.blocks.push(block);page.usedMm+=block.heightMm;
  }
@@ -152,6 +154,7 @@ export function buildPackedA5PrintCopy(packet:HTMLElement,options:{compactOrgani
    sheet.appendChild(section);
   }
   sheet.dataset.packedBlockCount=String(page.blocks.length);
+  sheet.dataset.packedBlockIds=page.blocks.map(block=>block.id).join(',');
   copy.appendChild(sheet);
  }
  return {copy,pageCount:pages.length,manifest};
