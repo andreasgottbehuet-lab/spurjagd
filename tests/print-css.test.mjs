@@ -469,3 +469,11 @@ test('Packed A5 preflight includes the same wrapper flow and separator as print'
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
  assert.match(css,/@media screen\s*\{\s*\.print-packet-packed \.print-packed-content \{display:flow-root;\}\s*\.print-packet-packed \.print-packed-content \+ \.print-packed-content \{margin-top:2mm;\}/);
 });
+
+test('Chromium print acceptance exports six separate A5 packets only after the combined proof passes',()=>{
+ const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
+ const gate=script.indexOf('if (failures.length) {');
+ const exportAt=script.indexOf('const pdfSpecs=[');
+ assert.ok(gate>=0&&exportAt>gate);
+ for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
+});

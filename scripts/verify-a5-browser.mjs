@@ -829,6 +829,57 @@ try {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
     throw new Error(failures.join('\n'));
   }
+  // The combined Chromium proof passed. Export the six production packets from its exact packed-page order.
+  mkdirSync('verification/print-pdfs',{recursive:true});
+  const packedPageGroups=await page.locator('.print-packet-packed > .print-packed-page').evaluateAll(elements=>elements.map((element,index)=>({
+    page:index+1,
+    organizer:element.classList.contains('print-organizer-sheet'),
+    label:element.classList.contains('print-label-sheet'),
+    team:element.getAttribute('data-team-color')??''
+  })));
+  const rangeFor=(indices)=>{
+    const sorted=[...indices].sort((a,b)=>a-b);
+    const ranges=[];
+    for(let i=0;i<sorted.length;){
+      let end=i;
+      while(end+1<sorted.length&&sorted[end+1]===sorted[end]+1)end++;
+      ranges.push(end===i?String(sorted[i]):sorted[i]+'-'+sorted[end]);
+      i=end+1;
+    }
+    return ranges.join(',');
+  };
+  const pdfSpecs=[
+    {key:'organizer',name:'SPURJAGD_Spielleitung_A5.pdf',pages:packedPageGroups.filter(page=>page.organizer).map(page=>page.page)},
+    {key:'rot',name:'SPURJAGD_Team_Rot_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='rot').map(page=>page.page)},
+    {key:'blau',name:'SPURJAGD_Team_Blau_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='blau').map(page=>page.page)},
+    {key:'grün',name:'SPURJAGD_Team_Gruen_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='grün').map(page=>page.page)},
+    {key:'gelb',name:'SPURJAGD_Team_Gelb_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='gelb').map(page=>page.page)},
+    {key:'labels',name:'SPURJAGD_Umschlagetiketten_A5.pdf',pages:packedPageGroups.filter(page=>page.label).map(page=>page.page)}
+  ];
+  const separatedPdfs=[];
+  for(const spec of pdfSpecs){
+    if(!spec.pages.length){failures.push('Separated PDF has no pages: '+spec.name);continue;}
+    const path='verification/print-pdfs/'+spec.name;
+    await page.pdf({path,format:'A5',printBackground:true,preferCSSPageSize:true,pageRanges:rangeFor(spec.pages)});
+    const info=spawnSync('pdfinfo',[path],{encoding:'utf8'});
+    const count=Number(info.stdout.match(/^Pages:\\s*(\\d+)/m)?.[1]);
+    const size=info.stdout.match(/^Page size:\\s*([\\d.]+) x ([\\d.]+) pts/m);
+    if(info.status!==0||count!==spec.pages.length)failures.push('Separated PDF page count differs from packed manifest: '+spec.name+' ('+count+'/'+spec.pages.length+')');
+    if(!size||Math.abs(Number(size[1])-419.53)>=2||Math.abs(Number(size[2])-595.28)>=2)failures.push('Separated PDF is not A5 portrait: '+spec.name);
+    const extracted=spawnSync('pdftotext',['-layout',path,'-'],{encoding:'utf8'});
+    const pageTexts=extracted.stdout.split('\\f').filter((value,index,array)=>index<array.length-1||value.trim());
+    if(extracted.status!==0||pageTexts.length!==spec.pages.length||pageTexts.some(value=>!value.trim()))failures.push('Separated PDF contains blank or unreadable pages: '+spec.name);
+    if(spec.key==='organizer'&&(!extracted.stdout.includes('Start und Sicherheit')||!extracted.stdout.includes('Codes und Lösungen')||!extracted.stdout.includes('Umschlagkontrolle')))failures.push('Organizer PDF is missing a required section');
+    if(['rot','blau','grün','gelb'].includes(spec.key)){
+      const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb'}[spec.key];
+      if(pageTexts.some(value=>!value.includes(teamLabel)))failures.push('Team PDF contains a page without its matching team: '+spec.name);
+      if(/Codes und Lösungen|Schloss-Code:\\s*(?:007|000|123|987)/.test(extracted.stdout))failures.push('Team PDF contains organizer-only codes: '+spec.name);
+    }
+    if(spec.key==='labels'&&(!extracted.stdout.includes('Umschlag')||spec.pages.length!==categories.labels))failures.push('Envelope-label PDF differs from the label manifest');
+    separatedPdfs.push({file:spec.name,path,pages:spec.pages.length,sourcePages:spec.pages});
+  }
+  writeFileSync('verification/a5-separated-pdf-report.json',JSON.stringify({source:'Chromium packed A5 PDF',totalPackedPages:packedExport.pages,pdfs:separatedPdfs,failures},null,2));
+  if(failures.length)throw new Error(failures.join('\\n'));
   console.log('A5 browser print verified:', expected, 'pages');
 } catch (error) {
   // Preserve evidence even when the wizard or Chromium fails before PDF creation.
