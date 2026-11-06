@@ -480,7 +480,7 @@ function App() {
                 </div>}
                 {printIssues.length>0 && <div className="warnings" role="status"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
-                  <article className="print-sheet print-organizer-sheet" key="safety-check">
+                  <article className="print-sheet print-organizer-sheet" data-print-section="safety" key="safety-check">
                     <h1>Spielleitung – Start und Sicherheit</h1>
                     <h2>Vor der Ausgabe</h2>
                     <p>Pro Umschlag: ein A5-Aufgabenblatt mit Antwortfeldern und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
@@ -492,7 +492,7 @@ function App() {
                     <h2>Zum Spielende</h2>
                     <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
                   </article>
-                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" data-print-section="group-routes" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
@@ -500,12 +500,12 @@ function App() {
                     <p>Jede Gruppe erhält Aufgaben und Wegrätsel für die neben ihrer Teamfarbe angegebene Altersstufe.</p>
                     {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p className="team-route-line" data-team-color={team.name.toLowerCase()} key={i}><strong>{team.name} · {team.profile?.age??age} Jahre ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
-                  {Array.from({length:Math.ceil(challenges.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
+                  {Array.from({length:Math.ceil(challenges.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" data-print-section="code-solutions" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
                     {challenges.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({location,challenge,teamName,teamIndex,ageGroup})=><div className="print-code-line" data-team-color={teamName.toLowerCase()} data-age-group={ageGroup} key={teamIndex+'-'+location.id}><strong>Team {teamName} · {ageGroup} Jahre · {location.name}: {challenge.code}</strong><p>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Drei Zahlwörter im gemeinsamen Suchgitter: '+generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+teamIndex+':'+location.id)).words.join(' → '):challenge.puzzles.map(p=>p.explanation).join(' | ')}</p></div>)}
                   </article>)}
-                  {Array.from({length:Math.ceil(Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'clue-solutions-'+page}>
+                  {Array.from({length:Math.ceil(Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" data-print-section="route-solutions" key={'clue-solutions-'+page}>
                     <h1>Spielleitung – Wegrätsel-Lösungen {page+1}</h1>
                     {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(destination=>{
                       const target=locations.find(l=>l.name.trim()===destination.trim());
@@ -513,12 +513,12 @@ function App() {
                       return <div className="print-solution-entry" key={destination}><strong>Ziel: {destination}</strong>{clue.mode==='questions'?<p>{clue.rows?.map(row=>row.solution+' ('+(row.letterIndex+1)+')').join(' · ')}</p>:<p>{clue.mode==='letters'?'Buchstabenspiel':clue.mode==='description'?'Text-Rätsel':'Eigener Rätseltext'}</p>}</div>;
                     })}
                   </article>)}
-                  {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'cautions-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" data-print-section="planning-hints" key={'cautions-'+page}>
                     <h1>Spielleitung – Planungshinweise {page+1}</h1>
                     <p>Diese Hinweise sind Annahmen aus der Routenplanung und müssen vor Ort überprüft werden.</p>
                     {plan.value.cautions.slice(page*ORGANIZER_CAUTIONS_PER_A5_SHEET,(page+1)*ORGANIZER_CAUTIONS_PER_A5_SHEET).map((warning,i)=><p className="print-caution" key={i}>{page*ORGANIZER_CAUTIONS_PER_A5_SHEET+i+1}. {warning}</p>)}
                   </article>)}
-                  {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet print-organizer-sheet" key={'control-'+page}>
+                  {Array.from({length:Math.max(1,Math.ceil((printManifest?.envelopes.length??0)/ORGANIZER_ENVELOPES_PER_A5_SHEET))},(_,page)=><article className="print-sheet print-organizer-sheet" data-print-section="envelope-control" key={'control-'+page}>
                     <h1>Spielleitung – Umschlagkontrolle {page+1}</h1>
                     <p>Umschläge je Team nach Stationsnummer sortieren und jeweils nach dem Packen abhaken.</p>
                     {printManifest?.envelopes.slice(page*ORGANIZER_ENVELOPES_PER_A5_SHEET,(page+1)*ORGANIZER_ENVELOPES_PER_A5_SHEET).map(envelope=><p className="print-checklist-row" data-team-color={envelope.team.toLowerCase()} key={envelope.id} data-envelope-id={envelope.id} data-team={envelope.team} data-station={envelope.stationName} data-number={envelope.stationNumber} data-count={envelope.sheetCount} data-code={stationCodes[envelope.stationId]??''} data-destination={envelope.destination} data-age-group={plan.value.teams.find(team=>team.name===envelope.team)?.profile?.age??age}>□ <strong>Team {envelope.team} · {plan.value.teams.find(team=>team.name===envelope.team)?.profile?.age??age} · Station {envelope.stationNumber}: {envelope.stationName}</strong><span>{envelope.sheetCount} Kinderblätter (1 Aufgabe, {envelope.sheetCount-1} Wegrätsel) · Schloss-Code: <strong>{stationCodes[envelope.stationId]}</strong> · Danach: <strong>{envelope.destination}</strong></span></p>)}
