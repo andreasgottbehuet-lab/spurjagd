@@ -733,7 +733,7 @@ try {
     if (!destination || !printedPage.includes('Danach: ' + destination))
       failures.push('A5 packing-list destination ' + (index + 1) + ' is missing from its expected PDF page');
   }
-  if (checklistPdfPages.length !== Math.ceil(checklistRows.length / 6))
+  if (checklistPdfPages.length !== Math.ceil(checklistRows.length / 7))
     failures.push('A5 organizer PDF has an incorrect number of packing-list pages');
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.

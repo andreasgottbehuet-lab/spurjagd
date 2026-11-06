@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
-import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerCautionSheetCount, organizerSheetCount} from '../src/print-manifest.ts';
+import {createPrintManifest, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_CAUTIONS_PER_A5_SHEET, ORGANIZER_ROUTES_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, organizerGroupPageRanges, organizerCautionSheetCount, organizerSheetCount} from '../src/print-manifest.ts';
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
 import {generateCreativeRouteClue,verifyRouteQuestions,normalizeSolutionWord} from '../src/puzzles.ts';
 const config={players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Spielplatz',description:''},{id:'b',name:'Wiese',description:''},{id:'c',name:'Feuerwehr',description:''},{id:'d',name:'Sportplatz',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Zuhause'};
@@ -60,7 +60,18 @@ test('Vertauschte Umschlagnummern werden erkannt',()=>{const plan=createPlan(con
 
 test('Veränderte Etikettenreihenfolge wird erkannt',()=>{const plan=createPlan(config),m=createPrintManifest(plan);m.envelopes.reverse();assert.ok(auditPrintManifest(plan,m).some(x=>x.includes('Umschlagreihenfolge')));});
 
-test('Dynamischer Druckumfang berücksichtigt unterschiedliche Gruppenzahlen',()=>{for(const players of [1,3,12,24,60,100]){const plan=createPlan({...config,players});const m=createPrintManifest(plan);const routes=Math.ceil(plan.teams.length/6);const codes=Math.ceil(plan.teams.reduce((sum,t)=>sum+t.stations.length,0)/6);const destinations=new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>t.stations[i+1]?.name??t.finish))).size;assert.equal(m.organizerSheets,routes+codes+Math.ceil(destinations/6)+Math.ceil(m.envelopes.length/6)+1+organizerCautionSheetCount(plan));assert.equal(m.minimumSheets,m.taskSheets+m.organizerSheets+m.labelSheets);assert.deepEqual(auditPrintManifest(plan,m),[]);}});
+test('Dynamischer Druckumfang berücksichtigt unterschiedliche Gruppenzahlen',()=>{for(const players of [1,3,12,24,60,100]){const plan=createPlan({...config,players});const m=createPrintManifest(plan);const routes=Math.ceil(plan.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET);const codes=organizerGroupPageRanges(plan.teams.map(t=>t.stations.length)).length;const destinations=new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>t.stations[i+1]?.name??t.finish))).size;assert.equal(m.organizerSheets,routes+codes+Math.ceil(destinations/6)+Math.ceil(m.envelopes.length/ORGANIZER_ENVELOPES_PER_A5_SHEET)+1+organizerCautionSheetCount(plan));assert.equal(m.minimumSheets,m.taskSheets+m.organizerSheets+m.labelSheets);assert.deepEqual(auditPrintManifest(plan,m),[]);}});
+
+test('Sieben Altersgruppen bleiben bei Routen, Codes und Umschlagkontrolle kompakt und gruppenweise',()=>{
+ const plan=createPlan({...config,players:21,groupSize:3});
+ const routePages=Math.ceil(plan.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET);
+ const codePages=organizerGroupPageRanges(plan.teams.map(team=>team.stations.length));
+ assert.equal(plan.teams.length,7);
+ assert.equal(routePages,1);
+ assert.deepEqual(codePages,[{start:0,end:3},{start:3,end:5},{start:5,end:7}]);
+ assert.ok(codePages.every(page=>plan.teams.slice(page.start,page.end).length<=3));
+ assert.equal(Math.ceil(plan.teams.reduce((sum,team)=>sum+team.stations.length,0)/ORGANIZER_ENVELOPES_PER_A5_SHEET),3);
+});
 
 test('Lange Fragenrätsel erhalten zusätzliche A5-Blätter und korrekte Umschlagzahlen',()=>{
  const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'},durationMinutes:60};
@@ -80,13 +91,13 @@ test('Umlautnamen werden für A5-Fragenseiten korrekt gezählt',()=>{const c={..
 
 test('Zusätzliche Wegrätselseiten erhöhen Kinder- und Spielleitungsumfang gemeinsam',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const normal=createPrintManifest(plan);const extended=createPrintManifest(plan,c);const affected=extended.envelopes.filter(e=>e.destination==='ABCDEFGHIJKLMNOPQRSTUVWXYZ');assert.ok(affected.length>0);assert.ok(affected.every(e=>e.sheetCount===7));assert.equal(extended.taskSheets-normal.taskSheets,affected.length*5);assert.equal(extended.organizerSheets-normal.organizerSheets,0);assert.deepEqual(auditPrintManifest(plan,extended,c),[]);});
 
-test('Unterschiedliche Gruppenrouten zählen jeden Zielort im Lösungsschlüssel nur einmal',()=>{const c={...config,routeMode:'varied',startMode:'distributed'};const plan=createPlan(c);const m=createPrintManifest(plan,c);const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));const stationAssignments=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);assert.equal(m.organizerSheets,Math.ceil(plan.teams.length/6)+Math.ceil(stationAssignments/6)+Math.ceil(destinations.size/6)+Math.ceil(m.envelopes.length/6)+1+organizerCautionSheetCount(plan));assert.deepEqual(auditPrintManifest(plan,m,c),[]);});
+test('Unterschiedliche Gruppenrouten zählen jeden Zielort im Lösungsschlüssel nur einmal',()=>{const c={...config,routeMode:'varied',startMode:'distributed'};const plan=createPlan(c);const m=createPrintManifest(plan,c);const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));const codes=organizerGroupPageRanges(plan.teams.map(team=>team.stations.length)).length;assert.equal(m.organizerSheets,Math.ceil(plan.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET)+codes+Math.ceil(destinations.size/6)+Math.ceil(m.envelopes.length/ORGANIZER_ENVELOPES_PER_A5_SHEET)+1+organizerCautionSheetCount(plan));assert.deepEqual(auditPrintManifest(plan,m,c),[]);});
 
 test('Leerzeichen am Stationsnamen verändern die Fragenrätsel-Seitenzahl nicht',()=>{const c={...config,locations:[{id:'a',name:'  Spielplatz  ',description:''}],routeClueModes:{a:'questions'}};assert.equal(routeSheetCount('Spielplatz',c),2);assert.equal(routeSheetCount(' Spielplatz ',c),2);});
 
 test('Fehlende Spielleitungs-Fortsetzungsseite blockiert Druckfreigabe',()=>{const c={...config,locations:[{id:'a',name:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',description:''},{id:'b',name:'Wiese',description:''}],routeClueModes:{a:'questions'}};const plan=createPlan(c);const m=createPrintManifest(plan,c);m.organizerSheets--;assert.ok(auditPrintManifest(plan,m,c).some(issue=>issue.includes('Spielleitungsseiten')));});
 
-test('Kontrollliste verteilt Umschläge in kompakten Sechserblöcken',()=>{const plan=createPlan(config);const m=createPrintManifest(plan,config);assert.equal(m.envelopes.length,12);assert.equal(m.organizerSheets,8);assert.deepEqual(auditPrintManifest(plan,m,config),[]);});
+test('Kontrollliste verteilt bis zu sieben Umschläge je A5-Blatt',()=>{const plan=createPlan(config);const m=createPrintManifest(plan,config);assert.equal(m.envelopes.length,12);assert.equal(Math.ceil(m.envelopes.length/ORGANIZER_ENVELOPES_PER_A5_SHEET),2);assert.equal(m.organizerSheets,8);assert.deepEqual(auditPrintManifest(plan,m,config),[]);});
 
 test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und Routen konsistent',()=>{
  for(const players of [1,2,7,12,25,100]){
@@ -101,7 +112,7 @@ test('Druckmanifest bleibt bei verschiedenen Gruppengrößen, Stationszahlen und
      assert.equal(manifest.minimumSheets,manifest.taskSheets+manifest.organizerSheets+manifest.labelSheets);
      const stationAssignments=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
      const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish))).size;
-     const expectedOrganizer=Math.ceil(plan.teams.length/6)+Math.ceil(stationAssignments/6)+Math.ceil(destinations/6)+Math.ceil(manifest.envelopes.length/6)+1+Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
+     const expectedOrganizer=Math.ceil(plan.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET)+organizerGroupPageRanges(plan.teams.map(team=>team.stations.length)).length+Math.ceil(destinations/6)+Math.ceil(manifest.envelopes.length/ORGANIZER_ENVELOPES_PER_A5_SHEET)+1+Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
      assert.equal(manifest.organizerSheets,expectedOrganizer);
      assert.ok(manifest.envelopes.every(envelope=>envelope.sheetCount>=2));
     }

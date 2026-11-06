@@ -9,7 +9,7 @@ import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
 import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
-import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET } from './print-manifest';
+import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_CODES_PER_A5_SHEET, ORGANIZER_ROUTES_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerGroupPageRanges } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
 import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabels, auditRenderedPackingItems, auditRenderedOrganizerSecrets } from './print-dom-audit';
 import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
@@ -98,15 +98,8 @@ function App() {
     });
   },[stationCodes,age,projectId,goal,printIssues.length,plan.value,teamProfiles]);
   const organizerChallengePages=useMemo(()=>{
-    const pages:Array<typeof challenges>=[];
-    for(const team of plan.value?.teams??[]){
-      const bundle=challenges.filter(item=>item.teamIndex===plan.value!.teams.indexOf(team));
-      if(!bundle.length)continue;
-      const page=pages.at(-1);
-      if(page&&page.length+bundle.length<=ORGANIZER_ITEMS_PER_A5_SHEET)page.push(...bundle);
-      else pages.push([...bundle]);
-    }
-    return pages;
+    const bundles=(plan.value?.teams??[]).map((_,teamIndex)=>challenges.filter(item=>item.teamIndex===teamIndex));
+    return organizerGroupPageRanges(bundles.map(bundle=>bundle.length),ORGANIZER_CODES_PER_A5_SHEET).map(range=>bundles.slice(range.start,range.end).flat());
   },[challenges,plan.value]);
   const [measuredPrintSummary,setMeasuredPrintSummary] = useState<{total:number;organizer:number;children:number;labels:number;error:string}|null>(null);
   useEffect(()=>{
@@ -515,13 +508,13 @@ function App() {
                     <h2>Zum Spielende</h2>
                     <p>Alle Kinder zählen, sämtliche Schlösser und das Material einsammeln.</p>
                   </article>
-                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
+                  {Array.from({length:Math.ceil(plan.value.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'routes-'+page}>
                     <h1>{projectTitle} – Gruppenrouten {page+1}</h1>
                     <p><strong>Start:</strong> {startPoint} · <strong>Ziel:</strong> {finishMode==='origin'?startPoint:finishMode==='meeting'?meetingPoint:'Eigene Startstation'}</p>
                     <p>{players} Kinder · {plan.value.teams.length} Gruppen · {duration} Minuten · {plan.value.stopsPerTeam} Stationen je Gruppe</p>
                     <h2>Gruppen und Routen</h2>
                     <p>Jede Gruppe erhält Aufgaben und Wegrätsel für die neben ihrer Teamfarbe angegebene Altersstufe.</p>
-                    {plan.value.teams.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map((team,i)=><p className="team-route-line" data-team-color={team.name.toLowerCase()} key={i}><strong>{team.name} · {team.profile?.age??age} Jahre ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
+                    {plan.value.teams.slice(page*ORGANIZER_ROUTES_PER_A5_SHEET,(page+1)*ORGANIZER_ROUTES_PER_A5_SHEET).map((team,i)=><p className="team-route-line" data-team-color={team.name.toLowerCase()} key={i}><strong>{team.name} · {team.profile?.age??age} Jahre ({team.memberCount}):</strong> {team.stations.map(s=>s.name).join(' → ')} → {team.finish}</p>)}
                   </article>)}
                   {organizerChallengePages.map((challengePage,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>

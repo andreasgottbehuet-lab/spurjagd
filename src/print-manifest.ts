@@ -10,15 +10,41 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
 export const ORGANIZER_ITEMS_PER_A5_SHEET = 6;
-export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 6;
+export const ORGANIZER_ROUTES_PER_A5_SHEET = 7;
+export const ORGANIZER_CODES_PER_A5_SHEET = 9;
+export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 7;
 export const ORGANIZER_CAUTIONS_PER_A5_SHEET = 6;
+/** Keep each team's code bundle together and balance remaining groups across pages. */
+export function organizerGroupPageRanges(groupSizes:number[],capacity=ORGANIZER_CODES_PER_A5_SHEET,maxGroups=3):{start:number;end:number}[] {
+ if(groupSizes.some(size=>!Number.isInteger(size)||size<1)||!Number.isInteger(capacity)||capacity<1||!Number.isInteger(maxGroups)||maxGroups<1)
+  throw new Error('Ungültige Spielleiter-Gruppengröße');
+ let minimumPages=0,used=0,groups=0;
+ for(const size of groupSizes){
+  if(groups&&(groups>=maxGroups||used+size>capacity)){minimumPages++;used=0;groups=0;}
+  used+=size;groups++;
+ }
+ if(groups)minimumPages++;
+ const ranges:{start:number;end:number}[]=[];
+ let start=0,remainingPages=minimumPages;
+ while(start<groupSizes.length){
+  const target=Math.ceil((groupSizes.length-start)/remainingPages);
+  let end=start,items=0;
+  while(end<groupSizes.length&&end-start<target&&end-start<maxGroups&&(!end||items+groupSizes[end]<=capacity)){
+   items+=groupSizes[end];end++;
+  }
+  if(end===start)end++;
+  ranges.push({start,end});
+  start=end;
+  remainingPages=Math.max(1,remainingPages-1);
+ }
+ return ranges;
+}
 export function organizerCautionSheetCount(plan:GamePlan):number {
  return Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
 }
 export function organizerSheetCount(plan:GamePlan,_config?:GameConfig):number {
- const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
- const stationAssignments=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
- const codes=Math.ceil(stationAssignments/ORGANIZER_ITEMS_PER_A5_SHEET);
+ const routes=Math.ceil(plan.teams.length/ORGANIZER_ROUTES_PER_A5_SHEET);
+ const codes=organizerGroupPageRanges(plan.teams.map(team=>team.stations.length)).length;
  const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));
  const solutionEntries=destinations.size;
  const solutionSheets=Math.ceil(solutionEntries/ORGANIZER_ITEMS_PER_A5_SHEET);
