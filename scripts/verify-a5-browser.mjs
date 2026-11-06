@@ -545,8 +545,8 @@ try {
   if (new Set(taskIds).size !== taskIds.length)
     failures.push('Duplicate task sheets for an envelope');
   if (taskIds.length !== 18 || envelopePages.some(entry => entry.kind === 'answer')) failures.push('Expected exactly 18 task sheets and no answer sheets');
-  if (envelopeGroups.size !== 12 || categories.children !== 24 || categories.labels !== 3)
-    failures.push('Default 12-child A5 fixture differs from 12 envelopes / 24 child sheets / 3 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
+  if (envelopeGroups.size !== 18 || categories.children !== 36 || categories.labels !== 5)
+    failures.push('Six-age-group A5 fixture differs from 18 envelopes / 36 child sheets / 5 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
