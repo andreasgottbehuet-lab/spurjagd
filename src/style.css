@@ -169,7 +169,7 @@
  .print-checklist-row strong { font-weight:700; }
 }
 
-@media print {
+@media screen, print {
  .print-caution { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; line-height:1.4; border-bottom:1px solid #bbb; }
 }
 
