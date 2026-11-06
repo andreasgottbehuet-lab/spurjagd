@@ -114,7 +114,7 @@ export function physicalA5Manifest(pages:readonly A5PackedPage[],elements:readon
  * Only complete sheets of the same owner and section may share an A5 page.
  * The caller must remove the returned copy after the print dialog closes.
  */
-export function buildPackedA5PrintCopy(packet:HTMLElement,options:{compactOrganizer?:boolean;compactAll?:boolean}={}):{copy:HTMLElement;pageCount:number;manifest:A5PhysicalManifest} {
+export function buildPackedA5PrintCopy(packet:HTMLElement,options:{compactOrganizer?:boolean;compactAll?:boolean;noCompactBlockIds?:readonly string[]}={}):{copy:HTMLElement;pageCount:number;manifest:A5PhysicalManifest} {
  const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
  if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
  const blocks=measureA5Elements(originals);
