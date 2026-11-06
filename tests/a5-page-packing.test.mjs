@@ -155,3 +155,15 @@ test('Only overflowing packed blocks are excluded while safe short pairs still c
  const pages=packA5Blocks(blocks,190,{noCompactBlockIds:['overflow-a','overflow-b']});
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['overflow-a'],['overflow-b'],['safe-a','safe-b']]);
 });
+
+
+test('Organizer measurement keeps each print section separate for 50-percent compaction',()=>{
+ const original=globalThis.getComputedStyle;
+ globalThis.getComputedStyle=()=>({marginTop:'0px',marginBottom:'0px'});
+ try{
+  const make=(section)=>({getBoundingClientRect:()=>({height:60}),scrollHeight:60,classList:{contains:(name)=>name==='print-organizer-sheet'},dataset:{printSection:section}});
+  const measured=measureA5Elements([make('codes'),make('planning-hints')]);
+  assert.deepEqual(measured.map(sheet=>sheet.section),['codes','planning-hints']);
+  assert.equal(packA5Blocks(measured).length,2);
+ }finally{if(original===undefined)delete globalThis.getComputedStyle;else globalThis.getComputedStyle=original;}
+});
