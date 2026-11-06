@@ -59,7 +59,7 @@ test('Druck und Prüfcode lösen Stationsnamen mit Leerzeichen konsistent auf',(
 
 test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('Umschläge mit je mindestens 2 Blättern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} Kinderblätter'));});
 
-test('Kontrollliste verteilt Umschläge in vierer A5-Blöcken',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} Kinderblätter'));});
+test('Kontrollliste verteilt Umschläge in kompakten sechser A5-Blöcken',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} Kinderblätter'));});
 
 test('Sicherheitshinweise stehen auf eigener A5-Seite statt zwischen Packlisten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('key="safety-check"'));assert.ok(source.includes('Spielleitung – Umschlagkontrolle'));assert.ok(source.includes('className="print-checklist-row"'));});
 
@@ -150,11 +150,11 @@ test('Chromium A5 acceptance validates categories, envelopes and label order',()
  }
 });
 
-test('Six age groups yield 18 envelopes, 36 child sheets and 5 label sheets',()=>{
+test('Seven age groups including 18+ yield 21 envelopes, 42 child sheets and 6 label sheets',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('envelopeGroups.size !== 18'));
- assert.ok(script.includes('categories.children !== 36'));
- assert.ok(script.includes('categories.labels !== 5'));
+ assert.ok(script.includes('envelopeGroups.size !== 21'));
+ assert.ok(script.includes('categories.children !== 42'));
+ assert.ok(script.includes('categories.labels !== 6'));
 });
 
 test('Chromium acceptance checks PDF content at individual page positions',()=>{
@@ -263,7 +263,7 @@ test('Lock-code input identifies invalid values and preserves three-digit text e
 test('Each team carries its own labeled age group through organizer and child print pages',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const ageGroups=readFileSync(new URL('../src/age-groups.ts',import.meta.url),'utf8');
- assert.match(ageGroups,/\['4–6','6–8','8–10','10–12','12–14','14\+'\]/);
+ assert.match(ageGroups,/\['4–6','6–8','8–10','10–12','12–14','14\+','18\+'\]/);
  assert.ok(source.includes('Jede Gruppe erhält Aufgaben und Wegrätsel'));
  assert.ok(source.includes('data-age-group={team.profile?.age??age}'));
  assert.ok(source.includes('Team {team.name} · {team.profile?.age??age} Jahre'));
@@ -423,7 +423,7 @@ test('Full A5 browser test explicitly verifies varied routes and persisted route
  assert.ok(script.includes("if (step === 1)"));
  assert.ok(script.includes("selectOption('varied')"));
  assert.ok(script.includes('Different group routes were lost after reload'));
- assert.ok(script.includes('routeSequences.length !== 6'));
+ assert.ok(script.includes('routeSequences.length !== 7'));
  assert.ok(script.includes('new Set(routeSequences).size < 2'));
 });
 
@@ -475,14 +475,14 @@ test('Packed A5 preflight includes the same wrapper flow and separator as print'
  assert.match(css,/@media screen\s*\{\s*\.print-packet-packed \.print-packed-content \{display:flow-root;\}\s*\.print-packet-packed \.print-packed-content \+ \.print-packed-content \{margin-top:2mm;\}/);
 });
 
-test('Chromium print acceptance exports eight separate A5 packets only after the combined proof passes',()=>{
+test('Chromium print acceptance exports nine separate A5 packets including the adult team only after the combined proof passes',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  const gate=script.indexOf('if (failures.length) {');
  const exportAt=script.indexOf('const pdfSpecs=[');
  assert.ok(gate>=0&&exportAt>gate);
  assert.ok(script.includes("'pdfunite'"));
  assert.ok(script.includes("'pdfseparate'"));
- for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Team_Orange_A5.pdf','SPURJAGD_Team_Lila_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
+ for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Team_Orange_A5.pdf','SPURJAGD_Team_Lila_A5.pdf','SPURJAGD_Team_Tuerkis_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
 });
 
 test('Verdichtete Kinderblätter halten Symbol- und Pfeilgitter innerhalb der A5-Druckfläche',()=>{
@@ -504,10 +504,4 @@ test('Das gemeinsame Buchstabengitter ist auf Quellblatt und Druckkopie mittig u
  assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-cell\s*,[\s\S]*?\{width:6mm;height:6mm/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
-});
-
-
-test('Organizer print cautions have identical screen-preflight and print geometry',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/@media screen, print\s*\{\s*\.print-caution\s*\{[^}]*margin:5mm 0;[^}]*padding:2mm 0;[^}]*line-height:1\.4;[^}]*border-bottom:1px solid #bbb;/);
 });

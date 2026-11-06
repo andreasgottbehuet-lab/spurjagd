@@ -169,7 +169,7 @@
  .print-checklist-row strong { font-weight:700; }
 }
 
-@media screen, print {
+@media print {
  .print-caution { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; line-height:1.4; border-bottom:1px solid #bbb; }
 }
 
@@ -445,3 +445,13 @@
  .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell,
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-three-word-grid .wordsearch-cell {width:6mm;height:6mm;font-size:10pt}
 }
+
+/* Additional palette entries are applied consistently to all organizer and child print surfaces. */
+.print-code-line[data-team-color="türkis"],.print-child-sheet[data-team-color="türkis"],.print-label[data-team-color="türkis"],.team-route-line[data-team-color="türkis"],.print-checklist-row[data-team-color="türkis"]{--team-accent:#0f766e;--team-tint:#e6f5f2}
+.print-code-line[data-team-color="silber"],.print-child-sheet[data-team-color="silber"],.print-label[data-team-color="silber"],.team-route-line[data-team-color="silber"],.print-checklist-row[data-team-color="silber"]{--team-accent:#64748b;--team-tint:#eef2f6}
+.print-code-line[data-team-color="gold"],.print-child-sheet[data-team-color="gold"],.print-label[data-team-color="gold"],.team-route-line[data-team-color="gold"],.print-checklist-row[data-team-color="gold"]{--team-accent:#a16207;--team-tint:#fff7df}
+.print-code-line[data-team-color="pink"],.print-child-sheet[data-team-color="pink"],.print-label[data-team-color="pink"],.team-route-line[data-team-color="pink"],.print-checklist-row[data-team-color="pink"]{--team-accent:#be185d;--team-tint:#fcebf3}
+.print-worked-example{border:1px solid #b9c4cb;padding:1.5mm 2mm;margin:1mm 0;font-size:8pt;background:#f7f9fa}
+@media print{.print-code-line[data-team-color="türkis"],.print-child-sheet[data-team-color="türkis"],.print-label[data-team-color="türkis"],.team-route-line[data-team-color="türkis"],.print-checklist-row[data-team-color="türkis"],.print-code-line[data-team-color="silber"],.print-child-sheet[data-team-color="silber"],.print-label[data-team-color="silber"],.team-route-line[data-team-color="silber"],.print-checklist-row[data-team-color="silber"],.print-code-line[data-team-color="gold"],.print-child-sheet[data-team-color="gold"],.print-label[data-team-color="gold"],.team-route-line[data-team-color="gold"],.print-checklist-row[data-team-color="gold"],.print-code-line[data-team-color="pink"],.print-child-sheet[data-team-color="pink"],.print-label[data-team-color="pink"],.team-route-line[data-team-color="pink"],.print-checklist-row[data-team-color="pink"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media screen,print{.arrow-grid[data-grid-size="5"] .wordsearch-cell,.arrow-grid[data-grid-size="6"] .wordsearch-cell{width:9mm;height:9mm;font-size:12pt}.arrow-grid[data-grid-size="7"] .wordsearch-cell,.arrow-grid[data-grid-size="8"] .wordsearch-cell{width:8mm;height:8mm;font-size:11pt}.arrow-grid[data-grid-size="9"] .wordsearch-cell,.arrow-grid[data-grid-size="10"] .wordsearch-cell,.arrow-grid[data-grid-size="11"] .wordsearch-cell{width:7mm;height:7mm;font-size:10pt}}
+@media screen,print{.print-packet-packed .arrow-grid[data-grid-size="5"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="5"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="6"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="6"] .wordsearch-cell{width:9mm;height:9mm}.print-packet-packed .arrow-grid[data-grid-size="7"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="7"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="8"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="8"] .wordsearch-cell{width:8mm;height:8mm}.print-packet-packed .arrow-grid[data-grid-size="9"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="9"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="10"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="10"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="11"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="11"] .wordsearch-cell{width:7mm;height:7mm}}

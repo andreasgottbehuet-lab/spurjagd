@@ -9,9 +9,9 @@ export function routeSheetCount(destination:string,config?:GameConfig):number {
  if(!target || config?.routeClueModes?.[target.id]!=='questions') return 1;
  return Math.max(1,Math.ceil(normalizeSolutionWord(destination).length/ROUTE_QUESTIONS_PER_A5_SHEET));
 }
-export const ORGANIZER_ITEMS_PER_A5_SHEET = 4;
-export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 4;
-export const ORGANIZER_CAUTIONS_PER_A5_SHEET = 4;
+export const ORGANIZER_ITEMS_PER_A5_SHEET = 6;
+export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 6;
+export const ORGANIZER_CAUTIONS_PER_A5_SHEET = 6;
 export function organizerCautionSheetCount(plan:GamePlan):number {
  return Math.ceil(plan.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET);
 }

@@ -1,6 +1,6 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
 export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence';
-export type AgeLevel = 'young' | 'middle' | 'older';
+export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
   kind: PuzzleKind;
@@ -9,7 +9,8 @@ export interface Puzzle {
   hint: string;
   explanation: string;
   expectedDigit: number;
-  render?: { symbol: string; count: number; items?: string[] };
+  render?: { symbol: string; count: number; items?: string[]; columns?: number };
+  workedExample?: string;
   wordGrid?: { rows: string[]; startRow: number; startCol: number; deltaRow: number; deltaCol: number; word: string };
   arrowGrid?: {rows:string[]; startRow:number; startCol:number; arrows:string};
 }
@@ -65,15 +66,17 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
-    // The missing final number is always the exact target digit.
-    const step=age==='young'?1:chooseInt(rng,age==='middle'?2:3,age==='middle'?5:8);
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const step=rank<2?chooseInt(rng,1,2):chooseInt(rng,rank===2?3:rank===3?5:rank===4?8:rank===5?11:14,rank===2?6:rank===3?10:rank===4?15:rank===5?20:25);
     const ascending=target>=4*step && rng()<0.5;
-    const values=Array.from({length:5},(_,i)=>ascending?target-(4-i)*step:target+(4-i)*step);
-    return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,4).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
+    const givenCount=rank>=5?6:rank>=3?5:4;
+    const values=Array.from({length:givenCount+1},(_,i)=>ascending?target-(givenCount-i)*step:target+(givenCount-i)*step);
+    return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,-1).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
   }
   if (kind === 'arrowpath') {
-    const size=age==='young'?5:age==='middle'?6:7;
-    const length=age==='young'?3:age==='middle'?5:7;
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const size=[5,6,7,8,9,10,11][rank];
+    const length=[3,5,7,9,11,13,15][rank];
     const moves=[{dr:0,dc:1,s:'→'},{dr:0,dc:-1,s:'←'},{dr:1,dc:0,s:'↓'},{dr:-1,dc:0,s:'↑'}];
     let startRow=0,startCol=0,r=0,c=0,arrows='';
     let completed=false;
@@ -96,8 +99,9 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   }
   if (kind === 'wordsearch') {
     const word = DIGIT_WORDS[target];
-    const size = age === 'young' ? 8 : age === 'middle' ? 10 : 12;
-    const directions = age === 'young' ? [[0,1],[1,0]] : age === 'middle'
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const size = [8,9,10,11,12,13,14][rank];
+    const directions = age === 'young' ? [[0,1],[1,0]] : age === 'early' || age === 'middle'
       ? [[0,1],[1,0],[1,1],[-1,1]]
       : [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
     const candidates: {r:number;c:number;dr:number;dc:number}[] = [];
@@ -117,53 +121,49 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     throw new Error('Kein eindeutiges Zahlwort-Suchgitter erzeugbar');
   }
   if (kind === 'symbols') {
-    // School-age children count one target among decoys in a fixed 4×4 field.
+    // All age groups count a target among distractors; the field grows with age.
     const symbol = SYMBOLS[chooseInt(rng, 0, SYMBOLS.length - 1)];
-    if(age==='young') return { id, kind, instruction: 'Zähle die abgebildeten Zeichen.', question: target === 0 ? 'Wie viele Zeichen siehst du im leeren Feld?' : 'Wie viele Zeichen sind im Kasten?', hint: 'Zeige auf jedes Zeichen und zähle langsam.', explanation: target + ' Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target} };
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const columns=[4,5,5,6,6,7,7][rank];
+    const total=columns*columns;
     const items=Array.from({length:target},()=>symbol);
-    while(items.length<16) items.push(SYMBOLS.filter(candidate=>candidate!==symbol)[chooseInt(rng,0,SYMBOLS.length-2)]);
+    while(items.length<total) items.push(SYMBOLS.filter(candidate=>candidate!==symbol)[chooseInt(rng,0,SYMBOLS.length-2)]);
     for(let i=items.length-1;i>0;i--){const j=chooseInt(rng,0,i);[items[i],items[j]]=[items[j],items[i]];}
-    return { id, kind, instruction: 'Zähle in den Kästchen nur das gesuchte Zeichen. Andere Zeichen sind Ablenkung.', question: 'Wie oft findest du dieses Zeichen? '+symbol, hint: 'Gehe Reihe für Reihe vor und zähle das gesuchte Zeichen nur einmal pro Kästchen.', explanation: target + ' passende Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target, items} };
+    return { id, kind, instruction: age==='young'?'Zähle die gesuchten Zeichen zwischen den anderen Bildern.':'Zähle in den Kästchen nur das gesuchte Zeichen. Andere Zeichen sind Ablenkung.', question: 'Wie oft findest du dieses Zeichen? '+symbol, hint: 'Gehe Reihe für Reihe vor und zähle das gesuchte Zeichen nur einmal pro Kästchen.', explanation: target + ' passende Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target, items, columns} };
   }
   if (kind === 'arithmetic') {
-    let question: string;
-    let explanation: string;
-    if (age === 'young') {
-      if(rng()<0.5){
-        const first=chooseInt(rng,0,target);
-        const second=target-first;
-        question=first+' + '+second+' = ?';
-        explanation=question.replace('?',String(target));
-      }else{
-        const extra=chooseInt(rng,0,Math.min(3,9-target));
-        question=(target+extra)+' − '+extra+' = ?';
-        explanation=question.replace('?',String(target));
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const termCount=rank===0?(target>1?2:3):rank<=2?3:rank===3?4:rank===4?5:rank===5?6:7;
+    let terms:number[]=[]; let signs:string[]=[]; let result=0;
+    for(let attempt=0;attempt<500;attempt++){
+      terms=Array.from({length:termCount-1},()=>chooseInt(rng,1,9));
+      if(terms.some((value,index)=>index>0&&value===terms[index-1]))continue;
+      signs=Array.from({length:termCount-2},()=>rng()<0.5?'+':'−');
+      result=terms[0]; for(let i=0;i<signs.length;i++)result=signs[i]==='+'?result+terms[i+1]:result-terms[i+1];
+      for(const lastSign of ['+','−']){
+        const last=lastSign==='+'?target-result:result-target;
+        if(last<1||last>9)continue;
+        if(terms.at(-1)===last)continue;
+        terms=[...terms,last]; signs=[...signs,lastSign]; result=target; break;
       }
-    } else if (age === 'middle') {
-      const extra=chooseInt(rng,1,9);
-      if(rng()<0.5){
-        question=(target+extra)+' − '+extra+' = ?';
-      }else{
-        question=target+' + '+extra+' − '+extra+' = ?';
-      }
-      explanation=question.replace('?',String(target));
-    } else {
-      // The product must be at least the target: avoid confusing 'minus -3' expressions.
-      const factor = chooseInt(rng, 3, 5);
-      const extra = chooseInt(rng, 3, 5);
-      question = factor + ' × ' + extra + ' − ' + (factor * extra - target) + ' = ?';
-      explanation = factor + ' × ' + extra + ' − (' + (factor * extra - target) + ') = ' + target;
+      if(result===target&&terms.length===termCount)break;
     }
-    return { id, kind, instruction: 'Löse die Rechnung. Das Ergebnis ist eine Ziffer für den Code.', question, hint: age==='young'?'Zähle mit den Fingern oder male Punkte.':age==='middle'?'Rechne Schritt für Schritt und prüfe die letzte Rechnung.':'Rechne zuerst die Multiplikation und danach die Subtraktion.', explanation, expectedDigit: target };
+    if(terms.length!==termCount||result!==target)throw new Error('Keine nichttriviale Rechnung erzeugbar');
+    const expression=terms.map((term,index)=>(index?signs[index-1]+' ':'')+term).join(' ');
+    const question=expression+' = ?';
+    const explanation=expression+' = '+target;
+    return { id, kind, instruction: 'Löse die Rechnung. Das Ergebnis ist eine Ziffer für den Code.', question, hint: rank===0?'Rechne die Zahlen nacheinander. Du darfst mit den Fingern oder Plättchen mitzählen.':rank<3?'Rechne Schritt für Schritt und prüfe das Ergebnis.':'Achte auf jedes Plus- und Minuszeichen und rechne von links nach rechts.', explanation, expectedDigit: target };
   }
   const word = DIGIT_WORDS[target];
-  const shift = age==='young'?1:age==='middle'?chooseInt(rng,1,3):chooseInt(rng,2,5);
+  const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+  const shift = rank===0?1:rank<3?chooseInt(rng,1,3):chooseInt(rng,2,7);
   const encoded = [...word].map(char => ALPHABET[(ALPHABET.indexOf(char) + shift) % ALPHABET.length]).join('');
   return {
     id, kind,
     instruction: 'Entschlüssele das Wort. Es verrät dir eine Ziffer. Verschiebe jeden Buchstaben im Alphabet um ' + shift + (shift===1?' Stelle':' Stellen') + ' zurück. Beim Rückwärtszählen kommt vor A der Buchstabe Z.',
     question: encoded,
-    hint: age==='young'?'Gehe bei jedem Zeichen einen Buchstaben im Alphabet zurück.':'Schreibe das Alphabet zweimal untereinander. Beginne die untere Reihe um '+shift+' Stellen versetzt und lies die Buchstaben rückwärts ab.',
+    hint: rank>=5?'Nutze das Beispiel und verschiebe dann jeden Buchstaben gleich weit zurück.':age==='young'?'Gehe bei jedem Zeichen einen Buchstaben im Alphabet zurück.':'Schreibe das Alphabet zweimal untereinander. Beginne die untere Reihe um '+shift+' Stellen versetzt und lies die Buchstaben rückwärts ab.',
+    workedExample:rank>=5?'Beispiel: '+ALPHABET[shift]+' wird um '+shift+' Stellen zurück zu A.':undefined,
     explanation: encoded + ' bedeutet ' + word + ', also ' + target + '.',
     expectedDigit: target,
   };
@@ -173,15 +173,15 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   const target = puzzle.expectedDigit;
   if (puzzle.kind === 'sequence') {
     const parts=puzzle.question.split('  ·  ');
-    if(parts.length!==5||parts[4]!=='?') return false;
-    const nums=parts.slice(0,4).map(Number);
+    if(![5,6,7].includes(parts.length)||parts.at(-1)!=='?') return false;
+    const nums=parts.slice(0,-1).map(Number);
     if(nums.some(n=>!Number.isInteger(n))) return false;
     const delta=nums[1]-nums[0];
-    return delta!==0 && nums.slice(2).every((value,index)=>value-nums[index+1]===delta) && nums[3]+delta===target;
+    return delta!==0 && nums.slice(2).every((value,index)=>value-nums[index+1]===delta) && nums.at(-1)!+delta===target;
   }
   if (puzzle.kind === 'arrowpath') {
     const g=puzzle.arrowGrid;
-    if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||![3,5,7].includes([...g.arrows].length)||puzzle.question!==[...g.arrows].join(' ')) return false;
+    if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||![3,5,7,9,11,13,15].includes([...g.arrows].length)||puzzle.question!==[...g.arrows].join(' ')) return false;
     let r=g.startRow,c=g.startCol;
     if(!Number.isInteger(r)||!Number.isInteger(c)||r<0||c<0||r>=g.rows.length||c>=g.rows.length) return false;
     const visited=new Set([r+':'+c]);
@@ -194,7 +194,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   }
   if (puzzle.kind === 'wordsearch') {
     const g=puzzle.wordGrid;
-    if(!g || g.word!==DIGIT_WORDS[target] || ![8,10,12].includes(g.rows.length) || g.rows.some(row=>row.length!==g.rows.length || !/^[A-Z]+$/.test(row))) return false;
+    if(!g || g.word!==DIGIT_WORDS[target] || ![8,9,10,11,12,13,14].includes(g.rows.length) || g.rows.some(row=>row.length!==g.rows.length || !/^[A-Z]+$/.test(row))) return false;
     const {startRow:r,startCol:c,deltaRow:dr,deltaCol:dc}=g;
     if(!Number.isInteger(r)||!Number.isInteger(c)||!Number.isInteger(dr)||!Number.isInteger(dc)||(dr===0&&dc===0)||Math.abs(dr)>1||Math.abs(dc)>1) return false;
     if(![...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter)) return false;
@@ -204,15 +204,14 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   if (puzzle.kind === 'symbols') {
     const render=puzzle.render;
     if(!render||render.count!==target||typeof render.symbol!=='string'||!render.symbol.trim()||render.symbol.length>4) return false;
-    return render.items===undefined || (render.items.length===16 && render.items.every(item=>SYMBOLS.includes(item)) && render.items.filter(item=>item===render.symbol).length===target);
+    return render.items===undefined || (render.items.length>=16 && render.items.length<=49 && render.items.every(item=>SYMBOLS.includes(item)) && render.items.filter(item=>item===render.symbol).length===target);
   }
   if (puzzle.kind === 'arithmetic') {
-    const q = puzzle.question.match(/^(-?\d+)\s*([+−×])\s*(-?\d+)(?:\s*−\s*\((-?\d+)\)|\s*−\s*(-?\d+))?\s*=\s*\?$/);
-    if (!q) return false;
-    const a = Number(q[1]), b = Number(q[3]), sign = q[2];
-    const result = sign === '+' ? a+b : sign === '−' ? a-b : a*b;
-    const subtraction = q[4] !== undefined ? Number(q[4]) : q[5] !== undefined ? Number(q[5]) : 0;
-    return result - subtraction === target;
+    const match=puzzle.question.match(/^\d+(?:\s*[+−]\s*\d+){1,6}\s*=\s*\?$/);
+    if(!match)return false;
+    const tokens=puzzle.question.replace(/=\s*\?$/,'').trim().split(/\s+/); let result=Number(tokens[0]);
+    for(let i=1;i<tokens.length;i+=2){const value=Number(tokens[i+1]);result=tokens[i]==='+'?result+value:result-value;}
+    return result===target && !/(\d+)\s*−\s*\1/.test(puzzle.question);
   }
   if (puzzle.kind === 'cipher') {
     const shift = puzzle.instruction.match(/um (\d+) Stelle(?:n)?/);

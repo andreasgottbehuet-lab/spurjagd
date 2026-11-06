@@ -159,7 +159,7 @@ test('Ortsnamen mit gleichem Vorwärts- und Rückwärtstext verraten nicht die L
 
 test('Eigene Ortsrätsel nennen den Zielort nicht ausdrücklich',()=>{const a=generateCreativeRouteClue('Wiese','','custom',1,'Geht zur WIESE.');assert.equal(verifyCreativeRouteClue(a),false);const b=generateCreativeRouteClue('Wiese','','custom',1,'Wo wachsen hohe Gräser?');assert.equal(verifyCreativeRouteClue(b),true);});
 
-test('Kinder erhalten altersgerechte Rechenhilfen',()=>{const a=generateDigitPuzzle(7,'arithmetic','young',3);const b=generateDigitPuzzle(7,'arithmetic','older',3);assert.match(a.hint,/Fingern/);assert.match(b.hint,/Multiplikation/);assert.notEqual(a.hint,b.hint);});
+test('Kinder erhalten altersgerechte Rechenhilfen',()=>{const a=generateDigitPuzzle(7,'arithmetic','young',3);const b=generateDigitPuzzle(7,'arithmetic','older',3);assert.match(a.hint,/Fingern/);assert.match(b.hint,/Plus- und Minuszeichen/);assert.notEqual(a.hint,b.hint);});
 
 test('Fragenrätsel akzeptieren ausschließlich geprüfte Fragen und Antworten',()=>{
  const clue=generateCreativeRouteClue('Spielplatz','', 'questions',hashSeed('approved-questions'));
@@ -291,7 +291,7 @@ test('Ältere Kinder erhalten keine Rechnung mit negativer Subtraktionszahl',()=
  for(let digit=0;digit<=9;digit++) for(let seed=0;seed<300;seed++){
   const puzzle=generateDigitPuzzle(digit,'arithmetic','older',seed);
   assert.ok(verifyDigitPuzzle(puzzle));
-  assert.match(puzzle.question,/^\d+ × \d+ − \d+ = \?$/);
+  assert.ok((puzzle.question.match(/[+−]/g)??[]).length>=3);
   assert.doesNotMatch(puzzle.question,/− -/);
  }
 });
@@ -317,7 +317,7 @@ test('Zahlwort-Suchgitter: alle Ziffern, Altersstufen, deterministisch und über
  for(const age of ['young','middle','older']) for(const digit of [0,1,2,3,4,5,6,7,8,9]) for(const seed of [0,1,17,999]){
   const puzzle=generateDigitPuzzle(digit,'wordsearch',age,seed);
   assert.equal(puzzle.expectedDigit,digit);
-  assert.equal(puzzle.wordGrid.rows.length,age==='young'?8:age==='middle'?10:12);
+  assert.equal(puzzle.wordGrid.rows.length,age==='young'?8:age==='middle'?10:11);
   assert.equal(verifyDigitPuzzle(puzzle),true);
   assert.deepEqual(generateDigitPuzzle(digit,'wordsearch',age,seed),puzzle);
   const tampered=structuredClone(puzzle);
@@ -387,7 +387,7 @@ test('Referenzspiel deckt alle sechs Schlossrätselarten mit gültigen Codes ab'
 });
 
 test('Pfeilpfade haben auch bei schwierigen Seeds immer die volle altersgerechte Länge',()=>{
- for(const [age,length] of [['young',3],['middle',5],['older',7]]) for(let digit=0;digit<10;digit++) for(let seed=0;seed<120;seed++){
+ for(const [age,length] of [['young',3],['middle',7],['older',9]]) for(let digit=0;digit<10;digit++) for(let seed=0;seed<120;seed++){
   const p=generateDigitPuzzle(digit,'arrowpath',age,seed);
   assert.equal([...p.arrowGrid.arrows].length,length);
   assert.equal(verifyDigitPuzzle(p),true);
@@ -492,7 +492,7 @@ test('Zahlenfolgen für 8- bis 10-Jährige zeigen vier Ausgangszahlen mit einem 
 test('Zählrätsel für 8- bis 10-Jährige mischen 16 Zeichen und ergeben eindeutig die gesuchte Ziffer',()=>{
  for(let target=0;target<=9;target++) for(let seed=0;seed<20;seed++){
   const puzzle=generateDigitPuzzle(target,'symbols','middle',seed+target*20);
-  assert.equal(puzzle.render.items.length,16);
+  assert.equal(puzzle.render.items.length,25);
   assert.equal(puzzle.render.items.filter(item=>item===puzzle.render.symbol).length,target);
   assert.ok(puzzle.render.items.some(item=>item!==puzzle.render.symbol));
   assert.equal(verifyDigitPuzzle(puzzle),true);
@@ -506,13 +506,55 @@ test('Neue Spiele wählen Textbeschreibungen und die Wiese beschreibt Blumen sta
  assert.doesNotMatch(config.locations.find(location=>location.name==='Wiese').description,/Bäume|Häuser/i);
 });
 
-test('Altersgruppen decken den Zweijahresrhythmus von 4 bis 14 ab',()=>{
- assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+']);
- assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','young','middle','older','older','older']);
+test('Altersgruppen decken den Zweijahresrhythmus bis 14+ und optional 18+ ab',()=>{
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+','18+']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','expert','adult']);
 });
 
 test('Text-Wegrätsel formt Ortsmerkmale aus einer Liste zu einem lesbaren Hinweis',()=>{
  const clue=generateCreativeRouteClue('Spielplatz','Schaukeln, Rutsche, Klettergerüst','description',11);
  assert.equal(clue.question,'Besondere Merkmale: Schaukeln, Rutsche und Klettergerüst. Welcher Ort passt zu diesem Text?');
  assert.equal(verifyCreativeRouteClue(clue),true);
+});
+
+test('Die optionalen Erwachsenen erhalten eine eigene Altersstufe und Schwierigkeitsklasse',()=>{
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+','18+']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','expert','adult']);
+});
+
+test('Zählrätsel für 6- bis 8-Jährige mischen mehrere Zeichen und bleiben eindeutig',()=>{
+ for(let target=0;target<=9;target++){
+  const p=generateDigitPuzzle(target,'symbols','early',target+610);
+  assert.ok(p.render.items.length>16);
+  assert.ok(new Set(p.render.items).size>=3);
+  assert.equal(p.render.items.filter(item=>item===p.render.symbol).length,target);
+  assert.equal(verifyDigitPuzzle(p),true);
+ }
+});
+
+test('Rechenaufgaben ab 10 Jahren enthalten mindestens vier sinnvolle Rechenschritte',()=>{
+ for(const age of ['older','advanced','expert','adult']) for(let target=0;target<=9;target++){
+  const p=generateDigitPuzzle(target,'arithmetic',age,target+100);
+  assert.ok((p.question.match(/[+−]/g)??[]).length>=3,p.question);
+  assert.doesNotMatch(p.question,/(\d+)\s*([+−])\s*\1/,p.question);
+  assert.equal(verifyDigitPuzzle(p),true,p.question);
+ }
+});
+
+test('Zahlfolgen und Pfeilpfade wachsen bis zur Erwachsenenstufe weiter',()=>{
+ const lengths=[];
+ for(const age of ['young','early','middle','older','advanced','expert','adult']){
+  const path=generateDigitPuzzle(7,'arrowpath',age,777);
+  lengths.push(path.arrowGrid.arrows.length);
+  assert.equal(verifyDigitPuzzle(path),true);
+ }
+ assert.deepEqual(lengths,[3,5,7,9,11,13,15]);
+});
+
+test('Geheimschrift ab 14+ erklärt die Verschiebung mit einem Beispiel statt Alphabettabelle',()=>{
+ for(const age of ['expert','adult']){
+  const p=generateDigitPuzzle(8,'cipher',age,1234);
+  assert.ok(p.workedExample);
+  assert.equal(verifyDigitPuzzle(p),true);
+ }
 });

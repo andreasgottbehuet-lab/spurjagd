@@ -13,15 +13,15 @@ try {
   activePage = page;
   page.on('pageerror', error => browserErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
-  const expectedTeamAges={rot:'4–6',blau:'6–8',grün:'8–10',gelb:'10–12',orange:'12–14',lila:'14+'};
+  const expectedTeamAges={rot:'4–6',blau:'6–8',grün:'8–10',gelb:'10–12',orange:'12–14',lila:'14+',türkis:'18+'};
   const participantRange=page.locator('input[type="range"]').nth(0);
   await participantRange.evaluate(input=>{
     const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;
-    setter.call(input,'18');
+    setter.call(input,'21');
     input.dispatchEvent(new Event('input',{bubbles:true}));
     input.dispatchEvent(new Event('change',{bubbles:true}));
   });
-  await page.waitForFunction(()=>document.querySelectorAll('.team-age-assignments select').length===6);
+  await page.waitForFunction(()=>document.querySelectorAll('.team-age-assignments select').length===7);
   const ageSelectors=page.locator('.team-age-assignments select');
   for(const [index,ageGroup] of Object.values(expectedTeamAges).entries())
     await ageSelectors.nth(index).selectOption({label:ageGroup});
@@ -103,7 +103,7 @@ try {
   else {
     await packingPreview.locator('summary').click();
     const previewRows = packingPreview.locator('li');
-    if (await previewRows.count() !== 18)
+    if (await previewRows.count() !== 21)
       failures.push('Organizer packing preview does not list all 12 envelopes');
     const previewText = await packingPreview.innerText();
     for (const code of ['007', '000', '123', '987'])
@@ -115,8 +115,8 @@ try {
   // Confirm that the printed organizer pages actually contain distinct team routes.
   const routeLines = await page.locator('.print-organizer-sheet').filter({ hasText: 'Gruppen und Routen' }).locator('p').allTextContents();
   const routeSequences = routeLines.filter(line => /→/.test(line) && /\(.+\):/.test(line)).map(line => line.split(':').slice(1).join(':').trim());
-  if (routeSequences.length !== 6 || new Set(routeSequences).size < 2)
-    failures.push('A5 reference case must print six age-group team routes with at least two different sequences');
+  if (routeSequences.length !== 7 || new Set(routeSequences).size < 2)
+    failures.push('A5 reference case must print seven age-group team routes with at least two different sequences');
   // The new print contract never emits separate answer sheets.
   if (await page.locator('.print-child-sheet[data-sheet-kind="answer"]').count() !== 0)
     failures.push('Redundant answer sheet is still present in the A5 packet');
@@ -130,7 +130,7 @@ try {
     if(position<0 || position<=previous) failures.push('Organizer sections out of order: '+label);
     else previous=position;
   }
-  const expectedTeamColors={rot:'rgb(183, 53, 58)',blau:'rgb(39, 102, 163)',grün:'rgb(40, 121, 77)',gelb:'rgb(153, 113, 0)',orange:'rgb(189, 90, 18)',lila:'rgb(116, 70, 166)'};
+  const expectedTeamColors={rot:'rgb(183, 53, 58)',blau:'rgb(39, 102, 163)',grün:'rgb(40, 121, 77)',gelb:'rgb(153, 113, 0)',orange:'rgb(189, 90, 18)',lila:'rgb(116, 70, 166)',türkis:'rgb(15, 118, 110)'};
   for(const [team,expectedColor] of Object.entries(expectedTeamColors)){
     for(const [selector,property] of [['.print-child-sheet','borderTopColor'],['.print-label','borderLeftColor'],['.print-checklist-row','borderLeftColor'],['.team-route-line','borderLeftColor'],['.print-code-line','borderLeftColor']]){
       const sheets=page.locator(selector+'[data-team-color="'+team+'"]');
@@ -544,9 +544,9 @@ try {
   const taskIds = envelopePages.filter(entry => entry.kind === 'task').map(entry => entry.id);
   if (new Set(taskIds).size !== taskIds.length)
     failures.push('Duplicate task sheets for an envelope');
-  if (taskIds.length !== 18 || envelopePages.some(entry => entry.kind === 'answer')) failures.push('Expected exactly 18 task sheets and no answer sheets');
-  if (envelopeGroups.size !== 18 || categories.children !== 36 || categories.labels !== 5)
-    failures.push('Six-age-group A5 fixture differs from 18 envelopes / 36 child sheets / 5 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
+  if (taskIds.length !== 21 || envelopePages.some(entry => entry.kind === 'answer')) failures.push('Expected exactly 21 task sheets and no answer sheets');
+  if (envelopeGroups.size !== 21 || categories.children !== 42 || categories.labels !== 6)
+    failures.push('Seven-age-group A5 fixture including 18+ differs from 21 envelopes / 42 child sheets / 6 label sheets: ' + JSON.stringify({envelopes: envelopeGroups.size, categories}));
   await page.emulateMedia({ media: 'print' });
   // Print-media emulation does not impose the PDF paper width on the screen viewport.
   // Match the A5 content width before collecting geometry diagnostics.
@@ -858,7 +858,7 @@ try {
     await page.screenshot({ path: 'verification/a5-browser-failure.png', fullPage: true });
     throw new Error(failures.join('\n'));
   }
-  // The combined Chromium proof passed. Export the organizer, six age-group team packets and labels from its exact packed-page order.
+  // The combined Chromium proof passed. Export the organizer, seven age-group team packets and labels from its exact packed-page order.
   rmSync('verification/print-pdfs/source-pages',{recursive:true,force:true});
   mkdirSync('verification/print-pdfs/source-pages',{recursive:true});
   const splitPages=spawnSync('pdfseparate',['verification/a5-browser-packed.pdf','verification/print-pdfs/source-pages/source-%d.pdf'],{encoding:'utf8'});
@@ -888,6 +888,7 @@ try {
     {key:'gelb',name:'SPURJAGD_Team_Gelb_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='gelb').map(page=>page.page)},
     {key:'orange',name:'SPURJAGD_Team_Orange_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='orange').map(page=>page.page)},
     {key:'lila',name:'SPURJAGD_Team_Lila_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='lila').map(page=>page.page)},
+    {key:'türkis',name:'SPURJAGD_Team_Tuerkis_A5.pdf',pages:packedPageGroups.filter(page=>!page.organizer&&!page.label&&page.team==='türkis').map(page=>page.page)},
     {key:'labels',name:'SPURJAGD_Umschlagetiketten_A5.pdf',pages:packedPageGroups.filter(page=>page.label).map(page=>page.page)}
   ];
   const separatedPdfs=[];
@@ -906,8 +907,8 @@ try {
     const pageTexts=extracted.stdout.split('\f').filter((value,index,array)=>index<array.length-1||value.trim());
     if(extracted.status!==0||pageTexts.length!==spec.pages.length||pageTexts.some(value=>!value.trim()))failures.push('Separated PDF contains blank or unreadable pages: '+spec.name);
     if(spec.key==='organizer'&&(!extracted.stdout.includes('Start und Sicherheit')||!extracted.stdout.includes('Codes und Lösungen')||!extracted.stdout.includes('Umschlagkontrolle')))failures.push('Organizer PDF is missing a required section');
-    if(['rot','blau','grün','gelb','orange','lila'].includes(spec.key)){
-      const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb',orange:'Team Orange',lila:'Team Lila'}[spec.key];
+    if(['rot','blau','grün','gelb','orange','lila','türkis'].includes(spec.key)){
+      const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb',orange:'Team Orange',lila:'Team Lila',türkis:'Team Türkis'}[spec.key];
       const ageGroup=expectedTeamAges[spec.key];
       if(pageTexts.some(value=>!value.includes(ageGroup+' Jahre'))) failures.push('Team PDF is missing its matching age group: '+spec.name);
       if(pageTexts.some(value=>!value.includes(teamLabel)))failures.push('Team PDF contains a page without its matching team: '+spec.name);
