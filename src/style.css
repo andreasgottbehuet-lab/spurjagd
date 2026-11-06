@@ -437,3 +437,11 @@
  .print-packet > .print-child-sheet[data-sheet-kind="task"] .symbol-grid {grid-template-columns:repeat(4,7mm);grid-auto-rows:7mm;gap:.6mm;margin:1mm auto;padding:1mm}
  .print-packet > .print-child-sheet[data-sheet-kind="task"] .symbol-grid .symbol-cell {width:7mm;height:7mm;font-size:12pt}
 }
+
+/* Override the legacy 3.5 mm rule with a centered, readable shared word grid. */
+@media screen, print {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-grid,
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-three-word-grid .wordsearch-grid {display:flex;flex-direction:column;width:max-content;max-width:100%;margin-left:auto!important;margin-right:auto!important;justify-content:center}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell,
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-three-word-grid .wordsearch-cell {width:6mm;height:6mm;font-size:10pt}
+}
