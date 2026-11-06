@@ -532,7 +532,7 @@ function App() {
                     try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??(target?'description':'letters'),hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevelFor(team.profile?.age??age));}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
-                      <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
+                      <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-age-group={team.profile?.age??age} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name} · {team.profile?.age??age} Jahre</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{1+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
