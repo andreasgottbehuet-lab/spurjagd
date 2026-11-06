@@ -259,9 +259,12 @@ test('Lock-code input identifies invalid values and preserves three-digit text e
  assert.ok(ui.includes('pattern="[0-9]{3}"'));
 });
 
-test('Organizer explains the shared age group without product-roadmap copy',()=>{
+test('Each team carries its own labeled age group through organizer and child print pages',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(source,/Alle Gruppen erhalten Aufgaben für die gemeinsam ausgewählte Altersklasse/);
+ for(const age of ['4–6','6–8','8–10','10–12','12–14','14+']) assert.ok(source.includes(age)||source.includes('AGE_GROUPS.map'),age);
+ assert.ok(source.includes('Jede Gruppe erhält Aufgaben und Wegrätsel'));
+ assert.ok(source.includes('data-age-group={team.profile?.age??age}'));
+ assert.ok(source.includes('Team {team.name} · {team.profile?.age??age} Jahre'));
 });
 
 test('Wizard offers explicit next-step navigation and live group summary',()=>{
@@ -470,12 +473,12 @@ test('Packed A5 preflight includes the same wrapper flow and separator as print'
  assert.match(css,/@media screen\s*\{\s*\.print-packet-packed \.print-packed-content \{display:flow-root;\}\s*\.print-packet-packed \.print-packed-content \+ \.print-packed-content \{margin-top:2mm;\}/);
 });
 
-test('Chromium print acceptance exports six separate A5 packets only after the combined proof passes',()=>{
+test('Chromium print acceptance exports eight separate A5 packets only after the combined proof passes',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  const gate=script.indexOf('if (failures.length) {');
  const exportAt=script.indexOf('const pdfSpecs=[');
  assert.ok(gate>=0&&exportAt>gate);
  assert.ok(script.includes("'pdfunite'"));
  assert.ok(script.includes("'pdfseparate'"));
- for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
+ for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Team_Orange_A5.pdf','SPURJAGD_Team_Lila_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
 });
