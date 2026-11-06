@@ -59,7 +59,7 @@ test('Druck und Prüfcode lösen Stationsnamen mit Leerzeichen konsistent auf',(
 
 test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('Umschläge mit je mindestens 2 Blättern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} Kinderblätter'));});
 
-test('Kontrollliste verteilt Umschläge in kompakten sechser A5-Blöcken',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} Kinderblätter'));});
+test('Kontrollliste verteilt sechs Umschläge je A5-Blatt',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const manifest=readFileSync(new URL('../src/print-manifest.ts',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(manifest.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET = 6'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} Kinderblätter'));});
 
 test('Sicherheitshinweise stehen auf eigener A5-Seite statt zwischen Packlisten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('key="safety-check"'));assert.ok(source.includes('Spielleitung – Umschlagkontrolle'));assert.ok(source.includes('className="print-checklist-row"'));});
 

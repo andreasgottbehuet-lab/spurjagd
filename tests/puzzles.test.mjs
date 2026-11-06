@@ -492,7 +492,7 @@ test('Zahlenfolgen für 8- bis 10-Jährige zeigen vier Ausgangszahlen mit einem 
 test('Zählrätsel für 8- bis 10-Jährige mischen 16 Zeichen und ergeben eindeutig die gesuchte Ziffer',()=>{
  for(let target=0;target<=9;target++) for(let seed=0;seed<20;seed++){
   const puzzle=generateDigitPuzzle(target,'symbols','middle',seed+target*20);
-  assert.equal(puzzle.render.items.length,25);
+  assert.equal(puzzle.render.items.length,16);
   assert.equal(puzzle.render.items.filter(item=>item===puzzle.render.symbol).length,target);
   assert.ok(puzzle.render.items.some(item=>item!==puzzle.render.symbol));
   assert.equal(verifyDigitPuzzle(puzzle),true);

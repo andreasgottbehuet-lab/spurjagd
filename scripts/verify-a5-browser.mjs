@@ -716,11 +716,11 @@ try {
       failures.push('A5 organizer PDF is missing packing-list destination for envelope ' + (index + 1));
   }
   // Every packing-list entry must be present on its expected A5 organizer
-  // checklist page (four envelopes per sheet), not somewhere in the document.
+  // checklist page (six envelopes per sheet), not somewhere in the document.
   const checklistPdfPages = pdfPageTexts.slice(0, categories.organizer)
     .filter(content => content.includes('Umschlagkontrolle'));
   for (let index = 0; index < checklistRows.length; index++) {
-    const printedPage = (checklistPdfPages[Math.floor(index / 4)] ?? '').replace(/\s+/g, ' ');
+    const printedPage = (checklistPdfPages[Math.floor(index / 6)] ?? '').replace(/\s+/g, ' ');
     const row = checklistRows[index].replace(/\s+/g, ' ').trim();
     const parts = row.split(' · ');
     if (!parts.every(part => printedPage.includes(part.trim())))
@@ -733,7 +733,7 @@ try {
     if (!destination || !printedPage.includes('Danach: ' + destination))
       failures.push('A5 packing-list destination ' + (index + 1) + ' is missing from its expected PDF page');
   }
-  if (checklistPdfPages.length !== Math.ceil(checklistRows.length / 4))
+  if (checklistPdfPages.length !== Math.ceil(checklistRows.length / 6))
     failures.push('A5 organizer PDF has an incorrect number of packing-list pages');
   const childText = pdfPageTexts.slice(categories.organizer, categories.organizer + categories.children).join(' ');
   // Label text must preserve each envelope's group and station assignment.

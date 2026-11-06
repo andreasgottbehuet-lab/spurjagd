@@ -124,7 +124,7 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     // All age groups count a target among distractors; the field grows with age.
     const symbol = SYMBOLS[chooseInt(rng, 0, SYMBOLS.length - 1)];
     const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
-    const columns=[4,5,5,6,6,7,7][rank];
+    const columns=[4,5,4,4,4,4,4][rank];
     const total=columns*columns;
     const items=Array.from({length:target},()=>symbol);
     while(items.length<total) items.push(SYMBOLS.filter(candidate=>candidate!==symbol)[chooseInt(rng,0,SYMBOLS.length-2)]);
