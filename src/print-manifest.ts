@@ -17,8 +17,8 @@ export function organizerCautionSheetCount(plan:GamePlan):number {
 }
 export function organizerSheetCount(plan:GamePlan,_config?:GameConfig):number {
  const routes=Math.ceil(plan.teams.length/ORGANIZER_ITEMS_PER_A5_SHEET);
- const stations=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id))).size;
- const codes=Math.ceil(stations/ORGANIZER_ITEMS_PER_A5_SHEET);
+ const stationAssignments=plan.teams.reduce((sum,team)=>sum+team.stations.length,0);
+ const codes=Math.ceil(stationAssignments/ORGANIZER_ITEMS_PER_A5_SHEET);
  const destinations=new Set(plan.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)));
  const solutionEntries=destinations.size;
  const solutionSheets=Math.ceil(solutionEntries/ORGANIZER_ITEMS_PER_A5_SHEET);
