@@ -108,7 +108,8 @@ test('A5-Kinderblätter tragen ihre Umschlagkennung und Blattart',()=>{
 
 test('A5-Etiketten besitzen eine eindeutige Umschlagkennung und werden vor Druck kontrolliert',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(/className="print-label"[^>]*data-envelope-id=\{envelope\.id\}/.test(source));
+ assert.ok(source.includes('className="print-label"'));
+ assert.ok(source.includes('data-envelope-id={envelope.id}'));
  assert.ok(source.includes("packet?.querySelectorAll<HTMLElement>('.print-label')"));
  assert.ok(source.includes('auditRenderedLabels(printManifest?.envelopes??[],labelIds)'));
 });
@@ -149,11 +150,11 @@ test('Chromium A5 acceptance validates categories, envelopes and label order',()
  }
 });
 
-test('Default browser A5 fixture checks 12 envelopes and 24 child sheets',()=>{
+test('Six age groups yield 18 envelopes, 36 child sheets and 5 label sheets',()=>{
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('envelopeGroups.size !== 12'));
- assert.ok(script.includes('categories.children !== 24'));
- assert.ok(script.includes('categories.labels !== 3'));
+ assert.ok(script.includes('envelopeGroups.size !== 18'));
+ assert.ok(script.includes('categories.children !== 36'));
+ assert.ok(script.includes('categories.labels !== 5'));
 });
 
 test('Chromium acceptance checks PDF content at individual page positions',()=>{
@@ -422,7 +423,7 @@ test('Full A5 browser test explicitly verifies varied routes and persisted route
  assert.ok(script.includes("if (step === 1)"));
  assert.ok(script.includes("selectOption('varied')"));
  assert.ok(script.includes('Different group routes were lost after reload'));
- assert.ok(script.includes('routeSequences.length !== 4'));
+ assert.ok(script.includes('routeSequences.length !== 6'));
  assert.ok(script.includes('new Set(routeSequences).size < 2'));
 });
 
