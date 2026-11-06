@@ -360,7 +360,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
    const safe=maskDestination(description,answer).replace(/\s+/g,' ').trim();
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    if(clueRevealsDestination(safe,answer)) throw new Error('Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.');
-   const listItems=safe.split(/[,;]\\s*/).map(item=>item.trim()).filter(Boolean);
+   const listItems=safe.split(/[,;]\s*/).map(item=>item.trim()).filter(Boolean);
    const prose=/[.!?]$/.test(safe)
      ? safe
      : listItems.length>1
