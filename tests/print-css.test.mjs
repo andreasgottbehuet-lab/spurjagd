@@ -500,8 +500,8 @@ test('Die A5-Höhenprüfung misst Kinderblätter mit derselben kompakten Typogra
 
 test('Das gemeinsame Buchstabengitter ist auf Quellblatt und Druckkopie mittig und größer gesetzt',()=>{
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important;[^}]*margin-right:auto!important/);
- assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
+ assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-grid\s*,[\s\S]*?\{[^}]*margin-left:auto!important;[^}]*margin-right:auto!important/);
+ assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-cell\s*,[\s\S]*?\{width:6mm;height:6mm/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
 });
