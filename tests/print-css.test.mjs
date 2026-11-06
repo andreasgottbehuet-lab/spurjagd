@@ -491,3 +491,9 @@ test('Verdichtete Kinderblätter halten Symbol- und Pfeilgitter innerhalb der A5
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.arrow-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.symbol-grid \.symbol-cell\s*\{width:7mm;height:7mm/);
 });
+
+test('Die A5-Höhenprüfung misst Kinderblätter mit derselben kompakten Typografie wie die Druckkopie',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/\.print-packet\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?font-size:8\.2pt;line-height:1\.02/);
+ assert.match(css,/\.print-packet\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.arrow-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
+});
