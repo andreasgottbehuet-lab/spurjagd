@@ -510,3 +510,9 @@ test('Altersgruppen decken den Zweijahresrhythmus von 4 bis 14 ab',()=>{
  assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+']);
  assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','young','middle','older','older','older']);
 });
+
+test('Text-Wegrätsel formt Ortsmerkmale aus einer Liste zu einem lesbaren Hinweis',()=>{
+ const clue=generateCreativeRouteClue('Spielplatz','Schaukeln, Rutsche, Klettergerüst','description',11);
+ assert.equal(clue.question,'Besondere Merkmale: Schaukeln, Rutsche und Klettergerüst. Welcher Ort passt zu diesem Text?');
+ assert.equal(verifyCreativeRouteClue(clue),true);
+});
