@@ -862,18 +862,18 @@ try {
     const path='verification/print-pdfs/'+spec.name;
     await page.pdf({path,format:'A5',printBackground:true,preferCSSPageSize:true,pageRanges:rangeFor(spec.pages)});
     const info=spawnSync('pdfinfo',[path],{encoding:'utf8'});
-    const count=Number(info.stdout.match(/^Pages:\\s*(\\d+)/m)?.[1]);
-    const size=info.stdout.match(/^Page size:\\s*([\\d.]+) x ([\\d.]+) pts/m);
+    const count=Number(info.stdout.match(/^Pages:\s*(\d+)/m)?.[1]);
+    const size=info.stdout.match(/^Page size:\s*([\d.]+) x ([\d.]+) pts/m);
     if(info.status!==0||count!==spec.pages.length)failures.push('Separated PDF page count differs from packed manifest: '+spec.name+' ('+count+'/'+spec.pages.length+')');
     if(!size||Math.abs(Number(size[1])-419.53)>=2||Math.abs(Number(size[2])-595.28)>=2)failures.push('Separated PDF is not A5 portrait: '+spec.name);
     const extracted=spawnSync('pdftotext',['-layout',path,'-'],{encoding:'utf8'});
-    const pageTexts=extracted.stdout.split('\\f').filter((value,index,array)=>index<array.length-1||value.trim());
+    const pageTexts=extracted.stdout.split('\f').filter((value,index,array)=>index<array.length-1||value.trim());
     if(extracted.status!==0||pageTexts.length!==spec.pages.length||pageTexts.some(value=>!value.trim()))failures.push('Separated PDF contains blank or unreadable pages: '+spec.name);
     if(spec.key==='organizer'&&(!extracted.stdout.includes('Start und Sicherheit')||!extracted.stdout.includes('Codes und Lösungen')||!extracted.stdout.includes('Umschlagkontrolle')))failures.push('Organizer PDF is missing a required section');
     if(['rot','blau','grün','gelb'].includes(spec.key)){
       const teamLabel={rot:'Team Rot',blau:'Team Blau',grün:'Team Grün',gelb:'Team Gelb'}[spec.key];
       if(pageTexts.some(value=>!value.includes(teamLabel)))failures.push('Team PDF contains a page without its matching team: '+spec.name);
-      if(/Codes und Lösungen|Schloss-Code:\\s*(?:007|000|123|987)/.test(extracted.stdout))failures.push('Team PDF contains organizer-only codes: '+spec.name);
+      if(/Codes und Lösungen|Schloss-Code:\s*(?:007|000|123|987)/.test(extracted.stdout))failures.push('Team PDF contains organizer-only codes: '+spec.name);
     }
     if(spec.key==='labels'&&(!extracted.stdout.includes('Umschlag')||spec.pages.length!==categories.labels))failures.push('Envelope-label PDF differs from the label manifest');
     separatedPdfs.push({file:spec.name,path,pages:spec.pages.length,sourcePages:spec.pages});
