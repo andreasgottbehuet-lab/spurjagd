@@ -364,3 +364,44 @@
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-question {font-size:10pt;line-height:1.12;}
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-hint {font-size:8.5pt;line-height:1.12;}
 }
+
+
+/* Age-specific handouts and organizer code keys retain the team's identity. */
+.team-age-assignments{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0 18px}
+.team-age-assignments label{display:grid;gap:5px;padding:10px 12px;border:1px solid #d3dbe0;border-radius:8px;background:#fff;font-weight:700}
+.print-code-line{display:block;margin:2mm 0;padding:1.5mm 2.5mm;border-left:3mm solid var(--team-accent,#63788a);background:var(--team-tint,#f0f3f5);break-inside:avoid}
+.print-code-line p{margin:.6mm 0 0}
+.print-code-line[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-code-line[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-code-line[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-code-line[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-code-line[data-team-color="orange"]{--team-accent:#bd5a12;--team-tint:#fff0e2}
+.print-child-sheet[data-team-color="orange"],.print-label[data-team-color="orange"],.team-route-line[data-team-color="orange"],.print-checklist-row[data-team-color="orange"]{--team-accent:#bd5a12;--team-tint:#fff0e2}
+@media print{.print-code-line,.print-child-sheet[data-team-color="orange"],.print-label[data-team-color="orange"],.team-route-line[data-team-color="orange"],.print-checklist-row[data-team-color="orange"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* The Caesar guide uses a fixed label column so both alphabets line up. */
+.print-alphabet-guide{display:grid;gap:1mm;margin:2mm 0;padding:2mm;border:1px solid #b9c4cb;font-family:monospace;font-size:8pt;line-height:1.35}
+.print-alphabet-guide>div{display:grid;grid-template-columns:24mm max-content;align-items:baseline;gap:2mm}
+.print-alphabet-guide code{font:inherit;letter-spacing:0;white-space:nowrap}
+
+/* Larger centered letter grids and clearly marked, team-colored arrow starts. */
+.print-three-word-grid .wordsearch-grid{display:flex;width:max-content;max-width:100%;margin:2mm auto}
+.print-three-word-grid .wordsearch-cell{width:5.5mm;height:5.5mm;font-size:10pt}
+.arrow-grid .wordsearch-cell{width:7mm;height:7mm;font-size:11pt}
+.arrow-grid .arrow-start-cell{position:relative;background:var(--team-tint,#f0f3f5);color:var(--team-accent,#63788a);border:1.5px solid var(--team-accent,#63788a)}
+.arrow-start-cell small{position:absolute;top:.3mm;left:.5mm;font-size:5pt;line-height:1}
+.arrow-start-cell strong{font-size:13pt;line-height:1}
+.symbol-grid{display:grid;grid-template-columns:repeat(4,8mm);grid-auto-rows:8mm;gap:1mm;width:max-content;margin:2mm auto;padding:1.5mm;border:1px solid #aeb9bf;background:#f8fafb;break-inside:avoid}
+.symbol-cell{display:flex;align-items:center;justify-content:center;width:8mm;height:8mm;box-sizing:border-box;border:1px solid #c5cfd4;background:white;font-size:13pt;line-height:1}
+@media screen,print{
+ .print-three-word-grid .wordsearch-grid{justify-content:center}
+ .print-three-word-grid .wordsearch-cell{width:5.5mm;height:5.5mm;font-size:10pt}
+ .arrow-grid .wordsearch-cell{width:7mm;height:7mm;font-size:11pt}
+ .arrow-start-cell strong{font-size:13pt}
+}
+@media print{
+ .print-code-line{font-size:9pt;line-height:1.2}
+ .print-alphabet-guide{font-size:7.5pt}
+ .symbol-grid{grid-template-columns:repeat(4,8mm);gap:.7mm}
+ .arrow-grid .arrow-start-cell,.symbol-cell{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
