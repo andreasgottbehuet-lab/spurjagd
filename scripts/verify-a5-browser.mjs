@@ -561,7 +561,10 @@ try {
       const h = Math.max(el.scrollHeight, rect.height);
       const w = Math.max(el.scrollWidth, rect.width);
       return { page: i + 1, widthPx: w, heightPx: h, visible: style.display !== 'none',
-        tooWide: w > maxW + 3, tooTall: h > maxH + 3 };
+        tooWide: w > maxW + 3, tooTall: h > maxH + 3,
+        className: el.className, team: el.dataset.team, ageGroup: el.dataset.ageGroup,
+        station: el.dataset.station, sheetKind: el.dataset.sheetKind,
+        text: el.innerText.slice(0, 700) };
     });
   });
   for (const entry of measured) {
