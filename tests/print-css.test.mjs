@@ -1,507 +1,538 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-
-test('A5 print packet is isolated from interactive planner elements',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/@page\s*\{\s*size:A5 portrait;/);
- assert.match(css,/\.wizard-panel\s*>\s*:not\(\.print-packet\)\s*\{\s*display:none!important;/);
- assert.match(css,/\.wizard-panel\s*>\s*\.print-packet\s*\{\s*display:block!important;/);
- assert.match(css,/\.print-sheet:last-child\s*\{\s*break-after:auto;/);
-});
-
-test('Child packet contains task and route sheets without redundant answer sheets',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('Blatt 1/{1+routeSheetCount'));
- assert.ok(source.includes('Blatt {2+routePage}'));
- assert.match(source,/printIssues\.length===0\s*&&\s*<section className="print-packet"/);
- assert.match(source,/disabled=\{printIssues\.length>0\}/);
-});
-
-test('Envelope labels use a dedicated A5 grid and page chunks',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(css,/\.print-label-grid\s*\{\s*display:grid;/);
- assert.match(css,/\.print-label-sheet\s+\.print-label\s*\{/);
- assert.match(source,/className="print-sheet print-label-sheet"/);
- assert.match(source,/className="print-label-grid"/);
- assert.match(source,/\.slice\(page\*LABELS_PER_A5_SHEET,\(page\+1\)\*LABELS_PER_A5_SHEET\)/);
-});
-
-test('Vier Etiketten lassen auf A5 Platz fÃ¼r Titel und SeitenrÃ¤nder',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const labelRule=css.match(/\.print-label-sheet \.print-label\s*\{([^}]+)\}/)?.[1];
- const gridRule=css.match(/\.print-label-grid\s*\{([^}]+)\}/)?.[1];
- assert.ok(labelRule&&gridRule);
- const row=Number(labelRule.match(/min-height:(\d+)mm/)?.[1]);
- const gap=Number(gridRule.match(/gap:(\d+)mm/)?.[1]);
- const printableHeight=210-2*10;
- const reservedTitle=25;
- assert.ok(4*row+3*gap+reservedTitle<=printableHeight,'Vier Etiketten Ã¼berschreiten das A5-HÃ¶henbudget');
-});
-
-test('Spielleitung nutzt dynamische A5-Seiten fÃ¼r Routen, Codes und LÃ¶sungen',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const marker of ["key={'routes-'+page}","key={'codes-'+page}","key={'clue-solutions-'+page}","Spielleitung â€“ Start und Sicherheit"]){
-  assert.ok(source.includes(marker),marker);
- }
-});
-
-test('Druckvorschau nennt Aufgaben-, Spielleitungs-, Etiketten- und Gesamtseiten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');for(const key of ['printManifest.taskSheets','printManifest.organizerSheets','printManifest.labelSheets','printManifest.minimumSheets','ORGANIZER_ITEMS_PER_A5_SHEET'])assert.ok(source.includes(key),key);});
-
-test('Mehrseitige WegrÃ¤tsel teilen Fragen in A5-BlÃ¶cke und nummerieren weiter',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('routePuzzle.rows.slice(routePage*ROUTE_QUESTIONS_PER_A5_SHEET'));assert.ok(source.includes('routePage*ROUTE_QUESTIONS_PER_A5_SHEET+i+1'));assert.ok(source.includes('routePage===routeSheetCount(destination,config)-1'));});
-
-test('Fragen und Antwortzeilen bleiben beim A5-Druck zusammen',()=>{const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.match(css,/\.print-route-question\s*\{[^}]*break-inside:avoid;/);assert.ok(source.includes('className="print-route-question"'));});
-
-test('LÃ¶sungsschlÃ¼ssel bÃ¼ndelt Ziele auf kompakten A5-BlÃ¤ttern',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('clue.rows?.map(row=>row.solution'));assert.ok(source.includes("key={'clue-solutions-'+page}"));});
-
-test('Druck und PrÃ¼fcode lÃ¶sen Stationsnamen mit Leerzeichen konsistent auf',()=>{const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const audit=readFileSync(new URL('../src/print-audit.ts',import.meta.url),'utf8');assert.ok(main.includes('l.name.trim()===destination.trim()'));assert.ok(audit.includes('location.name.trim()===destination.trim()'));});
-
-test('Druckumfang unterscheidet Umschlaganzahl und variable Kinderblattzahl',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('UmschlÃ¤ge mit je mindestens 2 BlÃ¤ttern; zusammen'));assert.ok(source.includes('{printManifest.taskSheets} KinderblÃ¤tter'));});
-
-test('Kontrollliste verteilt sechs UmschlÃ¤ge je A5-Blatt',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const manifest=readFileSync(new URL('../src/print-manifest.ts',import.meta.url),'utf8');assert.ok(source.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET'));assert.ok(manifest.includes('ORGANIZER_ENVELOPES_PER_A5_SHEET = 6'));assert.ok(source.includes("key={'control-'+page}"));assert.ok(source.includes('{envelope.sheetCount} KinderblÃ¤tter'));});
-
-test('Sicherheitshinweise stehen auf eigener A5-Seite statt zwischen Packlisten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('key="safety-check"'));assert.ok(source.includes('Spielleitung â€“ Umschlagkontrolle'));assert.ok(source.includes('className="print-checklist-row"'));});
-
-test('Spielleitungs-Kontrollliste enthÃ¤lt Code und tatsÃ¤chliches Folgeziel, Kinderetiketten nicht',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const checklist=source.slice(source.indexOf("key={'control-'+page}"),source.indexOf('{plan.value.teams.map((team,teamIndex)'));const labels=source.slice(source.indexOf('className="print-label-grid"'));assert.ok(checklist.includes('stationCodes[envelope.stationId]'));assert.ok(checklist.includes('envelope.destination'));assert.ok(checklist.includes('envelope.sheetCount'));assert.equal(labels.includes('stationCodes[envelope.stationId]'),false);assert.equal(labels.includes('envelope.destination'),false);});
-
-test('Kontrollliste zerlegt jede Blattzahl in Aufgabe und WegrÃ¤tsel',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('1 Aufgabe, {envelope.sheetCount-1} WegrÃ¤tsel'));});
-
-test('Druckvorschau erfordert Codes nur fÃ¼r tatsÃ¤chlich besuchte Stationen',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('const visitedStationIds = new Set('));assert.ok(source.includes("visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]"));assert.ok(source.includes("visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]"));assert.ok(source.includes('Code optional.'));});
-
-test('Alle Routenwarnungen werden auf eigene A5-BlÃ¤tter verteilt',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');assert.ok(source.includes("key={'cautions-'+page}"));assert.ok(source.includes('plan.value.cautions.slice(page*ORGANIZER_CAUTIONS_PER_A5_SHEET'));assert.ok(source.includes('className="print-caution"'));assert.match(css,/\.print-caution\s*\{[^}]*break-inside:avoid;/);});
-
-test('Keine widersprÃ¼chliche A4-SeitengrÃ¶ÃŸe im Druckstylesheet',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const declarations=[...css.matchAll(/@page\s*\{([^}]*)\}/g)].map(match=>match[1]);
- assert.ok(declarations.length>0);
- assert.ok(declarations.every(value=>/size\s*:\s*A5 portrait\s*;/.test(value)));
- assert.doesNotMatch(css,/size\s*:\s*A4\b/);
-});
-
-test('Druckknopf kontrolliert tatsÃ¤chliche DOM-Blattzahl vor dem Ã–ffnen des Druckdialogs',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes("packet?.querySelectorAll('.print-sheet').length"));
- assert.ok(source.includes('auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0'));
- assert.ok(source.includes("if(issues.length){window.alert(issues.join("));
- assert.ok(source.includes('window.print();'));
-});
-
-test('Alle Druckseiten werden einer der drei geprÃ¼ften Blattkategorien zugeordnet',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.equal((source.match(/className="print-sheet print-organizer-sheet"/g)??[]).length,6);
- assert.equal((source.match(/className="print-sheet print-child-sheet"/g)??[]).length,2);
- assert.ok(source.includes('className="print-sheet print-label-sheet"'));
- for(const name of ['print-organizer-sheet','print-child-sheet','print-label-sheet']){
-  assert.ok(source.includes("packet?.querySelectorAll('."+name+"').length"));
- }
-});
-
-test('A5-KinderblÃ¤tter tragen ihre Umschlagkennung und Blattart',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.equal((source.match(/data-envelope-id=\{teamIndex\+'-'\+location\.id\}/g)??[]).length,2);
- for(const kind of ['task','route']) assert.ok(source.includes('data-sheet-kind="'+kind+'"'));
- assert.ok(source.includes('auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes)'));
- assert.ok(source.includes("sheet.dataset.envelopeId??''"));
- assert.ok(source.includes("sheet.dataset.sheetKind??''"));
-});
-
-test('A5-Etiketten besitzen eine eindeutige Umschlagkennung und werden vor Druck kontrolliert',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('className="print-label"'));
- assert.ok(source.includes('data-envelope-id={envelope.id}'));
- assert.ok(source.includes("packet?.querySelectorAll<HTMLElement>('.print-label')"));
- assert.ok(source.includes('auditRenderedLabels(printManifest?.envelopes??[],labelIds)'));
-});
-
-test('A5 route pages expose page index for DOM print validation',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('data-route-page={routePage+1}'));
- assert.ok(source.includes('routePage:sheet.dataset.routePage?Number(sheet.dataset.routePage):undefined'));
- assert.ok(source.includes('auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes)'));
-});
-test('CI runs dedicated A5 checks and reproducible dependency installation',()=>{
- const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- assert.ok(workflow.includes('npm install --no-audit --no-fund'));
- assert.ok(workflow.includes('tests/print-dom-audit.test.mjs tests/print-css.test.mjs'));
- assert.ok(workflow.includes('verification/a5-print-tests.log'));
-});
-
-test('Browser A5 smoke test is connected to CI',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- assert.ok(script.includes('page.pdf('));
- assert.ok(script.includes('pages !== expected'));
- assert.ok(workflow.includes('node scripts/verify-a5-browser.mjs'));
-});
-
-test('Browser PDF validation rejects blank pages and missing print content',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes("spawnSync('pdftotext'"));
- assert.ok(script.includes('blankPages.length'));
- assert.ok(script.includes("includes('Spielleitung')"));
- assert.ok(script.includes("includes('Umschlag')"));
-});
-
-test('Chromium A5 acceptance validates categories, envelopes and label order',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- for(const marker of ['categories.unknown','envelopeGroups','Incomplete A5 envelope','Incorrect A5 envelope page order','A5 child sheets are interleaved','labelIds.length !== envelopeGroups.size']){
-  assert.ok(script.includes(marker),marker);
- }
-});
-
-test('Seven age groups including 18+ yield 21 envelopes, 42 child sheets and 6 label sheets',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('envelopeGroups.size !== 21'));
- assert.ok(script.includes('categories.children !== 42'));
- assert.ok(script.includes('categories.labels !== 6'));
-});
-
-test('Chromium acceptance checks PDF content at individual page positions',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('pdfPageTexts.length === expected'));
- assert.ok(!script.includes("kind === 'answer' ? 'Antwortblatt'"));
- assert.match(script,/kind === 'route'[^;]*'WegrÃ¤tsel'/);
- assert.ok(script.includes("'Stationsaufgaben:'"));
- assert.ok(script.includes('combinedWordGrid'));
- assert.ok(script.includes("'Aufgabe ' + number"));
- assert.ok(script.includes('categories.organizer + categories.children + i + 1'));
-});
-
-test('Chromium PDF audit compares organizer, children and labels to rendered packet',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('Gruppen und Routen'));
- assert.ok(script.includes('Codes und LÃ¶sungen'));
- assert.ok(script.includes('Umschlagkontrolle'));
- assert.ok(script.includes("page.locator('.print-child-sheet')"));
- assert.ok(script.includes('printedHeaders[index]'));
- assert.ok(script.includes("page.locator('.print-label strong')"));
- assert.ok(script.includes('expectedLabel.replace'));
- assert.ok(script.includes('childHeadersChecked: printedHeaders.length'));
- assert.ok(script.includes('teamIdentitiesChecked: printedTeams.length'));
- assert.ok(script.includes('labelTextsChecked: labelNames.length'));
- assert.ok(script.includes('Organizer-only solution or envelope checklist leaked'));
-});
-
-test('A5 PDF audit reconciles packing checklist and label descriptions',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes("page.locator('.print-checklist-row > strong')"));
- assert.ok(script.includes("page.locator('.print-label span')"));
- assert.ok(script.includes('checklistRows.length !== envelopeGroups.size'));
- assert.ok(script.includes("page.locator('.print-checklist-row > span')"));
- assert.ok(script.includes('A5 packing checklist has incorrect child sheet count'));
- assert.ok(script.includes("details.includes('Danach:')"));
- assert.ok(script.includes("details.includes('Schloss-Code:')"));
- assert.ok(script.includes('A5 packing checklist has an invalid code or destination'));
- assert.ok(script.includes('A5 organizer PDF is missing packing-list lock code'));
- assert.ok(script.includes('A5 organizer PDF is missing packing-list destination'));
- assert.ok(script.includes('labelDescriptions.length'));
- assert.ok(script.includes('A5 envelope label and organizer packing-list identity differ'));
- assert.ok(script.includes('A5 packing-list row '));
- assert.ok(script.includes('incorrect number of packing-list pages'));
- assert.ok(script.includes('labelParts[1] !== checklistParts[1]'));
- assert.ok(script.includes('labelCount[1] !== packingCount[1]'));
- assert.ok(script.includes('normalizedOrganizer.includes(part.trim())'));
- assert.ok(script.includes('printedPage.includes(expectedDescription)'));
-});
-
-test('Chromium acceptance archives visual A5 page previews',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes("spawnSync('pdftoppm'"));
- for(const name of ["['organizer', 1]","['child', categories.organizer + 1]","['labels', categories.organizer + categories.children + 1]"]) assert.ok(script.includes(name),name);
-});
-
-test('A5 CI retains evidence when the browser or preview fails early',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- assert.ok(script.includes('a5-browser-error.json'));
- assert.ok(script.includes('activePage.screenshot'));
- assert.ok(workflow.includes('READY=0'));
- assert.ok(workflow.includes('Vite preview failed to start'));
- assert.ok(workflow.includes('if: always()'));
-});
-
-test('A5 workflow records browser setup log',()=>{
- const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
- assert.ok(workflow.includes('a5-browser-setup.log'));
- assert.ok(workflow.includes('timeout-minutes: 30'));
-});
-
-test('A5 Chromium fixture checks leading zeroes and printable category order',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes("['007', '000', '123', '987']"));
- assert.ok(script.includes('Station code lost leading zeroes'));
- assert.ok(script.includes('printButton.isDisabled()'));
- assert.ok(script.includes('A5 sheet category order must be organizer, child, labels'));
-});
-
-test('Wizard does not offer unsupported paid game goals as printable options',()=>{
- const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(ui,/checked={goal==='word'} disabled/);
- assert.match(ui,/checked={goal==='cards'} disabled/);
- assert.ok(ui.includes("Auf unterstÃ¼tztes Spielziel wechseln"));
-});
-
-test('Wizard exposes print errors at station entry and offers a direct correction path',()=>{
- const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(ui.includes('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:'));
- assert.ok(ui.includes('Alle Angaben fÃ¼r das A5-Druckpaket sind vollstÃ¤ndig.'));
- assert.ok(ui.includes('Spielregeln und Zeit prÃ¼fen'));
- assert.ok(ui.includes('Standorte und Codes prÃ¼fen'));
- assert.ok(ui.includes('onClick={()=>setActiveStep(2)}'));
- assert.ok(ui.includes('onClick={()=>setActiveStep(3)}'));
-});
-
-test('Lock-code input identifies invalid values and preserves three-digit text entry',()=>{
- const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(ui.includes("aria-invalid={visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'')}"));
- assert.ok(ui.includes("aria-describedby={'code-help-'+location.id}"));
- assert.ok(ui.includes('Bitte genau drei Ziffern eingeben; 000 und fÃ¼hrende Nullen sind erlaubt.'));
- assert.ok(ui.includes('pattern="[0-9]{3}"'));
-});
-
-test('Each team carries its own labeled age group through organizer and child print pages',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const ageGroups=readFileSync(new URL('../src/age-groups.ts',import.meta.url),'utf8');
- assert.match(ageGroups,/\['4â€“6','6â€“8','8â€“10','10â€“12','12â€“14','14\+','18\+'\]/);
- assert.ok(source.includes('Jede Gruppe erhÃ¤lt Aufgaben und WegrÃ¤tsel'));
- assert.ok(source.includes('data-age-group={team.profile?.age??age}'));
- assert.ok(source.includes('Team {team.name} Â· {team.profile?.age??age} Jahre'));
-});
-
-test('Wizard offers explicit next-step navigation and live group summary',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const label of ['Geplante Gruppen','Weiter zu den Spielregeln','Weiter zu den Standorten','Spielplan ansehen'])assert.ok(source.includes(label),label);
-});
-
-test('Standortschritt weist auf OrtsprÃ¼fung und fehlende Distanzberechnung hin',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('Die App kennt keine tatsÃ¤chlichen Wegstrecken'));
- assert.ok(source.includes('PrÃ¼fe jeden Standort vor Ort'));
-});
-
-test('GroÃŸe Gruppenzahlen werden in der Vorschau kompakt angezeigt',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('groupDistribution.length <= 12'));
-});
-
-test('Spielleitungs-Hinweise sind auch im sichtbaren Spielplan verfÃ¼gbar',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('plan.value.cautions.map'));
- assert.ok(source.includes('Hinweise fÃ¼r die Spielleitung'));
-});
-
-test('Gruppenobergrenze und aktueller Produktstatus sind verstÃ¤ndlich beschriftet',()=>{
- const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const labels=readFileSync(new URL('../src/i18n.ts',import.meta.url),'utf8');
- assert.ok(ui.includes('Die maximale GruppengrÃ¶ÃŸe ist eine Obergrenze'));
- assert.ok(labels.includes('Maximale Kinder pro Team'));
- assert.ok(labels.includes('Maximum children per team'));
- assert.ok(!labels.includes('RÃ¤tsel, echte Wege und Codes werden in der nÃ¤chsten Ausbaustufe ergÃ¤nzt'));
-});
-
-test('WegrÃ¤tsel-Eingabe erklÃ¤rt Geheimhaltung des Zielorts',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('Der Ortsname ist die LÃ¶sung des WegrÃ¤tsels'));
- assert.ok(source.includes('Route clues â€“ preview by destination'));
-});
-
-test('Eigene WegrÃ¤tsel sind bereits im Eingabefeld auf 400 Zeichen begrenzt',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('maxLength={400} value={routeClueTexts[location.id]'));
-});
-
-test('A5 print button validates rendered packing labels against organizer rows',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(source.includes('auditRenderedPackingItems('));
- assert.ok(source.includes("readPacking('.print-label')"));
- assert.ok(source.includes("readPacking('.print-checklist-row')"));
- assert.ok(source.includes('data-count={envelope.sheetCount}'));
-});
-
-test('A5 print instructions are visible on screen and absent from the physical packet',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.ok(source.includes('className="print-guidance"'));
- assert.ok(source.includes('A5 Hochformat'));
- assert.ok(source.includes('PackÃ¼bersicht nach Team:'));
- assert.ok(source.includes('A5-Einzelseiten'));
- assert.ok(source.includes('Duplexdruck'));
- assert.ok(source.includes('items.reduce((sum,envelope)=>sum+envelope.sheetCount,0)'));
- assert.ok(source.includes('Schloss-Codes am echten Schloss prÃ¼fen'));
- assert.ok(css.includes('.print-guidance{display:none!important}'));
-});
-
-test('Browser checks A5 screen packing totals against actual labels',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('A5 organizer print guidance is missing'));
- assert.ok(script.includes('A5 screen packing overview does not match printed labels'));
- assert.ok(script.includes("page.locator('.print-label').evaluateAll"));
-});
-
-test('PDF keeps screen packing notes off A5 sheets',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('A5 PDF unexpectedly includes screen-only packing guidance'));
-});
-
-test('Browser actually blocks printing on wrong labels and checklist counts',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('Corrupted A5 envelope label did not block the print button'));
- assert.ok(script.includes('Corrupted A5 organizer packing count did not block printing'));
- assert.ok(script.includes('Valid A5 envelope labels did not restore the print action'));
- assert.ok(script.includes('Valid A5 organizer packing count did not restore printing'));
-});
-
-test('Browser rejects misassigned child sheets and mislabelled route pages',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('A5 child sheet with wrong envelope identity did not block printing'));
- assert.ok(script.includes('A5 route page mislabelled as answer did not block printing'));
- assert.ok(script.includes('A5 print did not recover after child envelope restoration'));
- assert.ok(script.includes('A5 print did not recover after route page kind restoration'));
- assert.ok(script.includes('Missing A5 child sheet did not block printing'));
- assert.ok(script.includes('A5 print did not recover after restoring missing child sheet'));
-});
-
-test('Browser rejects whitespace-padded packing labels and restores printing',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('Whitespace-padded A5 envelope label did not block printing'));
- assert.ok(script.includes('A5 print did not recover after correcting whitespace-padded label'));
-});
-
-test('Browser validates organizer-only lock codes and destinations before printing',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(main.includes('auditRenderedOrganizerSecrets'));
- assert.ok(main.includes('data-code={stationCodes[envelope.stationId]'));
- assert.ok(main.includes('data-destination={envelope.destination}'));
- assert.ok(script.includes('Tampered A5 organizer'));
- assert.ok(script.includes('Corrected A5 organizer'));
-});
-
-test('Browser print gate checks organizer lock codes and next destinations',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('Incorrect organizer-only lock code did not block printing'));
- assert.ok(script.includes('Incorrect organizer next destination did not block printing'));
- assert.ok(script.includes('A5 print did not recover after organizer code correction'));
- assert.ok(script.includes('A5 print did not recover after organizer destination correction'));
-});
-
-test('PDF verification binds organizer codes and destinations to the correct A5 checklist page',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes('A5 packing-list code '));
- assert.ok(script.includes('A5 packing-list destination '));
- assert.ok(script.includes("printedPage.includes('Schloss-Code: ' + code)"));
- assert.ok(script.includes("printedPage.includes('Danach: ' + destination)"));
-});
-
-test('Organizer packing preview is screen-only and verified in Chromium',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const app=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const browser=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(css.includes('@media print{.packing-preview{display:none!important}}'));
- assert.ok(app.includes('className="packing-preview"'));
- assert.ok(app.includes('printManifest.envelopes.filter(envelope=>envelope.team===team.name)'));
- assert.ok(browser.includes('Organizer packing preview does not list all 12 envelopes'));
- assert.ok(browser.includes('A5 PDF unexpectedly includes organizer-only on-screen packing preview'));
-});
-
-test('A5 preflight explains readiness and offers corrections for rules and station codes',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.ok(source.includes('preflight-status preflight-blocked'));
- assert.ok(source.includes('preflight-status preflight-ready'));
- assert.ok(source.includes("tx('Druck noch gesperrt'"));
- assert.ok(source.includes("tx('Druckpaket bereit'"));
- assert.ok(source.includes("onClick={()=>setActiveStep(2)}"));
- assert.ok(source.includes("onClick={()=>setActiveStep(3)}"));
- assert.match(css,/\.preflight-status\s*\{/);
- assert.match(css,/@media print\s*\{\.preflight-status,\.preflight-actions\{display:none!important\}\}/);
-});
-
-test('Full A5 browser test explicitly verifies varied routes and persisted route choice',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.ok(script.includes("if (step === 1)"));
- assert.ok(script.includes("selectOption('varied')"));
- assert.ok(script.includes('Different group routes were lost after reload'));
- assert.ok(script.includes('routeSequences.length !== 7'));
- assert.ok(script.includes('new Set(routeSequences).size < 2'));
-});
-
-test('Packed A5 PDF has a fixed physical content width and source packet is hidden',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet\.print-packet-source\s*\{\s*display:none!important;/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page\.print-sheet\s*\{width:127mm!important;/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page:last-child\s*\{[\s\S]*?break-after:auto!important;/);
-});
-
-test('A5 preflight measures the same packed task geometry used for printing',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(css,/Apply the same packed task geometry during screen preflight and printing\.\s*\*\/\s*@media screen, print/);
- assert.match(css,/The A5 content width must match in preflight and PDF pagination\.\s*\*\/\s*@media screen, print/);
- assert.match(source,/const \{manifest:physical\}=buildPackedA5PrintCopy\(packet\)/);
-});
-
-test('Print action rejects overflowing packed content using the same 190 mm budget as Chromium',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const verifier=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.match(source,/sheet\.scrollHeight\*25\.4\/96/);
- assert.match(source,/Math\.max\(height,content\)>A5_USABLE_HEIGHT_MM\+0\.01/);
- assert.match(verifier,/sheet\.heightMm>190\.01 \|\| sheet\.scrollHeightMm>190\.01/);
-});
-
-test('Source A5 task cards retain legible type while reducing excess vertical spacing',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task\{padding:1\.5mm 3mm;margin:1mm 0;line-height:1\.15;font-size:9pt\}/);
- assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\] \.print-task \.print-question\{font-size:11pt/);
-});
-
-test('A5 print gate and Chromium PDF both reject content exceeding 128 mm width',()=>{
- const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- const verifier=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- assert.match(source,/Math\.max\(sheet\.getBoundingClientRect\(\)\.width,sheet\.scrollWidth\)\*25\.4\/96/);
- assert.match(source,/width>128\.01/);
- assert.match(verifier,/scrollWidthMm:Math\.round\(el\.scrollWidth\*25\.4\/96\*100\)\/100/);
- assert.match(verifier,/sheet\.widthMm>128\.01 \|\| sheet\.scrollWidthMm>128\.01/);
-});
-
-test('Packed A5 pages reserve fractional CSS pixel space below the strict 128 mm width gate',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet-packed > \.print-packed-page.print-sheet {width:127mm!important;max-width:127mm!important/);
-});
-
-test('Packed A5 preflight includes the same wrapper flow and separator as print',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/@media screen\s*\{\s*\.print-packet-packed \.print-packed-content \{display:flow-root;\}\s*\.print-packet-packed \.print-packed-content \+ \.print-packed-content \{margin-top:2mm;\}/);
-});
-
-test('Chromium print acceptance exports nine separate A5 packets including the adult team only after the combined proof passes',()=>{
- const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
- const gate=script.indexOf('if (failures.length) {');
- const exportAt=script.indexOf('const pdfSpecs=[');
- assert.ok(gate>=0&&exportAt>gate);
- assert.ok(script.includes("'pdfunite'"));
- assert.ok(script.includes("'pdfseparate'"));
- for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Team_Orange_A5.pdf','SPURJAGD_Team_Lila_A5.pdf','SPURJAGD_Team_Tuerkis_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
-});
-
-test('Verdichtete KinderblÃ¤tter halten Symbol- und Pfeilgitter innerhalb der A5-DruckflÃ¤che',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?font-size:8\.2pt;line-height:1\.02/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.arrow-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.symbol-grid \.symbol-cell\s*\{width:7mm;height:7mm/);
-});
-
-test('Die A5-HÃ¶henprÃ¼fung misst KinderblÃ¤tter mit derselben kompakten Typografie wie die Druckkopie',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?font-size:8\.2pt;line-height:1\.02/);
- assert.match(css,/\.print-packet\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.arrow-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
-});
-
-test('Das gemeinsame Buchstabengitter ist auf Quellblatt und Druckkopie mittig und grÃ¶ÃŸer gesetzt',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-grid\s*,[\s\S]*?\{[^}]*margin-left:auto!important;[^}]*margin-right:auto!important/);
- assert.match(css,/\.print-packet \.print-child-sheet\[data-sheet-kind="task"\] \.print-three-word-grid \.wordsearch-cell\s*,[\s\S]*?\{width:6mm;height:6mm/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
-});
+Û^š›bžh¥êß¢¹­…â'ŠØš–,ÞçÚº[C®+Þ²Š^­«b¢z'¶…ŠW’ÊË^ššè¾'^­ö¢•çZ[\Ü\Ýœ›ÛH	Û›ÙN\Ý	ÎÂš[\Ü\ÜÙ\œ›ÛH	Û›ÙN˜\ÜÙ\ÜÝšXÝ	ÎÂš[\ÜÜ™XYš[TÞ[˜ßHœ›ÛH	Û›ÙN™œÉÎÂ‚\Ý
+	ÐMHš[XÚÙ]\È\ÛÛ]Yœ›ÛH[\˜XÝ]™H[›™\ˆ[[Y[ÉË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜËÐYÙWÊ—×ÊœÚ^™NMHÜ˜Z]ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×Ú^˜\™\[™[Ê—ÊŽ››Ý
+œš[\XÚÙ]
+WÊ—×Ê™\Ü^N››Û™HZ[\Ü[ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×Ú^˜\™\[™[Ê—Ê—œš[\XÚÙ]Ê—×Ê™\Ü^N˜›ØÚÈZ[\Ü[ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\ÚY]›\ÝXÚ[Ê—×Ê˜œ™XZËXY\Ž˜]]ÎËÊNÂŸJNÂ‚\Ý
+	ÐÚ[XÚÙ]ÛÛZ[œÈ\ÚÈ[™›Ý]HÚY]ÈÚ]Ý]™Y[™[[œÝÙ\ˆÚY]ÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ð›]KÞÌJÜ›Ý]TÚY]ÛÝ[	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ð›]ÌŠÜ›Ý]TYÙ_IÊJNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÜš[\ÜÝY\×›[™ÝOOLÊ‰‰—ÊÙXÝ[ÛˆÛ\ÜÓ˜[YOHœš[\XÚÙ]‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÙ\ØX›YWÜš[\ÜÝY\×›[™ÝŒKÊNÂŸJNÂ‚\Ý
+	Ñ[™[ÜHX™[È\ÙHHYXØ]YMHÜšY[™YÙHÚ[šÜÉË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[[X™[YÜšYÊ—×Ê™\Ü^N™ÜšYËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[[X™[\ÚY]Ê×œš[[X™[Ê—ËÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKØÛ\ÜÓ˜[YOHœš[\ÚY]š[[X™[\ÚY]‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKØÛ\ÜÓ˜[YOHœš[[X™[YÜšY‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙK×œÛXÙW
+YÙW
+“P‘S×ÔT—ÐMWÔÒQU
+YÙW
+ÌW
+W
+“P‘S×ÔT—ÐMWÔÒQU
+KÊNÂŸJNÂ‚\Ý
+	ÕšY\ˆ]ZÙ][ˆ\ÜÙ[ˆ]YˆMH]ˆ°ïˆ][[™ÙZ][œ°é™\‰Ë
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝX™[[OXÜÜË›X]Ú
+×œš[[X™[\ÚY]œš[[X™[Ê—Ê×ŸWJÊWKÊOË–ÌWNÂˆÛÛœÝÜšY[OXÜÜË›X]Ú
+×œš[[X™[YÜšYÊ—Ê×ŸWJÊWKÊOË–ÌWNÂˆ\ÜÙ\›ÚÊX™[[I‰™ÜšY[JNÂˆÛÛœÝ›ÝÏS[X™\ŠX™[[K›X]Ú
+ÛZ[‹ZZYÚŠ
+Ê[[KÊOË–ÌWJNÂˆÛÛœÝØ\S[X™\ŠÜšY[K›X]Ú
+ÙØ\Š
+Ê[[KÊOË–ÌWJNÂˆÛÛœÝš[X›RZYÚLŒLLŠŒLÂˆÛÛœÝ™\Ù\™Y]OLNÂˆ\ÜÙ\›ÚÊ
+œ›ÝÊÌÊ™Ø\
+Ü™\Ù\™Y]O\š[X›RZYÚ	ÕšY\ˆ]ZÙ][ˆ0ï™\œØÚ™Z][ˆ\ÈMKR0íš[˜YÙ]	ÊNÂŸJNÂ‚\Ý
+	ÔÜY[Z][™È][˜[Z\ØÚHMKTÙZ][ˆ°ïˆ›Ý][‹ÛÙ\È[™0íœÝ[™Ù[‰Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ›ÜŠÛÛœÝX\šÙ\ˆÙˆÈšÙ^O^ÉÜ›Ý]\ËIÊÜYÙ_H‹šÙ^O^ÉØÛÙ\ËIÊÜYÙ_H‹šÙ^O^ÉØÛYK\ÛÛ][ÛœËIÊÜYÙ_H‹”ÜY[Z][™È8 $ÈÝ\[™ÚXÚ\šZ]—J^Âˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊX\šÙ\ŠKX\šÙ\ŠNÂˆBŸJNÂ‚\Ý
+	ÑXÚÝ›ÜœØÚ]H™[›]Y™ØX™[‹KÜY[Z][™ÜËK]ZÙ][‹H[™Ù\Ø[]ÙZ][‰Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÙ›ÜŠÛÛœÝÙ^HÙˆÉÜš[X[šY™\Ý\ÚÔÚY]ÉË	Üš[X[šY™\Ý›Ü™Ø[š^™\”ÚY]ÉË	Üš[X[šY™\Ý›X™[ÚY]ÉË	Üš[X[šY™\Ý›Z[š[][TÚY]ÉË	ÓÔ‘ÐS’V‘T—ÒUST×ÔT—ÐMWÔÒQU	×JX\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊÙ^JKÙ^JNßJNÂ‚\Ý
+	ÓYZœÙZ]YÙHÙYÜ°éÙ[Z[[ˆœ˜YÙ[ˆ[ˆMKP›0í˜ÚÙH[™[[Y\šY\™[ˆÙZ]\‰Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü›Ý]T^ž›Kœ›ÝÜËœÛXÙJ›Ý]TYÙJ”“ÕUWÔUQTÕSÓ”×ÔT—ÐMWÔÒQU	ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü›Ý]TYÙJ”“ÕUWÔUQTÕSÓ”×ÔT—ÐMWÔÒQU
+ÚJÌIÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü›Ý]TYÙOOO\›Ý]TÚY]ÛÝ[
+\Ý[˜][Û‹ÛÛ™šYÊKLIÊJNßJNÂ‚\Ý
+	Ñœ˜YÙ[ˆ[™[ÛÜ™Z[[ˆ›ZX™[ˆ™Z[HMKQXÚÈ\Ø[[Y[‰Ë
+
+OOžØÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›X]Ú
+ÜÜË×œš[\›Ý]K\]Y\Ý[Û—Ê—Ö×ŸWJ˜œ™XZËZ[œÚYN˜]›ÚYËÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[\›Ý]K\]Y\Ý[Ûˆ‰ÊJNßJNÂ‚\Ý
+	Ó0íœÝ[™ÜÜØÚ0ïÜÙ[°ï™[šY[H]YˆÛÛ\ZÝ[ˆMKP›0é\›‰Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛYKœ›ÝÜÏË›X\
+›ÝÏOœ›ÝËœÛÛ][Û‰ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊšÙ^O^ÉØÛYK\ÛÛ][ÛœËIÊÜYÙ_HŠJNßJNÂ‚\Ý
+	ÑXÚÈ[™°ï˜ÛÙH0íœÙ[ˆÝ][ÛœÛ˜[Y[ˆZ]Y\ž™ZXÚ[ˆÛÛœÚ\Ý[]Y‰Ë
+
+OOžØÛÛœÝXZ[\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØÛÛœÝ]Y]\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜš[X]Y]ÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊXZ[‹š[˜ÛY\Ê	Û›˜[YKš[J
+OOOY\Ý[˜][Û‹š[J
+IÊJNØ\ÜÙ\›ÚÊ]Y]š[˜ÛY\Ê	ÛØØ][Û‹›˜[YKš[J
+OOOY\Ý[˜][Û‹š[J
+IÊJNßJNÂ‚\Ý
+	ÑXÚÝ[Y˜[™È[\œØÚZY][\ØÚYØ[ž˜Z[™˜\šXX›HÚ[™\˜›]˜Z	Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Õ[\ØÚ0éÙHZ]™HZ[™\Ý[œÈˆ›0é\›ŽÈ\Ø[[Y[‰ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÞÜš[X[šY™\Ý\ÚÔÚY]ßHÚ[™\˜›0é\‰ÊJNßJNÂ‚\Ý
+	ÒÛÛ›Û\ÝH™\Z[ÙXÚÈ[\ØÚ0éÙH™HMKP›]	Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØÛÛœÝX[šY™\Ý\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜš[[X[šY™\ÝÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÓÔ‘ÐS’V‘T—ÑS•‘SÔT×ÔT—ÐMWÔÒQU	ÊJNØ\ÜÙ\›ÚÊX[šY™\Ýš[˜ÛY\Ê	ÓÔ‘ÐS’V‘T—ÑS•‘SÔT×ÔT—ÐMWÔÒQUH‰ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊšÙ^O^ÉØÛÛ›ÛIÊÜYÙ_HŠJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÞÙ[™[ÜKœÚY]ÛÝ[HÚ[™\˜›0é\‰ÊJNßJNÂ‚\Ý
+	ÔÚXÚ\šZ]Ú[ÙZ\ÙHÝZ[ˆ]YˆZYÙ[™\ˆMKTÙZ]HÝ]Ú\ØÚ[ˆXÚÛ\Ý[‰Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÚÙ^OHœØY™]KXÚXÚÈ‰ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÔÜY[Z][™È8 $È[\ØÚYÚÛÛ›ÛIÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[XÚXÚÛ\Ý\›ÝÈ‰ÊJNßJNÂ‚\Ý
+	ÔÜY[Z][™ÜËRÛÛ›Û\ÝH[0éÛÙH[™]ðéÚXÚ\È›ÛÙ^šY[Ú[™\™]ZÙ][ˆšXÚ	Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØÛÛœÝÚXÚÛ\Ý\ÛÝ\˜ÙKœÛXÙJÛÝ\˜ÙKš[™^ÙŠšÙ^O^ÉØÛÛ›ÛIÊÜYÙ_HŠKÛÝ\˜ÙKš[™^ÙŠ	ÞÜ[‹˜[YKX[\Ë›X\
+
+X[KX[R[™^
+IÊJNØÛÛœÝX™[Ï\ÛÝ\˜ÙKœÛXÙJÛÝ\˜ÙKš[™^ÙŠ	ØÛ\ÜÓ˜[YOHœš[[X™[YÜšY‰ÊJNØ\ÜÙ\›ÚÊÚXÚÛ\Ýš[˜ÛY\Ê	ÜÝ][ÛÛÙ\ÖÙ[™[ÜKœÝ][Û’YIÊJNØ\ÜÙ\›ÚÊÚXÚÛ\Ýš[˜ÛY\Ê	Ù[™[ÜK™\Ý[˜][Û‰ÊJNØ\ÜÙ\›ÚÊÚXÚÛ\Ýš[˜ÛY\Ê	Ù[™[ÜKœÚY]ÛÝ[	ÊJNØ\ÜÙ\™\]X[
+X™[Ëš[˜ÛY\Ê	ÜÝ][ÛÛÙ\ÖÙ[™[ÜKœÝ][Û’YIÊK˜[ÙJNØ\ÜÙ\™\]X[
+X™[Ëš[˜ÛY\Ê	Ù[™[ÜK™\Ý[˜][Û‰ÊK˜[ÙJNßJNÂ‚\Ý
+	ÒÛÛ›Û\ÝH™\›YÝ™YH›]˜Z[ˆ]Y™ØX™H[™ÙYÜ°éÙ[	Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÌH]Y™ØX™KÙ[™[ÜKœÚY]ÛÝ[L_HÙYÜ°éÙ[	ÊJNßJNÂ‚\Ý
+	ÑXÚÝ›ÜœØÚ]H\™›Ü™\ÛÙ\È\ˆ°ïˆ]ðéÚXÚ™\ÝXÚHÝ][Û™[‰Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛÛœÝš\Ú]YÝ][Û’YÈH™]ÈÙ]
+	ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Êš\Ú]YÝ][Û’YËš\ÊšY
+I‰ˆ]˜[YÛÙJÝ][ÛÛÙ\ÖÛšYHŠJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Êš\Ú]YÝ][Û’YËš\ÊšY
+I‰˜[YÛÙJÝ][ÛÛÙ\ÖÛšYHŠJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÐÛÙHÜ[Û˜[‰ÊJNßJNÂ‚\Ý
+	Ð[H›Ý][Ø\›[™Ù[ˆÙ\™[ˆ]YˆZYÙ[™HMKP›0é\ˆ™\Z[	Ë
+
+OOžØÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNØÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊšÙ^O^ÉØØ]][ÛœËIÊÜYÙ_HŠJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü[‹˜[YK˜Ø]][ÛœËœÛXÙJYÙJ“Ô‘ÐS’V‘T—ÐÐUUSÓ”×ÔT—ÐMWÔÒQU	ÊJNØ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[XØ]][Ûˆ‰ÊJNØ\ÜÙ\›X]Ú
+ÜÜË×œš[XØ]][Û—Ê—Ö×ŸWJ˜œ™XZËZ[œÚYN˜]›ÚYËÊNßJNÂ‚\Ý
+	ÒÙZ[™HÚY\œÜ°ïÚXÚHMTÙZ][™Ü°í°çÙH[HXÚÜÝ[\ÚY]	Ë
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝXÛ\˜][ÛœÏVË‹‹˜ÜÜË›X]Ú[
+ÐYÙWÊ—Ê×ŸWJŠWKÙÊWK›X\
+X]ÚO›X]ÚÌWJNÂˆ\ÜÙ\›ÚÊXÛ\˜][ÛœË›[™ÝŒ
+NÂˆ\ÜÙ\›ÚÊXÛ\˜][ÛœË™]™\žJ˜[YOO‹ÜÚ^™WÊŽ—ÊMHÜ˜Z]ÊŽËË\Ý
+˜[YJJJNÂˆ\ÜÙ\™Ù\Ó›ÝX]Ú
+ÜÜËÜÚ^™WÊŽ—ÊM‹ÊNÂŸJNÂ‚\Ý
+	ÑXÚÚÛ›ÜˆÛÛ›ÛY\]ðéÚXÚHÓKP›]˜Z›Üˆ[H0å™™›™[ˆ\ÈXÚÙX[ÙÜÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊœXÚÙ]Ëœ]Y\žTÙ[XÝÜ[
+	Ëœš[\ÚY]	ÊK›[™ÝŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ø]Y]™[™\™Yš[Ø]YÛÜšY\ÊÛZ[š[][TÚY]Îœš[X[šY™\ÝË›Z[š[][TÚY]ÏÏÌ	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊšYŠ\ÜÝY\Ë›[™Ý
+^ÝÚ[™ÝË˜[\
+\ÜÝY\Ëš›Ú[ŠŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÝÚ[™ÝËœš[
+
+NÉÊJNÂŸJNÂ‚\Ý
+	Ð[HXÚÜÙZ][ˆÙ\™[ˆZ[™\ˆ\ˆ™ZHÙ\°ï[ˆ›]Ø]YÛÜšY[ˆYÙ[Ü™™]	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\™\]X[
+
+ÛÝ\˜ÙK›X]Ú
+ØÛ\ÜÓ˜[YOHœš[\ÚY]š[[Ü™Ø[š^™\‹\ÚY]‹ÙÊOÏÖ×JK›[™ÝŠNÂˆ\ÜÙ\™\]X[
+
+ÛÝ\˜ÙK›X]Ú
+ØÛ\ÜÓ˜[YOHœš[\ÚY]š[XÚ[\ÚY]‹ÙÊOÏÖ×JK›[™ÝŠNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[\ÚY]š[[X™[\ÚY]‰ÊJNÂˆ›ÜŠÛÛœÝ˜[YHÙˆÉÜš[[Ü™Ø[š^™\‹\ÚY]	Ë	Üš[XÚ[\ÚY]	Ë	Üš[[X™[\ÚY]	×J^Âˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊœXÚÙ]Ëœ]Y\žTÙ[XÝÜ[
+	ËˆŠÛ˜[YJÈ‰ÊK›[™ÝŠJNÂˆBŸJNÂ‚\Ý
+	ÐMKRÚ[™\˜›0é\ˆ˜YÙ[ˆZ™H[\ØÚYÚÙ[›[™È[™›]\	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\™\]X[
+
+ÛÝ\˜ÙK›X]Ú
+Ù]KY[™[ÜKZYWÝX[R[™^
+ÉËI×
+ÛØØ][Û—šYKÙÊOÏÖ×JK›[™ÝŠNÂˆ›ÜŠÛÛœÝÚ[™ÙˆÉÝ\ÚÉË	Ü›Ý]I×JH\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ù]K\ÚY]ZÚ[™H‰ÊÚÚ[™
+ÉÈ‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ø]Y]™[™\™Y[™[Ü\Êš[X[šY™\ÝË™[™[Ü\ÏÏÖ×K™[™\™Y[™[Ü\ÊIÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊœÚY]™]\Ù]™[™[ÜRYÏÉÉÈŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊœÚY]™]\Ù]œÚY]Ú[™ÏÉÉÈŠJNÂŸJNÂ‚\Ý
+	ÐMKQ]ZÙ][ˆ™\Ú]™[ˆZ[™HZ[™]]YÙH[\ØÚYÚÙ[›[™È[™Ù\™[ˆ›ÜˆXÚÈÛÛ›ÛY\	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[[X™[‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ù]KY[™[ÜKZY^Ù[™[ÜKšYIÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊœXÚÙ]Ëœ]Y\žTÙ[XÝÜ[S[[Y[Š	Ëœš[[X™[	ÊHŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ø]Y]™[™\™YX™[Êš[X[šY™\ÝË™[™[Ü\ÏÏÖ×KX™[YÊIÊJNÂŸJNÂ‚\Ý
+	ÐMH›Ý]HYÙ\È^ÜÙHYÙH[™^›ÜˆÓHš[˜[Y][Û‰Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ù]K\›Ý]K\YÙO^Ü›Ý]TYÙJÌ_IÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü›Ý]TYÙNœÚY]™]\Ù]œ›Ý]TYÙOÓ[X™\ŠÚY]™]\Ù]œ›Ý]TYÙJN[™Yš[™Y	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ø]Y]™[™\™Y[™[Ü\Êš[X[šY™\ÝË™[™[Ü\ÏÏÖ×K™[™\™Y[™[Ü\ÊIÊJNÂŸJNÂ\Ý
+	ÐÒH[œÈYXØ]YMHÚXÚÜÈ[™™\›ÙXÚX›H\[™[˜ÞH[œÝ[][Û‰Ë
+
+OOžÂˆÛÛœÝÛÜšÙ›ÝÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹Ë™Ú]X‹ÝÛÜšÙ›ÝÜËÜ]X[]Kž[[	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	ÛœH[œÝ[K[›ËX]Y]K[›ËY[™	ÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Ý\ÝËÜš[YÛKX]Y]\Ý›ZœÈ\ÝËÜš[XÜÜË\Ý›ZœÉÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Ý™\šYšXØ][Û‹ØMK\š[]\ÝË›ÙÉÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆMHÛ[ÚÙH\Ý\ÈÛÛ›™XÝYÈÒIË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÛÜšÙ›ÝÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹Ë™Ú]X‹ÝÛÜšÙ›ÝÜËÜ]X[]Kž[[	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÜYÙKœŠ	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÜYÙ\ÈOOH^XÝY	ÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Û›ÙHØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆˆ˜[Y][Ûˆ™Z™XÝÈ›[šÈYÙ\È[™Z\ÜÚ[™Èš[ÛÛ[	Ë
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœÜ]Û”Þ[˜Ê	ÜÝ^	ÈŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ø›[šÔYÙ\Ë›[™Ý	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Êš[˜ÛY\Ê	ÔÜY[Z][™ÉÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Êš[˜ÛY\Ê	Õ[\ØÚYÉÊHŠJNÂŸJNÂ‚\Ý
+	ÐÚ›ÛZ][HMHXØÙ\[˜ÙH˜[Y]\ÈØ]YÛÜšY\Ë[™[Ü\È[™X™[Ü™\‰Ë
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ›ÜŠÛÛœÝX\šÙ\ˆÙˆÉØØ]YÛÜšY\Ë[šÛ›ÝÛ‰Ë	Ù[™[ÜQÜ›Ý\ÉË	Ò[˜ÛÛ\]HMH[™[ÜIË	Ò[˜ÛÜœ™XÝMH[™[ÜHYÙHÜ™\‰Ë	ÐMHÚ[ÚY]È\™H[\›X]™Y	Ë	ÛX™[YË›[™ÝOOH[™[ÜQÜ›Ý\ËœÚ^™I×J^Âˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊX\šÙ\ŠKX\šÙ\ŠNÂˆBŸJNÂ‚\Ý
+	ÔÙ]™[ˆYÙHÜ›Ý\È[˜ÛY[™ÈN
+ÈZY[ŒH[™[Ü\ËˆÚ[ÚY]È[™ˆX™[ÚY]ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ù[™[ÜQÜ›Ý\ËœÚ^™HOOHŒIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØØ]YÛÜšY\Ë˜Ú[™[ˆOOH‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØØ]YÛÜšY\Ë›X™[ÈOOH‰ÊJNÂŸJNÂ‚\Ý
+	ÐÚ›ÛZ][HXØÙ\[˜ÙHÚXÚÜÈˆÛÛ[][™]šYX[YÙHÜÚ][ÛœÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ü”YÙU^Ë›[™ÝOOH^XÝY	ÊJNÂˆ\ÜÙ\›ÚÊ\ØÜš\š[˜ÛY\ÊšÚ[™OOH	Ø[œÝÙ\‰ÈÈ	Ð[ÛÜ›]	ÈŠJNÂˆ\ÜÙ\›X]Ú
+ØÜš\ÚÚ[™OOH	Ü›Ý]IÖ×Ž×J‰ÕÙYÜ°éÙ[	ËÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê‰ÔÝ][ÛœØ]Y™ØX™[Ž‰ÈŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØÛÛXš[™YÛÜ™ÜšY	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê‰Ð]Y™ØX™H	È
+È[X™\ˆŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØØ]YÛÜšY\Ë›Ü™Ø[š^™\ˆ
+ÈØ]YÛÜšY\Ë˜Ú[™[ˆ
+ÈH
+ÈIÊJNÂŸJNÂ‚\Ý
+	ÐÚ›ÛZ][Hˆ]Y]ÛÛ\\™\ÈÜ™Ø[š^™\‹Ú[™[ˆ[™X™[ÈÈ™[™\™YXÚÙ]	Ë
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÑÜ\[ˆ[™›Ý][‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐÛÙ\È[™0íœÝ[™Ù[‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Õ[\ØÚYÚÛÛ›ÛIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[XÚ[\ÚY]	ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Üš[YXY\œÖÚ[™^IÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[[X™[Ý›Û™ÉÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ù^XÝYX™[œ™\XÙIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØÚ[XY\œÐÚXÚÙYˆš[YXY\œË›[™Ý	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÝX[RY[]Y\ÐÚXÚÙYˆš[YX[\Ë›[™Ý	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÛX™[^ÐÚXÚÙYˆX™[˜[Y\Ë›[™Ý	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÓÜ™Ø[š^™\‹[Û›HÛÛ][ÛˆÜˆ[™[ÜHÚXÚÛ\ÝXZÙY	ÊJNÂŸJNÂ‚\Ý
+	ÐMHˆ]Y]™XÛÛ˜Ú[\ÈXÚÚ[™ÈÚXÚÛ\Ý[™X™[\ØÜš\[ÛœÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[XÚXÚÛ\Ý\›ÝÈˆÝ›Û™ÉÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[[X™[Ü[‰ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØÚXÚÛ\Ý›ÝÜË›[™ÝOOH[™[ÜQÜ›Ý\ËœÚ^™IÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[XÚXÚÛ\Ý\›ÝÈˆÜ[‰ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHXÚÚ[™ÈÚXÚÛ\Ý\È[˜ÛÜœ™XÝÚ[ÚY]ÛÝ[	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê™]Z[Ëš[˜ÛY\Ê	Ñ[˜XÚ‰ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê™]Z[Ëš[˜ÛY\Ê	ÔØÚÜÜËPÛÙN‰ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHXÚÚ[™ÈÚXÚÛ\Ý\È[ˆ[˜[YÛÙHÜˆ\Ý[˜][Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHÜ™Ø[š^™\ˆˆ\ÈZ\ÜÚ[™ÈXÚÚ[™Ë[\ÝØÚÈÛÙIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHÜ™Ø[š^™\ˆˆ\ÈZ\ÜÚ[™ÈXÚÚ[™Ë[\Ý\Ý[˜][Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÛX™[\ØÜš\[ÛœË›[™Ý	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMH[™[ÜHX™[[™Ü™Ø[š^™\ˆXÚÚ[™Ë[\ÝY[]HY™™\‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHXÚÚ[™Ë[\Ý›ÝÈ	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ú[˜ÛÜœ™XÝ[X™\ˆÙˆXÚÚ[™Ë[\ÝYÙ\ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÛX™[\ÖÌWHOOHÚXÚÛ\Ý\ÖÌWIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÛX™[ÛÝ[ÌWHOOHXÚÚ[™ÐÛÝ[ÌWIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Û›Ü›X[^™YÜ™Ø[š^™\‹š[˜ÛY\Ê\š[J
+JIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Üš[YYÙKš[˜ÛY\Ê^XÝY\ØÜš\[ÛŠIÊJNÂŸJNÂ‚\Ý
+	ÐÚ›ÛZ][HXØÙ\[˜ÙH\˜Ú]™\Èš\ÝX[MHYÙH™]šY]ÜÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœÜ]Û”Þ[˜Ê	ÜÜIÈŠJNÂˆ›ÜŠÛÛœÝ˜[YHÙˆÈ–ÉÛÜ™Ø[š^™\‰ËWH‹–ÉØÚ[	ËØ]YÛÜšY\Ë›Ü™Ø[š^™\ˆ
+ÈWH‹–ÉÛX™[ÉËØ]YÛÜšY\Ë›Ü™Ø[š^™\ˆ
+ÈØ]YÛÜšY\Ë˜Ú[™[ˆ
+ÈWH—JH\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê˜[YJK˜[YJNÂŸJNÂ‚\Ý
+	ÐMHÒH™]Z[œÈ]šY[˜ÙHÚ[ˆHœ›ÝÜÙ\ˆÜˆ™]šY]È˜Z[ÈX\›IË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÛÜšÙ›ÝÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹Ë™Ú]X‹ÝÛÜšÙ›ÝÜËÜ]X[]Kž[[	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØMKXœ›ÝÜÙ\‹Y\œ›Ü‹šœÛÛ‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ØXÝ]™TYÙKœØÜ™Y[œÚÝ	ÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Ô‘PQOL	ÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Õš]H™]šY]È˜Z[YÈÝ\	ÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	ÚYŽˆ[Ø^\Ê
+IÊJNÂŸJNÂ‚\Ý
+	ÐMHÛÜšÙ›ÝÈ™XÛÜ™Èœ›ÝÜÙ\ˆÙ]\ÙÉË
+
+OOžÂˆÛÛœÝÛÜšÙ›ÝÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹Ë™Ú]X‹ÝÛÜšÙ›ÝÜËÜ]X[]Kž[[	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	ØMKXœ›ÝÜÙ\‹\Ù]\›ÙÉÊJNÂˆ\ÜÙ\›ÚÊÛÜšÙ›ÝËš[˜ÛY\Ê	Ý[Y[Ý][Z[]\ÎˆÌ	ÊJNÂŸJNÂ‚\Ý
+	ÐMHÚ›ÛZ][Hš^\™HÚXÚÜÈXY[™È™\›Ù\È[™š[X›HØ]YÛÜžHÜ™\‰Ë
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê–ÉÌÉË	Ì	Ë	ÌLŒÉË	ÎNÉ×HŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÔÝ][ÛˆÛÙHÜÝXY[™È™\›Ù\ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Üš[]Û‹š\Ñ\ØX›Y
+
+IÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHÚY]Ø]YÛÜžHÜ™\ˆ]\Ý™HÜ™Ø[š^™\‹Ú[X™[ÉÊJNÂŸJNÂ‚\Ý
+	ÕÚ^˜\™Ù\È›ÝÙ™™\ˆ[œÝ\ÜYZYØ[YHÛØ[È\Èš[X›HÜ[ÛœÉË
+
+OOžÂˆÛÛœÝZO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ZKØÚXÚÙY^ÙÛØ[OOIÝÛÜ™	ßH\ØX›YÊNÂˆ\ÜÙ\›X]Ú
+ZKØÚXÚÙY^ÙÛØ[OOIØØ\™ÉßH\ØX›YÊNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê]Yˆ[\œÝ0ï\ÈÜY[šY[ÙXÚÙ[ˆŠJNÂŸJNÂ‚\Ý
+	ÕÚ^˜\™^ÜÙ\Èš[\œ›ÜœÈ]Ý][Ûˆ[žH[™Ù™™\œÈH\™XÝÛÜœ™XÝ[Ûˆ]	Ë
+
+OOžÂˆÛÛœÝZO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	Ó›ØÚH\›YYÙ[‹™]›Üˆ\ÈMKTZÙ]ÙYXÚÝÙ\™[ˆØ[›Ž‰ÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	Ð[H[™ØX™[ˆ°ïˆ\ÈMKQXÚÜZÙ]Ú[™›ÛÝ0é™YË‰ÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	ÔÜY[™YÙ[ˆ[™™Z]°ï™[‰ÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	ÔÝ[™ÜH[™ÛÙ\È°ï™[‰ÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	ÛÛÛXÚÏ^Ê
+OOœÙ]XÝ]™TÝ\
+Š_IÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	ÛÛÛXÚÏ^Ê
+OOœÙ]XÝ]™TÝ\
+Ê_IÊJNÂŸJNÂ‚\Ý
+	ÓØÚËXÛÙH[œ]Y[YšY\È[˜[Y˜[Y\È[™™\Ù\™\È™YKYYÚ]^[žIË
+
+OOžÂˆÛÛœÝZO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê˜\šXKZ[˜[Y^Ýš\Ú]YÝ][Û’YËš\ÊØØ][Û‹šY
+H	‰ˆ]˜[YÛÙJÝ][ÛÛÙ\ÖÛØØ][Û‹šYOÏÉÉÊ_HŠJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê˜\šXKY\ØÜšX™YžO^ÉØÛÙKZ[IÊÛØØ][Û‹šYHŠJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	Ðš]HÙ[˜]H™ZHšY™™\›ˆZ[™ÙX™[ŽÈ[™°ï™[™H[[ˆÚ[™\›]X‰ÊJNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	Ü]\›H–ÌNW^ÌßH‰ÊJNÂŸJNÂ‚\Ý
+	ÑXXÚX[HØ\œšY\È]ÈÝÛˆX™[YYÙHÜ›Ý\›ÝYÚÜ™Ø[š^™\ˆ[™Ú[š[YÙ\ÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝYÙQÜ›Ý\Ï\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËØYÙKYÜ›Ý\ËÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+YÙQÜ›Ý\Ë×ÉÍ8 $Í‰Ë	Í¸ $Î	Ë	Î8 $ÌL	Ë	ÌL8 $ÌL‰Ë	ÌL¸ $ÌM	Ë	ÌM
+ÉË	ÌN
+É×KÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ò™YHÜ\H\š0é]Y™ØX™[ˆ[™ÙYÜ°éÙ[	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ù]KXYÙKYÜ›Ý\^ÝX[Kœ›Ùš[OË˜YÙOÏØYÙ_IÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÕX[HÝX[K›˜[Y_H0­ÈÝX[Kœ›Ùš[OË˜YÙOÏØYÙ_H˜Z™IÊJNÂŸJNÂ‚\Ý
+	ÕÚ^˜\™Ù™™\œÈ^XÚ]™^\Ý\˜]šYØ][Ûˆ[™]™HÜ›Ý\Ý[[X\žIË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ›ÜŠÛÛœÝX™[ÙˆÉÑÙ\[HÜ\[‰Ë	ÕÙZ]\ˆH[ˆÜY[™YÙ[‰Ë	ÕÙZ]\ˆH[ˆÝ[™Ü[‰Ë	ÔÜY[[ˆ[œÙZ[‰×JX\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\ÊX™[
+KX™[
+NÂŸJNÂ‚\Ý
+	ÔÝ[™ÜØÚš]ÙZ\Ý]YˆÜÜ°ï[™È[™™Z[™H\Ý[ž˜™\™XÚ[™È[‰Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÑYH\Ù[›ÙZ[™H]ðéÚXÚ[ˆÙYÜÝ™XÚÙ[‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ô°ï™H™Y[ˆÝ[™Ü›ÜˆÜ	ÊJNÂŸJNÂ‚\Ý
+	ÑÜ›ðçÙHÜ\[ž˜Z[ˆÙ\™[ˆ[ˆ\ˆ›ÜœØÚ]HÛÛ\ZÝ[™Ù^™ZYÝ	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÙÜ›Ý\\ÝšX][Û‹›[™ÝHL‰ÊJNÂŸJNÂ‚\Ý
+	ÔÜY[Z][™ÜËR[ÙZ\ÙHÚ[™]XÚ[HÚXÚ˜\™[ˆÜY[[ˆ™\™°ïØ˜\‰Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü[‹˜[YK˜Ø]][ÛœË›X\	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ò[ÙZ\ÙH°ïˆYHÜY[Z][™ÉÊJNÂŸJNÂ‚\Ý
+	ÑÜ\[›Ø™\™Ü™[ž™H[™ZÝY[\ˆ›ÙZÝÝ]\ÈÚ[™™\œÝ0é™XÚ™\ØÚšY]	Ë
+
+OOžÂˆÛÛœÝZO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝX™[Ï\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÚLN‹ÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊZKš[˜ÛY\Ê	ÑYHX^[X[HÜ\[™Ü°í°çÙH\ÝZ[™HØ™\™Ü™[ž™IÊJNÂˆ\ÜÙ\›ÚÊX™[Ëš[˜ÛY\Ê	ÓX^[X[HÚ[™\ˆ›ÈX[IÊJNÂˆ\ÜÙ\›ÚÊX™[Ëš[˜ÛY\Ê	ÓX^[][HÚ[™[ˆ\ˆX[IÊJNÂˆ\ÜÙ\›ÚÊ[X™[Ëš[˜ÛY\Ê	Ô°éÙ[XÚHÙYÙH[™ÛÙ\ÈÙ\™[ˆ[ˆ\ˆ°éÚÝ[ˆ]\Ø˜]\ÝY™H\™ðéž	ÊJNÂŸJNÂ‚\Ý
+	ÕÙYÜ°éÙ[QZ[™ØX™H\šÛ0éÙZZ[Z[[™È\ÈšY[ÜÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ñ\ˆÜÛ˜[YH\ÝYH0íœÝ[™È\ÈÙYÜ°éÙ[ÉÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ô›Ý]HÛY\È8 $È™]šY]ÈžH\Ý[˜][Û‰ÊJNÂŸJNÂ‚\Ý
+	ÑZYÙ[™HÙYÜ°éÙ[Ú[™™\™Z]È[HZ[™ØX™Y™[]Yˆ™ZXÚ[ˆ™YÜ™[ž	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÛX^[™Ý^ÍH˜[YO^Ü›Ý]PÛYU^ÖÛØØ][Û‹šYIÊJNÂŸJNÂ‚\Ý
+	ÐMHš[]Ûˆ˜[Y]\È™[™\™YXÚÚ[™ÈX™[ÈYØZ[œÝÜ™Ø[š^™\ˆ›ÝÜÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ø]Y]™[™\™YXÚÚ[™Ò][\Ê	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Êœ™XYXÚÚ[™Ê	Ëœš[[X™[	ÊHŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Êœ™XYXÚÚ[™Ê	Ëœš[XÚXÚÛ\Ý\›ÝÉÊHŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ù]KXÛÝ[^Ù[™[ÜKœÚY]ÛÝ[IÊJNÂŸJNÂ‚\Ý
+	ÐMHš[[œÝXÝ[ÛœÈ\™Hš\ÚX›HÛˆØÜ™Y[ˆ[™XœÙ[œ›ÛHH\ÚXØ[XÚÙ]	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœš[YÝZY[˜ÙH‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÐMHØÚ›Ü›X]	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÔXÚðï™\œÚXÚ˜XÚX[N‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÐMKQZ[ž™[ÙZ][‰ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ñ\^XÚÉÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ú][\Ëœ™YXÙJ
+Ý[K[™[ÜJOOœÝ[JÙ[™[ÜKœÚY]ÛÝ[
+IÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	ÔØÚÜÜËPÛÙ\È[HXÚ[ˆØÚÜÜÈ°ï™[‰ÊJNÂˆ\ÜÙ\›ÚÊÜÜËš[˜ÛY\Ê	Ëœš[YÝZY[˜Ù^Ù\Ü^N››Û™HZ[\Ü[IÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆÚXÚÜÈMHØÜ™Y[ˆXÚÚ[™ÈÝ[ÈYØZ[œÝXÝX[X™[ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHÜ™Ø[š^™\ˆš[ÝZY[˜ÙH\ÈZ\ÜÚ[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHØÜ™Y[ˆXÚÚ[™ÈÝ™\šY]ÈÙ\È›ÝX]Úš[YX™[ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœYÙK›ØØ]ÜŠ	Ëœš[[X™[	ÊK™]˜[X]P[ŠJNÂŸJNÂ‚\Ý
+	ÔˆÙY\ÈØÜ™Y[ˆXÚÚ[™È›Ý\ÈÙ™ˆMHÚY]ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHˆ[™^XÝYH[˜ÛY\ÈØÜ™Y[‹[Û›HXÚÚ[™ÈÝZY[˜ÙIÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆXÝX[H›ØÚÜÈš[[™ÈÛˆÜ›Û™ÈX™[È[™ÚXÚÛ\ÝÛÝ[ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐÛÜœ\YMH[™[ÜHX™[Y›Ý›ØÚÈHš[]Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐÛÜœ\YMHÜ™Ø[š^™\ˆXÚÚ[™ÈÛÝ[Y›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Õ˜[YMH[™[ÜHX™[ÈY›Ý™\ÝÜ™HHš[XÝ[Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Õ˜[YMHÜ™Ø[š^™\ˆXÚÚ[™ÈÛÝ[Y›Ý™\ÝÜ™Hš[[™ÉÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆ™Z™XÝÈZ\Ø\ÜÚYÛ™YÚ[ÚY]È[™Z\ÛX™[Y›Ý]HYÙ\ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHÚ[ÚY]Ú]Ü›Û™È[™[ÜHY[]HY›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMH›Ý]HYÙHZ\ÛX™[Y\È[œÝÙ\ˆY›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆÚ[[™[ÜH™\ÝÜ˜][Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆ›Ý]HYÙHÚ[™™\ÝÜ˜][Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÓZ\ÜÚ[™ÈMHÚ[ÚY]Y›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆ™\ÝÜš[™ÈZ\ÜÚ[™ÈÚ[ÚY]	ÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆ™Z™XÝÈÚ]\ÜXÙK\YYXÚÚ[™ÈX™[È[™™\ÝÜ™\Èš[[™ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÕÚ]\ÜXÙK\YYMH[™[ÜHX™[Y›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆÛÜœ™XÝ[™ÈÚ]\ÜXÙK\YYX™[	ÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆ˜[Y]\ÈÜ™Ø[š^™\‹[Û›HØÚÈÛÙ\È[™\Ý[˜][ÛœÈ™Y›Ü™Hš[[™ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝXZ[\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊXZ[‹š[˜ÛY\Ê	Ø]Y]™[™\™YÜ™Ø[š^™\”ÙXÜ™]ÉÊJNÂˆ\ÜÙ\›ÚÊXZ[‹š[˜ÛY\Ê	Ù]KXÛÙO^ÜÝ][ÛÛÙ\ÖÙ[™[ÜKœÝ][Û’YIÊJNÂˆ\ÜÙ\›ÚÊXZ[‹š[˜ÛY\Ê	Ù]KY\Ý[˜][Û^Ù[™[ÜK™\Ý[˜][ÛŸIÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Õ[\\™YMHÜ™Ø[š^™\‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐÛÜœ™XÝYMHÜ™Ø[š^™\‰ÊJNÂŸJNÂ‚\Ý
+	Ðœ›ÝÜÙ\ˆš[Ø]HÚXÚÜÈÜ™Ø[š^™\ˆØÚÈÛÙ\È[™™^\Ý[˜][ÛœÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ò[˜ÛÜœ™XÝÜ™Ø[š^™\‹[Û›HØÚÈÛÙHY›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ò[˜ÛÜœ™XÝÜ™Ø[š^™\ˆ™^\Ý[˜][ÛˆY›Ý›ØÚÈš[[™ÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆÜ™Ø[š^™\ˆÛÙHÛÜœ™XÝ[Û‰ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHš[Y›Ý™XÛÝ™\ˆY\ˆÜ™Ø[š^™\ˆ\Ý[˜][ÛˆÛÜœ™XÝ[Û‰ÊJNÂŸJNÂ‚\Ý
+	Ôˆ™\šYšXØ][Ûˆš[™ÈÜ™Ø[š^™\ˆÛÙ\È[™\Ý[˜][ÛœÈÈHÛÜœ™XÝMHÚXÚÛ\ÝYÙIË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHXÚÚ[™Ë[\ÝÛÙH	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÐMHXÚÚ[™Ë[\Ý\Ý[˜][Ûˆ	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Êœš[YYÙKš[˜ÛY\Ê	ÔØÚÜÜËPÛÙNˆ	È
+ÈÛÙJHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Êœš[YYÙKš[˜ÛY\Ê	Ñ[˜XÚˆ	È
+È\Ý[˜][ÛŠHŠJNÂŸJNÂ‚\Ý
+	ÓÜ™Ø[š^™\ˆXÚÚ[™È™]šY]È\ÈØÜ™Y[‹[Û›H[™™\šYšYY[ˆÚ›ÛZ][IË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝ\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝœ›ÝÜÙ\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÜÜËš[˜ÛY\Ê	ÐYYXHš[ËœXÚÚ[™Ë\™]šY]ÞÙ\Ü^N››Û™HZ[\Ü[_IÊJNÂˆ\ÜÙ\›ÚÊ\š[˜ÛY\Ê	ØÛ\ÜÓ˜[YOHœXÚÚ[™Ë\™]šY]È‰ÊJNÂˆ\ÜÙ\›ÚÊ\š[˜ÛY\Ê	Üš[X[šY™\Ý™[™[Ü\Ë™š[\Š[™[ÜOO™[™[ÜKX[OOO]X[K›˜[YJIÊJNÂˆ\ÜÙ\›ÚÊœ›ÝÜÙ\‹š[˜ÛY\Ê	ÓÜ™Ø[š^™\ˆXÚÚ[™È™]šY]ÈÙ\È›Ý\Ý[Lˆ[™[Ü\ÉÊJNÂˆ\ÜÙ\›ÚÊœ›ÝÜÙ\‹š[˜ÛY\Ê	ÐMHˆ[™^XÝYH[˜ÛY\ÈÜ™Ø[š^™\‹[Û›HÛ‹\ØÜ™Y[ˆXÚÚ[™È™]šY]ÉÊJNÂŸJNÂ‚\Ý
+	ÐMH™Y›YÚ^Z[œÈ™XY[™\ÜÈ[™Ù™™\œÈÛÜœ™XÝ[ÛœÈ›Üˆ[\È[™Ý][ÛˆÛÙ\ÉË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü™Y›YÚ\Ý]\È™Y›YÚX›ØÚÙY	ÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê	Ü™Y›YÚ\Ý]\È™Y›YÚ\™XYIÊJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê
+	ÑXÚÈ›ØÚÙ\Ü\œ	ÈŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê
+	ÑXÚÜZÙ]™\™Z]	ÈŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê›ÛÛXÚÏ^Ê
+OOœÙ]XÝ]™TÝ\
+Š_HŠJNÂˆ\ÜÙ\›ÚÊÛÝ\˜ÙKš[˜ÛY\Ê›ÛÛXÚÏ^Ê
+OOœÙ]XÝ]™TÝ\
+Ê_HŠJNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œ™Y›YÚ\Ý]\×Ê—ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜËÐYYXHš[Ê—×œ™Y›YÚ\Ý]\Ëœ™Y›YÚXXÝ[Ûœ×Ù\Ü^N››Û™HZ[\Ü[WKÊNÂŸJNÂ‚\Ý
+	Ñ[MHœ›ÝÜÙ\ˆ\Ý^XÚ]H™\šYšY\È˜\šYY›Ý]\È[™\œÚ\ÝY›Ý]HÚÚXÙIË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊšYˆ
+Ý\OOHJHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\ÊœÙ[XÝÜ[ÛŠ	Ý˜\šYY	ÊHŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	ÑY™™\™[Ü›Ý\›Ý]\ÈÙ\™HÜÝY\ˆ™[ØY	ÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Ü›Ý]TÙ\]Y[˜Ù\Ë›[™ÝOOHÉÊJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê	Û™]ÈÙ]
+›Ý]TÙ\]Y[˜Ù\ÊKœÚ^™H‰ÊJNÂŸJNÂ‚\Ý
+	ÔXÚÙYMHˆ\ÈHš^Y\ÚXØ[ÛÛ[ÚY[™ÛÝ\˜ÙHXÚÙ]\ÈY[‰Ë
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]œš[\XÚÙ]\ÛÝ\˜ÙWÊ—×Ê™\Ü^N››Û™HZ[\Ü[ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[\XÚÙY\YÙWœš[\ÚY]Ê—ÝÚYŒLÛ[HZ[\Ü[ËÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[\XÚÙY\YÙN›\ÝXÚ[Ê—Ö×××JØœ™XZËXY\Ž˜]]ÈZ[\Ü[ËÊNÂŸJNÂ‚\Ý
+	ÐMH™Y›YÚYX\Ý\™\ÈHØ[YHXÚÙY\ÚÈÙ[ÛY]žH\ÙY›Üˆš[[™ÉË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜËÐ\HHØ[YHXÚÙY\ÚÈÙ[ÛY]žH\š[™ÈØÜ™Y[ˆ™Y›YÚ[™š[[™×—Ê—
+—×ÊYYXHØÜ™Y[‹š[ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜËÕHMHÛÛ[ÚY]\ÝX]Ú[ˆ™Y›YÚ[™ˆYÚ[˜][Û——Ê—
+—×ÊYYXHØÜ™Y[‹š[ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKØÛÛœÝÛX[šY™\Ýœ\ÚXØ[OXZ[XÚÙYMTš[ÛÜW
+XÚÙ]
+KÊNÂŸJNÂ‚\Ý
+	Ôš[XÝ[Ûˆ™Z™XÝÈÝ™\™›ÝÚ[™ÈXÚÙYÛÛ[\Ú[™ÈHØ[YHNL[HYÙ]\ÈÚ›ÛZ][IË
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝ™\šYšY\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÜÚY]œØÜ›ÛZYÚ
+ŒWÎM‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÓX]›X^
+ZYÚÛÛ[
+OMWÕTÐP“WÒRQÒÓSW
+ÌŒKÊNÂˆ\ÜÙ\›X]Ú
+™\šYšY\‹ÜÚY]šZYÚ[OŒNLŒHÚY]œØÜ›ÛZYÚ[OŒNLŒKÊNÂŸJNÂ‚\Ý
+	ÔÛÝ\˜ÙHMH\ÚÈØ\™È™]Z[ˆYÚX›H\HÚ[H™YXÚ[™È^Ù\ÜÈ™\XØ[ÜXÚ[™ÉË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[]\Ú×ÜY[™ÎŒW[[HÛ[NÛX\™Ú[ŽŒ[[HÛ[™KZZYÚŒWŒMNÙ›Û\Ú^™NŽ\KÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[]\ÚÈœš[\]Y\Ý[Û—Ù›Û\Ú^™NŒL\ÊNÂŸJNÂ‚\Ý
+	ÐMHš[Ø]H[™Ú›ÛZ][Hˆ›Ý™Z™XÝÛÛ[^ÙYY[™ÈLŽ[HÚY	Ë
+
+OOžÂˆÛÛœÝÛÝ\˜ÙO\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÛXZ[‹Þ	Ë[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝ™\šYšY\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÓX]›X^
+ÚY]™Ù]›Ý[™[™ÐÛY[™XÝ
+
+WÚYÚY]œØÜ›ÛÚY
+W
+ŒWÎM‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÝ\˜ÙKÝÚYŒLŽŒKÊNÂˆ\ÜÙ\›X]Ú
+™\šYšY\‹ÜØÜ›ÛÚY[N“X]œ›Ý[™
+[œØÜ›ÛÚY
+ŒWÎM—
+ŒL
+WÌLÊNÂˆ\ÜÙ\›X]Ú
+™\šYšY\‹ÜÚY]ÚY[OŒLŽŒHÚY]œØÜ›ÛÚY[OŒLŽŒKÊNÂŸJNÂ‚\Ý
+	ÔXÚÙYMHYÙ\È™\Ù\™Hœ˜XÝ[Û˜[ÔÔÈ^[ÜXÙH™[ÝÈHÝšXÝLŽ[HÚYØ]IË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYˆœš[\XÚÙY\YÙKœš[\ÚY]ÝÚYŒLÛ[HZ[\Ü[ÛX^]ÚYŒLÛ[HZ[\Ü[ÊNÂŸJNÂ‚\Ý
+	ÔXÚÙYMH™Y›YÚ[˜ÛY\ÈHØ[YHÜ˜\\ˆ›ÝÈ[™Ù\\˜]Üˆ\Èš[	Ë
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜËÐYYXHØÜ™Y[—Ê—×Ê—œš[\XÚÙ]\XÚÙYœš[\XÚÙYXÛÛ[Ù\Ü^N™›ÝË\›ÛÝ×WÊ—œš[\XÚÙ]\XÚÙYœš[\XÚÙYXÛÛ[
+Èœš[\XÚÙYXÛÛ[ÛX\™Ú[‹]ÜŒ›[N×KÊNÂŸJNÂ‚\Ý
+	ÐÚ›ÛZ][Hš[XØÙ\[˜ÙH^ÜÈš[™HÙ\\˜]HMHXÚÙ]È[˜ÛY[™ÈHY[X[HÛ›HY\ˆHÛÛXš[™Y›ÛÙˆ\ÜÙ\ÉË
+
+OOžÂˆÛÛœÝØÜš\\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜØÜš\ËÝ™\šYžKXMKXœ›ÝÜÙ\‹›ZœÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆÛÛœÝØ]O\ØÜš\š[™^ÙŠ	ÚYˆ
+˜Z[\™\Ë›[™Ý
+HÉÊNÂˆÛÛœÝ^Ü]\ØÜš\š[™^ÙŠ	ØÛÛœÝ”ÜXÜÏVÉÊNÂˆ\ÜÙ\›ÚÊØ]OL	‰™^Ü]™Ø]JNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê‰Ü[š]IÈŠJNÂˆ\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê‰ÜœÙ\\˜]IÈŠJNÂˆ›ÜŠÛÛœÝ˜[YHÙˆÉÔÔT’QÑÔÜY[Z][™×ÐMKœ‰Ë	ÔÔT’QÑÕX[WÔ›ÝÐMKœ‰Ë	ÔÔT’QÑÕX[WÐ›]WÐMKœ‰Ë	ÔÔT’QÑÕX[WÑÜY[—ÐMKœ‰Ë	ÔÔT’QÑÕX[WÑÙ[—ÐMKœ‰Ë	ÔÔT’QÑÕX[WÓÜ˜[™ÙWÐMKœ‰Ë	ÔÔT’QÑÕX[WÓ[WÐMKœ‰Ë	ÔÔT’QÑÕX[WÕY\šÚ\×ÐMKœ‰Ë	ÔÔT’QÑÕ[\ØÚYÙ]ZÙ][—ÐMKœ‰×JX\ÜÙ\›ÚÊØÜš\š[˜ÛY\Ê˜[YJJNÂŸJNÂ‚\Ý
+	Õ™\™XÚ]HÚ[™\˜›0é\ˆ[[ˆÞ[X›ÛH[™™Z[Ú]\ˆ[›™\š[ˆ\ˆMKQXÚÙ›0éÚIË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—V×××JÙ›Û\Ú^™NŽŒœÛ[™KZZYÚŒWŒ‹ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—H˜\œ›ÝËYÜšYÛÜ™ÙX\˜ÚXÙ[Ê—ÝÚY›[NÚZYÚ›[KÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—HœÞ[X›ÛYÜšYœÞ[X›ÛXÙ[Ê—ÝÚYÛ[NÚZYÚÛ[KÊNÂŸJNÂ‚\Ý
+	ÑYHMKR0íš[œ°ï[™ÈZ\ÜÝÚ[™\˜›0é\ˆZ]\œÙ[™[ˆÛÛ\ZÝ[ˆ\ÙÜ˜YšYHÚYHYHXÚÚÛÜYIË
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]Ê—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—V×××JÙ›Û\Ú^™NŽŒœÛ[™KZZYÚŒWŒ‹ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]Ê—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—H˜\œ›ÝËYÜšYÛÜ™ÙX\˜ÚXÙ[Ê—ÝÚY›[NÚZYÚ›[KÊNÂŸJNÂ‚\Ý
+	Ñ\ÈÙ[YZ[œØ[YHXÚÝX™[™Ú]\ˆ\Ý]Yˆ]Y[›][™XÚÚÛÜYHZ]YÈ[™Ü°í°çÙ\ˆÙ\Ù]	Ë
+
+OOžÂˆÛÛœÝÜÜÏ\™XYš[TÞ[˜Ê™]ÈT“
+	Ë‹‹ÜÜ˜ËÜÝ[K˜ÜÜÉË[\Ü›Y]K\›
+K	Ý]Ž	ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[]™YK]ÛÜ™YÜšYÛÜ™ÙX\˜ÚYÜšYÊ‹×××J×Ö×ŸWJ›X\™Ú[‹[Y˜]]ÈZ[\Ü[Ö×ŸWJ›X\™Ú[‹\šYÚ˜]]ÈZ[\Ü[ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[]™YK]ÛÜ™YÜšYÛÜ™ÙX\˜ÚXÙ[Ê‹×××J×ÝÚY[[NÚZYÚ[[NÙ›Û\Ú^™NŽ\ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[\XÚÙYXÛÛ[œš[]™YK]ÛÜ™YÜšYÛÜ™ÙX\˜ÚYÜšYÊ—Ö×ŸWJ›X\™Ú[‹[Y˜]]ÈZ[\Ü[ÊNÂˆ\ÜÙ\›X]Ú
+ÜÜË×œš[\XÚÙ]\XÚÙYÊ—Ê—œš[XÚ[\ÚY]Ù]K\ÚY]ZÚ[™H\ÚÈ—Hœš[\XÚÙYXÛÛ[œš[]™YK]ÛÜ™YÜšYÛÜ™ÙX\˜ÚXÙ[Ê—ÝÚY[[NÚZYÚ[[NÙ›Û\Ú^™NŽ\ÊNÂŸJNÂ
