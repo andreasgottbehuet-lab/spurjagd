@@ -357,11 +357,11 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
-   const safe=maskDestination(description,answer).replace(/\\s+/g,' ').trim();
+   const safe=maskDestination(description,answer).replace(/\s+/g,' ').trim();
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    if(clueRevealsDestination(safe,answer)) throw new Error('Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.');
-   const prose=/[.!?]$/.test(safe) ? safe : 'Hinweis: '+safe.replace(/[,;]\\s*/g,', ')+'.';
-   return {mode,instruction:'Lest den Hinweistext und findet heraus, welcher Ort gemeint ist.',question:prose+'\\n\\nWelcher Ort passt zu diesem Text?',hint:'Achtet darauf, welche Merkmale im Text wirklich genannt werden.',answer};
+   const prose=/[.!?]$/.test(safe) ? safe : 'Hinweis: '+safe.replace(/[,;]\s*/g,', ')+'.';
+   return {mode,instruction:'Lest den Hinweistext und findet heraus, welcher Ort gemeint ist.',question:prose+' Welcher Ort passt zu diesem Text?',hint:'Achtet darauf, welche Merkmale im Text wirklich genannt werden.',answer};
  }
  if(mode==='questions') {
    if (/\d/.test(answer)) throw new Error('Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.');
