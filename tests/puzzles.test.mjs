@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createDefaultGameConfig } from '../src/default-game.ts';
 import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination, findDigitWords } from '../src/puzzles.ts';
 
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
@@ -470,4 +471,36 @@ test('Wordsearch verifier rejects unsupported grid sizes without losing valid ag
   const empty={...puzzle,wordGrid:{...original,rows:[]}};
   assert.equal(verifyDigitPuzzle(empty),false);
  }
+});
+
+
+test('Zahlenfolgen für 8- bis 10-Jährige zeigen vier Ausgangszahlen mit einem deutlichen Rechenschritt',()=>{
+ for(let target=0;target<=9;target++) for(let seed=0;seed<20;seed++){
+  const puzzle=generateDigitPuzzle(target,'sequence','middle',seed+target*20);
+  const parts=puzzle.question.split('  ·  ');
+  assert.equal(parts.length,5);
+  assert.equal(parts[4],'?');
+  const values=parts.slice(0,4).map(Number);
+  const steps=values.slice(1).map((value,index)=>value-values[index]);
+  assert.ok(steps.every(step=>step===steps[0]&&Math.abs(step)>=2));
+  assert.equal(values[3]+steps[0],target);
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+ }
+});
+
+test('Zählrätsel für 8- bis 10-Jährige mischen 16 Zeichen und ergeben eindeutig die gesuchte Ziffer',()=>{
+ for(let target=0;target<=9;target++) for(let seed=0;seed<20;seed++){
+  const puzzle=generateDigitPuzzle(target,'symbols','middle',seed+target*20);
+  assert.equal(puzzle.render.items.length,16);
+  assert.equal(puzzle.render.items.filter(item=>item===puzzle.render.symbol).length,target);
+  assert.ok(puzzle.render.items.some(item=>item!==puzzle.render.symbol));
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+ }
+});
+
+test('Neue Spiele wählen Textbeschreibungen und die Wiese beschreibt Blumen statt Bäume',()=>{
+ const config=createDefaultGameConfig();
+ assert.ok(Object.values(config.routeClueModes).every(mode=>mode==='description'));
+ assert.match(config.locations.find(location=>location.name==='Wiese').description,/Blumen/i);
+ assert.doesNotMatch(config.locations.find(location=>location.name==='Wiese').description,/Bäume|Häuser/i);
 });
