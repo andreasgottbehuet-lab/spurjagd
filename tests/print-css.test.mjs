@@ -484,3 +484,10 @@ test('Chromium print acceptance exports eight separate A5 packets only after the
  assert.ok(script.includes("'pdfseparate'"));
  for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Team_Orange_A5.pdf','SPURJAGD_Team_Lila_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
 });
+
+test('Verdichtete Kinderblätter halten Symbol- und Pfeilgitter innerhalb der A5-Druckfläche',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?font-size:8\.2pt;line-height:1\.02/);
+ assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?\.arrow-grid \.wordsearch-cell\{width:6mm;height:6mm/);
+ assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\][\s\S]*?\.symbol-grid \.symbol-cell\{width:7mm;height:7mm/);
+});
