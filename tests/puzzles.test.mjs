@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { AGE_GROUPS, ageLevelFor } from '../src/age-groups.ts';
 import { createDefaultGameConfig } from '../src/default-game.ts';
 import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination, findDigitWords } from '../src/puzzles.ts';
 
@@ -503,4 +504,9 @@ test('Neue Spiele wählen Textbeschreibungen und die Wiese beschreibt Blumen sta
  assert.ok(Object.values(config.routeClueModes).every(mode=>mode==='description'));
  assert.match(config.locations.find(location=>location.name==='Wiese').description,/Blumen/i);
  assert.doesNotMatch(config.locations.find(location=>location.name==='Wiese').description,/Bäume|Häuser/i);
+});
+
+test('Altersgruppen decken den Zweijahresrhythmus von 4 bis 14 ab',()=>{
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','young','middle','older','older']);
 });
