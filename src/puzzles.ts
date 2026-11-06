@@ -360,7 +360,12 @@ export function generateCreativeRouteClue(destination: string, description: stri
    const safe=maskDestination(description,answer).replace(/\s+/g,' ').trim();
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    if(clueRevealsDestination(safe,answer)) throw new Error('Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.');
-   const prose=/[.!?]$/.test(safe) ? safe : 'Hinweis: '+safe.replace(/[,;]\s*/g,', ')+'.';
+   const listItems=safe.split(/[,;]\\s*/).map(item=>item.trim()).filter(Boolean);
+   const prose=/[.!?]$/.test(safe)
+     ? safe
+     : listItems.length>1
+       ? 'Besondere Merkmale: '+listItems.slice(0,-1).join(', ')+' und '+listItems.at(-1)+'.'
+       : 'Hinweis: '+safe+'.';
    return {mode,instruction:'Lest den Hinweistext und findet heraus, welcher Ort gemeint ist.',question:prose+' Welcher Ort passt zu diesem Text?',hint:'Achtet darauf, welche Merkmale im Text wirklich genannt werden.',answer};
  }
  if(mode==='questions') {
