@@ -425,7 +425,7 @@ test('Full A5 browser test explicitly verifies varied routes and persisted route
 test('Packed A5 PDF has a fixed physical content width and source packet is hidden',()=>{
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
  assert.match(css,/\.print-packet\.print-packet-source\s*\{\s*display:none!important;/);
- assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page\s*\{width:127mm!important;/);
+ assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page\.print-sheet\s*\{width:127mm!important;/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-packed-page:last-child\s*\{[\s\S]*?break-after:auto!important;/);
 });
 
@@ -462,5 +462,5 @@ test('A5 print gate and Chromium PDF both reject content exceeding 128 mm width'
 
 test('Packed A5 pages reserve fractional CSS pixel space below the strict 128 mm width gate',()=>{
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- assert.match(css,/\.print-packet-packed > \.print-packed-page \{width:127mm!important;max-width:127mm!important/);
+ assert.match(css,/\.print-packet-packed > \.print-packed-page.print-sheet {width:127mm!important;max-width:127mm!important/);
 });
