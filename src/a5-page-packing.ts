@@ -2,7 +2,7 @@
 export const A5_USABLE_HEIGHT_MM = 190;
 export interface A5Block { id:string; owner:string; section:string; heightMm:number; keepWithNext?:boolean }
 export interface A5PackedPage { owner:string; section:string; blocks:A5Block[]; usedMm:number }
-export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_HEIGHT_MM,options:{compactOrganizer?:boolean}={}):A5PackedPage[] {
+export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_HEIGHT_MM,options:{compactOrganizer?:boolean;compactAll?:boolean}={}):A5PackedPage[] {
  if(!Number.isFinite(usableHeightMm)||usableHeightMm<=0) throw new Error('Ungültige A5-Druckhöhe');
  const pages:A5PackedPage[]=[];
  if(blocks.some(b=>!b.id.trim()||!b.owner.trim()||!b.section.trim()||!Number.isFinite(b.heightMm)||b.heightMm<=0||b.heightMm>usableHeightMm)) throw new Error('Ungültiger A5-Inhaltsblock');
@@ -18,7 +18,7 @@ export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_
    }
   }
   if(pair>usableHeightMm) throw new Error('Zusammengehörige A5-Blöcke überschreiten die Druckhöhe');
-  const eligibleForCompaction=block.owner!=='leitung'||(options.compactOrganizer!==false&&block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2));
+  const eligibleForCompaction=options.compactAll!==false&&(block.owner!=='leitung'||(options.compactOrganizer!==false&&block.heightMm<usableHeightMm/2&&!!last&&last.blocks.length===1&&last.blocks.every(previous=>previous.heightMm<usableHeightMm/2)));
   if(!last||!same||!eligibleForCompaction||last.usedMm+block.heightMm>usableHeightMm||(pair>block.heightMm&&last.usedMm+pair>usableHeightMm)) pages.push({owner:block.owner,section:block.section,blocks:[],usedMm:0});
   const page=pages[pages.length-1];page.blocks.push(block);page.usedMm+=block.heightMm;
  }
@@ -112,13 +112,13 @@ export function physicalA5Manifest(pages:readonly A5PackedPage[],elements:readon
  * Only complete sheets of the same owner and section may share an A5 page.
  * The caller must remove the returned copy after the print dialog closes.
  */
-export function buildPackedA5PrintCopy(packet:HTMLElement,compactOrganizer=true):{copy:HTMLElement;pageCount:number;manifest:A5PhysicalManifest} {
+export function buildPackedA5PrintCopy(packet:HTMLElement,options:{compactOrganizer?:boolean;compactAll?:boolean}={}):{copy:HTMLElement;pageCount:number;manifest:A5PhysicalManifest} {
  const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
  if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
  const blocks=measureA5Elements(originals);
  // Reserve wrapper and separator space before the browser prints the copy.
  const packingBlocks=blocks.map(block=>({...block,heightMm:block.heightMm+(block.owner==='leitung'?3:2)}));
- const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2,{compactOrganizer});
+ const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2,options);
  // A single original block must fit on its own page; the separator allowance
  // is only available between blocks and must not hide oversized originals.
  const oversizedOriginals=blocks.filter(block=>block.heightMm>A5_USABLE_HEIGHT_MM);

@@ -140,6 +140,12 @@ test('Organizer 50-percent compaction pairs at most two short pages and preserve
 
 test('Organizer pages fall back to one-per-page when physical layout cannot compact safely',()=>{
  const compact=packA5Blocks([b('short-1','leitung',60,'organizer'),b('short-2','leitung',60,'organizer')]);
- const safe=packA5Blocks([b('short-1','leitung',60,'organizer'),b('short-2','leitung',60,'organizer')],190,{compactOrganizer:false});
+ const safe=packA5Blocks([b('short-1','leitung',60,'organizer'),b('short-2','leitung',60,'organizer')],190,{compactOrganizer:false,compactAll:false});
  assert.equal(compact.length,1);assert.equal(safe.length,2);
+});
+
+test('Overflow recovery can disable every packing group while preserving source order',()=>{
+ const blocks=[b('org','leitung',60,'organizer'),b('r1','rot:env','60,'route'),b('r2','rot:env','60','route')];
+ const pages=packA5Blocks(blocks,190,{compactAll:false});
+ assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['org'],['r1'],['r2']]);
 });
