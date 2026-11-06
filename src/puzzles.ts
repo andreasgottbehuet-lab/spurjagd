@@ -331,7 +331,7 @@ export function encodeAlternatingRouteName(destination:string):string {
 }
 export function decodeAlternatingRouteName(question:string):string|null {
  const separator=question.indexOf(':');
- if(separator<1||!/^\\d+$/.test(question.slice(0,separator)))return null;
+ if(separator<1||!/^\d+$/.test(question.slice(0,separator)))return null;
  const firstLength=Number(question.slice(0,separator));
  if(!Number.isSafeInteger(firstLength))return null;
  const body=[...question.slice(separator+1)];
