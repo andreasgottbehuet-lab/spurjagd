@@ -170,7 +170,7 @@ test('Organizer measurement keeps each print section separate for 50-percent com
 
 
 test('Organizer compaction keeps a physical print reserve below the A5 limit',()=>{
- const justBelowHalf=[b('hints-a','leitung',94,'planning-hints'),b('hints-b','leitung',88,'planning-hints')];
+ const justBelowHalf=[b('hints-a','leitung',84,'planning-hints'),b('hints-b','leitung',84,'planning-hints')];
  const pages=packA5Blocks(justBelowHalf);
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['hints-a'],['hints-b']]);
  const safelyCompactable=packA5Blocks([b('short-a','leitung',70,'planning-hints'),b('short-b','leitung',75,'planning-hints')]);
