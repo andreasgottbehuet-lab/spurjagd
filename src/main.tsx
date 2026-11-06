@@ -448,7 +448,7 @@ function App() {
                 {plan.value && <section className="challenge-preview"><h3>{tx("Wegrätsel – Vorschau nach Zielort", "Route clues – preview by destination")}</h3><p className="helper">{tx("Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.", "Each destination has one route clue. Teams receive the same version regardless of their route.")}</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
                   const target=locations.find(l=>l.name.trim()===destination.trim());
                   try {
-                    const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
+                    const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);
                     return <article className="location-card" key={destination}><strong>{tx("Ziel", "Destination")}: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} (Buchstabe {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">{tx("Lösung für die Spielleitung", "Organizer answer")}: {clue.answer}</p></article>;
                   } catch(error) {
                     return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
@@ -506,7 +506,7 @@ function App() {
                     <h1>Spielleitung – Wegrätsel-Lösungen {page+1}</h1>
                     {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(destination=>{
                       const target=locations.find(l=>l.name.trim()===destination.trim());
-                      const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');
+                      const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);
                       return <div className="print-solution-entry" key={destination}><strong>Ziel: {destination}</strong>{clue.mode==='questions'?<p>{clue.rows?.map(row=>row.solution+' ('+(row.letterIndex+1)+')').join(' · ')}</p>:<p>{clue.mode==='letters'?'Buchstabenspiel':clue.mode==='description'?'Ortsbeschreibung':'Eigener Rätseltext'}</p>}</div>;
                     })}
                   </article>)}
@@ -526,7 +526,7 @@ function App() {
                     const destination=team.stations[stationIndex+1]?.name??team.finish;
                     const target=locations.find(l=>l.name.trim()===destination.trim());
                     let routePuzzle;
-                    try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'');}
+                    try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??'letters',hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">

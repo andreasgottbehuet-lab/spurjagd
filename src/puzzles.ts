@@ -323,7 +323,24 @@ function maskDestination(description:string, destination:string):string {
  }
  return result+source.slice(start);
 }
-export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = ''): RouteClue {
+export function encodeAlternatingRouteName(destination:string):string {
+ const chars=[...destination];
+ const first=chars.filter((_,index)=>index%2===0).join('');
+ const second=chars.filter((_,index)=>index%2===1).join('');
+ return first.length+':'+first+'|'+second;
+}
+export function decodeAlternatingRouteName(question:string):string|null {
+ const separator=question.indexOf(':');
+ if(separator<1||!/^\\d+$/.test(question.slice(0,separator)))return null;
+ const firstLength=Number(question.slice(0,separator));
+ if(!Number.isSafeInteger(firstLength))return null;
+ const body=[...question.slice(separator+1)];
+ if(body.length<=firstLength||body[firstLength]!=='|')return null;
+ const first=body.slice(0,firstLength),second=body.slice(firstLength+1);
+ if(first.length!==second.length&&first.length!==second.length+1)return null;
+ return first.map((character,index)=>character+(second[index]??'')).join('');
+}
+export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = '', age:AgeLevel='middle'): RouteClue {
  const answer=destination.trim();
  if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
  if(mode==='custom') {
@@ -356,8 +373,11 @@ export function generateCreativeRouteClue(destination: string, description: stri
    if(rows.some((r,i)=>r.solution[r.letterIndex]?.toUpperCase()!==letters[i])) throw new Error('Fragenrätsel ist nicht konsistent.');
    return {mode,instruction:'Beantwortet die Fragen. Nehmt jeweils den angegebenen Buchstaben der Antwort. Die Buchstaben ergeben den nächsten Ort (ohne Leerzeichen).',question:'',hint:'Schreibt die Lösungsbuchstaben nacheinander auf.',answer,rows};
  }
- const p=generateRoutePuzzle(answer,seed);
- return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
+ if(age==='young'){
+  const p=generateRoutePuzzle(answer,seed);
+  return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
+ }
+ return {mode:'letters',instruction:'Die erste Gruppe zeigt die Zeichen an den Stellen 1, 3, 5 usw.; nach dem senkrechten Strich folgen die Zeichen an den Stellen 2, 4, 6 usw. Setzt die Zeichen abwechselnd zusammen.',question:encodeAlternatingRouteName(answer),hint:'Lest links vom senkrechten Strich ein Zeichen und ergänzt dann rechts das nächste.',answer};
 }
 
 /** Normalize punctuation and repeated spaces before checking whether a clue reveals its answer. */
@@ -390,6 +410,8 @@ export function verifyCreativeRouteClue(clue:RouteClue):boolean {
  }
  if(clue.mode==='custom') return clue.question.trim().length>0 && clue.question.trim().length<=400 && !clueRevealsDestination(clue.question,destination);
  if(clue.mode==='letters') {
+  const decoded=decodeAlternatingRouteName(clue.question);
+  if(decoded===destination)return true;
   const reverse=[...destination].reverse().join('');
   const vowels=destination.replace(/[AEIOUÄÖÜaeiouäöü]/g,'_');
   return clue.question!==destination && (clue.question===reverse || clue.question===vowels);
