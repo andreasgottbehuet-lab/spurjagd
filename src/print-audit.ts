@@ -7,7 +7,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
  if(config.goal!=='locks') issues.push('Das Druckpaket unterstützt derzeit nur Schloss-Codes.');
  if(!config.startPoint?.trim()) issues.push('Startort fehlt.');
  if(config.finishMode==='meeting'&&!config.meetingPoint?.trim()) issues.push('Gemeinsamer Zielort fehlt.');
- if(new Set(config.locations.map(location=>location.id)).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
+ if(new Set(config.locations.map(location=>location.id.trim())).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
  try {
   const expected=createPlan(config);
   if(plan.teams.length!==expected.teams.length || plan.stopsPerTeam!==expected.stopsPerTeam || plan.estimatedMinutes!==expected.estimatedMinutes || plan.remainderMinutes!==expected.remainderMinutes) issues.push('Gruppenplan oder Zeitberechnung stimmt nicht mit den Eingaben überein.');

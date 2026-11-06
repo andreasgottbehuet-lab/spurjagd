@@ -161,14 +161,297 @@
 
 /* The organizer packing list stays separate from the safety instructions. */
 @media print {
- .print-checklist-row { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; border-bottom:1px solid #bbb; line-height:1.4; }
+ .print-checklist-row { break-inside:avoid; page-break-inside:avoid; margin:3mm 0; padding:1mm 0; border-bottom:1px solid #bbb; line-height:1.35; }
 }
 
 @media print {
- .print-checklist-row span { display:block; margin:2mm 0 0 5mm; font-size:9pt; }
+ .print-checklist-row span { display:block; margin:1mm 0 0 5mm; font-size:9pt; }
  .print-checklist-row strong { font-weight:700; }
 }
 
 @media print {
  .print-caution { break-inside:avoid; page-break-inside:avoid; margin:5mm 0; padding:2mm 0; line-height:1.4; border-bottom:1px solid #bbb; }
 }
+
+/* Screen-only print preparation guidance. */
+.print-guidance{border:1px solid #cad9d1;border-radius:10px;padding:14px 17px;margin:18px 0;background:#f7faf8}
+.print-guidance p{font-size:14px;line-height:1.55;margin:9px 0 0}
+@media print{.print-guidance{display:none!important}}
+
+/* Screen-only organizer packing preview. Never include secret codes in child printouts. */
+.packing-preview{margin:16px 0 8px;border:1px solid #c8d8ce;border-radius:9px;background:#fff;padding:12px 15px}
+.packing-preview summary{cursor:pointer;font-weight:700;line-height:1.5}
+.packing-preview-team{margin-top:14px}
+.packing-preview-team h4{margin:0 0 7px;font-size:15px}
+.packing-preview-team ol{margin:0;padding-left:25px}
+.packing-preview-team li{padding:7px 0;border-bottom:1px solid #e6ece7;line-height:1.5}
+.packing-preview-team li>span{display:block;font-size:13px}
+@media print{.packing-preview{display:none!important}}
+
+/* A5 preflight feedback is visible before the long organizer previews. */
+.preflight-status{display:flex;flex-direction:column;gap:5px;padding:14px 16px;margin:0 0 18px;border:1px solid #b8d2c3;border-radius:10px;background:#f1f7f2;color:#244b37;font-size:14px;line-height:1.5}
+.preflight-status strong{font-size:15px}
+.preflight-blocked{border-color:#dfbca9;background:#fff6f0;color:#743a25}
+.preflight-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+@media print{.preflight-status,.preflight-actions{display:none!important}}
+
+/* A5-friendly number-word search: fixed cells, no splitting across pages. */
+.wordsearch-grid{display:inline-flex;flex-direction:column;gap:0;margin:.45rem 0;max-width:100%;break-inside:avoid;page-break-inside:avoid}
+.wordsearch-row{display:flex;gap:0}
+.wordsearch-cell{display:flex;align-items:center;justify-content:center;width:6mm;height:6mm;box-sizing:border-box;border:1px solid #aeb9bf;font-family:Arial,sans-serif;font-size:10pt;font-weight:700;line-height:1}
+@media print{.wordsearch-grid{margin:2mm 0}.wordsearch-cell{width:4.6mm;height:4.6mm;font-size:9pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+.route-answer-grid{display:flex;gap:0;margin:.25rem 0 .6rem;break-inside:avoid}
+.route-answer-cell{display:inline-block;width:7mm;height:7mm;border:1px solid #9eacb6;box-sizing:border-box}
+.route-answer-highlight{background:#fff0bd;border-color:#8b9298}
+@media print{.route-answer-cell{width:6.5mm;height:6.5mm}.route-answer-highlight{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Grid-bearing station sheets must keep three tasks on one physical A5 page. */
+@media print {
+ .print-child-sheet[data-sheet-kind="task"] h1{font-size:16pt;margin:0 0 3mm}
+ .print-child-sheet[data-sheet-kind="task"] h2{font-size:12pt;margin:2mm 0}
+ .print-child-sheet[data-sheet-kind="task"]>p{margin:2mm 0;font-size:9.5pt;line-height:1.2}
+ .print-child-sheet[data-sheet-kind="task"] .print-task{padding:1.5mm 3mm;margin:1mm 0;line-height:1.15;font-size:9pt}
+ .print-child-sheet[data-sheet-kind="task"] .print-task h3{font-size:10pt;margin:0 0 1mm}
+ .print-child-sheet[data-sheet-kind="task"] .print-task p{margin:1mm 0}
+ .print-child-sheet[data-sheet-kind="task"] .print-task .print-question{font-size:11pt;line-height:1.15}
+ .print-child-sheet[data-sheet-kind="task"] .print-task .symbols{font-size:16pt;line-height:1.1}
+ .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid{margin:1mm 0}
+}
+
+/* Inline correction controls for blocked print packets (screen only). */
+.preflight-issue{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #d8c9c1}
+.preflight-issue span{flex:1;min-width:0;overflow-wrap:anywhere}
+.preflight-issue button{flex-shrink:0}
+@media(max-width:600px){.preflight-issue{align-items:flex-start;flex-direction:column}}
+@media print{.preflight-issue button{display:none!important}}
+
+/* Restrained, printer-friendly team identity on A5 worksheets, labels and route plans. */
+.print-child-sheet[data-team-color],.print-label[data-team-color]{--team-accent:#63788a;--team-tint:#f0f3f5}
+.print-child-sheet[data-team-color="rot"],.print-label[data-team-color="rot"],.team-route-line[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-child-sheet[data-team-color="blau"],.print-label[data-team-color="blau"],.team-route-line[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-child-sheet[data-team-color="grün"],.print-label[data-team-color="grün"],.team-route-line[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-child-sheet[data-team-color="gelb"],.print-label[data-team-color="gelb"],.team-route-line[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-child-sheet[data-team-color]{border-top:4mm solid var(--team-accent);border-bottom:3mm solid var(--team-accent)}
+.print-child-sheet[data-team-color]>p:first-of-type{background:var(--team-tint);padding:1.5mm 2mm;border-radius:1mm}
+.team-route-line[data-team-color]{border-left:4mm solid var(--team-accent);background:var(--team-tint);padding:2mm 3mm;margin:2mm 0}
+.print-label[data-team-color]{border-left:3mm solid var(--team-accent);background:var(--team-tint)}
+@media print{.print-child-sheet[data-team-color],.print-label[data-team-color],.team-route-line[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Unified team identity for organizer checklists and route clues. */
+.print-checklist-row[data-team-color]{--team-accent:#63788a;--team-tint:#f0f3f5;border-left:3mm solid var(--team-accent);background:var(--team-tint);padding:2mm 3mm}
+.print-checklist-row[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-checklist-row[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-checklist-row[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-checklist-row[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-alphabet-guide{font-family:monospace;font-size:8pt;line-height:1.6;overflow-wrap:anywhere;margin:2mm 0;padding:2mm;border:1px solid #b9c4cb}
+.print-alphabet-guide span{display:block;letter-spacing:.15pt}
+@media print{.print-checklist-row[data-team-color]{-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-child-sheet[data-sheet-kind="route"]{border-top:4mm solid var(--team-accent);border-bottom:3mm solid var(--team-accent)}}
+
+/* Compact A5 print: answers stay on task sheets; organizer solutions use shared pages. */
+@media print{
+ .print-solution-entry{margin:3mm 0;padding:2mm 3mm;border-bottom:1px solid #bbb;break-inside:avoid}
+ .print-solution-entry p{margin:1mm 0}
+ .print-code-entry{font-size:12pt;font-weight:700;margin:4mm 0}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid{margin-left:auto;margin-right:auto;max-width:100%}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-grid{justify-content:center}
+}
+
+/* Keep print DOM measurable without exposing it in the interactive wizard. */
+@media screen {
+ .print-packet { display:block; position:absolute; left:-20000px; top:0; width:128mm; opacity:0; pointer-events:none; }
+ .print-packet .print-sheet { width:128mm; max-width:128mm; box-sizing:border-box; font-size:10pt; line-height:1.35; }
+ .print-packet .print-sheet h1 { font-size:16pt; margin-bottom:6mm; }
+ .print-packet .print-sheet h2 { font-size:12pt; }
+}
+
+/* Physical A5 compaction: only the measured print copy is printed. */
+@media print {
+ .print-packet.print-packet-source { display:none!important; }
+ .print-packet.print-packet-packed { display:block!important; }
+ .print-packed-page { break-after:page;page-break-after:always; }
+ .print-packed-page:last-child { break-after:auto;page-break-after:auto; }
+ .print-packed-content { display:flow-root; }
+ .print-packed-content + .print-packed-content { margin-top:2mm; }
+}
+
+/* Keep packed-page wrapper geometry identical between screen preflight and printed PDF. */
+@media screen {
+ .print-packet-packed .print-packed-content {display:flow-root;}
+ .print-packet-packed .print-packed-content + .print-packed-content {margin-top:2mm;}
+}
+
+/* Undo offscreen measurement styles in print media. */
+@media print {
+ .print-packet.print-packet-packed {
+  position:static!important;left:auto!important;top:auto!important;
+  width:auto!important;opacity:1!important;visibility:visible!important;
+  pointer-events:auto!important;
+ }
+ .print-packet.print-packet-packed .print-sheet {width:auto!important;max-width:100%!important;}
+}
+
+/* Browser preflight must measure print-scale puzzles, not the larger editor preview. */
+@media screen {
+ .print-packet .wordsearch-cell {width:4.6mm;height:4.6mm;font-size:9pt;}
+ .print-packet .wordsearch-grid {margin:2mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task {padding:2mm 3mm;margin:2mm 0;line-height:1.15;font-size:9pt;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task h3 {font-size:10pt;margin:0 0 1mm;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task p {margin:1mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .print-question {font-size:11pt;line-height:1.15;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .wordsearch-grid {margin:1mm 0;}
+}
+
+/* Three-number grids must fit the 190 mm A5 content box at print and measurement scale. */
+@media print {
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell {width:3.5mm;height:3.5mm;font-size:8pt;}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid {padding:1.5mm 2mm;margin:1mm 0;}
+ .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid p {margin:1mm 0;}
+}
+@media screen {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell {width:3.5mm;height:3.5mm;font-size:8pt;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid {padding:1.5mm 2mm;margin:1mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid p {margin:1mm 0;}
+}
+
+/* Physical packed pages, not the original React sheets, own all page breaks. */
+@media print {
+ .print-packet-packed > .print-packed-page {
+  break-before:auto!important;
+  page-break-before:auto!important;
+  break-after:page!important;
+  page-break-after:always!important;
+ }
+ .print-packet-packed > .print-packed-page:last-child {
+  break-after:auto!important;
+  page-break-after:auto!important;
+ }
+ .print-packet-packed .print-packed-content {break-inside:avoid;page-break-inside:avoid;}
+}
+
+/* Mirror the complete A5 task typography in the offscreen browser preflight. */
+@media screen {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] h1 {font-size:16pt;line-height:1.2;margin:0 0 3mm;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] h2 {font-size:12pt;margin:2mm 0;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] > p {margin:2mm 0;font-size:9.5pt;line-height:1.2;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .symbols {font-size:16pt;line-height:1.1;}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-task .print-hint {font-size:9pt;line-height:1.3;}
+}
+
+/* Packed task wrappers add layout overhead; reserve space without reducing grid legibility. */
+@media screen, print {
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task {
+  margin:1mm 0;padding:1.5mm 2.5mm;
+ }
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin-bottom:2mm;}
+}
+
+/* Apply the same packed task geometry during screen preflight and printing. */
+@media screen, print {
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {margin:0 0 1mm;line-height:1.05;font-size:14pt;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h2 {margin:1mm 0;font-size:11pt;line-height:1.1;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-packed-content > p {margin:1mm 0;line-height:1.1;font-size:9pt;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task {margin:0.8mm 0;padding:1mm 2mm;line-height:1.1;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task p {margin:0.5mm 0;}
+ .print-packet-packed .print-child-sheet[data-sheet-kind="task"] .print-task h3 {margin:0 0 0.5mm;}
+}
+
+/* The A5 content width must match in preflight and PDF pagination. */
+@media screen, print {
+ .print-packet-packed > .print-packed-page.print-sheet {width:127mm!important;max-width:127mm!important;margin:0!important;padding:0!important;box-sizing:border-box;}
+ .print-packet-packed > .print-packed-page .print-packed-content {margin-bottom:0;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content {font-size:9pt;line-height:1.12;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-question {font-size:10pt;line-height:1.12;}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-hint {font-size:8.5pt;line-height:1.12;}
+}
+
+
+/* Age-specific handouts and organizer code keys retain the team's identity. */
+.team-age-assignments{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0 18px}
+.team-age-assignments label{display:grid;gap:5px;padding:10px 12px;border:1px solid #d3dbe0;border-radius:8px;background:#fff;font-weight:700}
+.print-code-line{display:block;margin:2mm 0;padding:1.5mm 2.5mm;border-left:3mm solid var(--team-accent,#63788a);background:var(--team-tint,#f0f3f5);break-inside:avoid}
+.print-code-line p{margin:.6mm 0 0}
+.print-code-line[data-team-color="rot"]{--team-accent:#b7353a;--team-tint:#fcecee}
+.print-code-line[data-team-color="blau"]{--team-accent:#2766a3;--team-tint:#eaf3fc}
+.print-code-line[data-team-color="grün"]{--team-accent:#28794d;--team-tint:#eaf5ed}
+.print-code-line[data-team-color="gelb"]{--team-accent:#997100;--team-tint:#fff6d9}
+.print-code-line[data-team-color="orange"]{--team-accent:#bd5a12;--team-tint:#fff0e2}
+.print-child-sheet[data-team-color="orange"],.print-label[data-team-color="orange"],.team-route-line[data-team-color="orange"],.print-checklist-row[data-team-color="orange"]{--team-accent:#bd5a12;--team-tint:#fff0e2}
+@media print{.print-code-line,.print-child-sheet[data-team-color="orange"],.print-label[data-team-color="orange"],.team-route-line[data-team-color="orange"],.print-checklist-row[data-team-color="orange"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* The Caesar guide uses a fixed label column so both alphabets line up. */
+.print-alphabet-guide{display:grid;gap:1mm;margin:2mm 0;padding:2mm;border:1px solid #b9c4cb;font-family:monospace;font-size:8pt;line-height:1.35}
+.print-alphabet-guide>div{display:grid;grid-template-columns:24mm max-content;align-items:baseline;gap:2mm}
+.print-alphabet-guide code{font:inherit;letter-spacing:0;white-space:nowrap}
+
+/* Larger centered letter grids and clearly marked, team-colored arrow starts. */
+.print-three-word-grid .wordsearch-grid{display:flex;width:max-content;max-width:100%;margin:2mm auto}
+.print-three-word-grid .wordsearch-cell{width:5.5mm;height:5.5mm;font-size:10pt}
+.arrow-grid .wordsearch-cell{width:7mm;height:7mm;font-size:11pt}
+.arrow-grid .arrow-start-cell{position:relative;background:var(--team-tint,#f0f3f5);color:var(--team-accent,#63788a);border:1.5px solid var(--team-accent,#63788a)}
+.arrow-start-cell small{position:absolute;top:.3mm;left:.5mm;font-size:5pt;line-height:1}
+.arrow-start-cell strong{font-size:13pt;line-height:1}
+.symbol-grid{display:grid;grid-template-columns:repeat(4,8mm);grid-auto-rows:8mm;gap:1mm;width:max-content;margin:2mm auto;padding:1.5mm;border:1px solid #aeb9bf;background:#f8fafb;break-inside:avoid}
+.symbol-cell{display:flex;align-items:center;justify-content:center;width:8mm;height:8mm;box-sizing:border-box;border:1px solid #c5cfd4;background:white;font-size:13pt;line-height:1}
+@media screen,print{
+ .print-three-word-grid .wordsearch-grid{justify-content:center}
+ .print-three-word-grid .wordsearch-cell{width:5.5mm;height:5.5mm;font-size:10pt}
+ .arrow-grid .wordsearch-cell{width:7mm;height:7mm;font-size:11pt}
+ .arrow-start-cell strong{font-size:13pt}
+}
+@media print{
+ .print-code-line{font-size:9pt;line-height:1.2}
+ .print-alphabet-guide{font-size:7.5pt}
+ .symbol-grid{grid-template-columns:repeat(4,8mm);gap:.7mm}
+ .arrow-grid .arrow-start-cell,.symbol-cell{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+.print-code-line[data-team-color="lila"]{--team-accent:#7446a6;--team-tint:#f2ecfb}
+.print-child-sheet[data-team-color="lila"],.print-label[data-team-color="lila"],.team-route-line[data-team-color="lila"],.print-checklist-row[data-team-color="lila"]{--team-accent:#7446a6;--team-tint:#f2ecfb}
+@media print{.print-code-line[data-team-color="lila"],.print-child-sheet[data-team-color="lila"],.print-label[data-team-color="lila"],.team-route-line[data-team-color="lila"],.print-checklist-row[data-team-color="lila"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Keep denser team puzzles within one physical A5 task sheet. */
+@media screen, print {
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content {font-size:8.2pt;line-height:1.02}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h1 {font-size:12pt;line-height:1.05;margin:0 0 .7mm}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content > h2 {font-size:10pt;line-height:1.05;margin:.6mm 0}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content > p {font-size:8.2pt;line-height:1.02;margin:.45mm 0}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-task {margin:.4mm 0;padding:.6mm 1.2mm}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-task h3 {font-size:9.5pt;line-height:1.02;margin:0 0 .3mm}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-task p {font-size:8pt;line-height:1.02;margin:.2mm 0}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .arrow-grid .wordsearch-cell {width:6mm;height:6mm;font-size:10pt}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .symbol-grid {grid-template-columns:repeat(4,7mm);grid-auto-rows:7mm;gap:.6mm;margin:1mm auto;padding:1mm}
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .symbol-grid .symbol-cell {width:7mm;height:7mm;font-size:12pt}
+}
+
+/* Preflight measures the source sheets before cloning; apply identical sizing there. */
+@media screen, print {
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] {font-size:8.2pt;line-height:1.02}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] > h1 {font-size:12pt;line-height:1.05;margin:0 0 .7mm}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] > h2 {font-size:10pt;line-height:1.05;margin:.6mm 0}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] > p {font-size:8.2pt;line-height:1.02;margin:.45mm 0}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .print-task {margin:.4mm 0;padding:.6mm 1.2mm}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .print-task h3 {font-size:9.5pt;line-height:1.02;margin:0 0 .3mm}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .print-task p {font-size:8pt;line-height:1.02;margin:.2mm 0}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .arrow-grid .wordsearch-cell {width:6mm;height:6mm;font-size:10pt}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .symbol-grid {grid-template-columns:repeat(4,7mm);grid-auto-rows:7mm;gap:.6mm;margin:1mm auto;padding:1mm}
+ .print-packet > .print-child-sheet[data-sheet-kind="task"] .symbol-grid .symbol-cell {width:7mm;height:7mm;font-size:12pt}
+}
+
+/* Override the legacy 3.5 mm rule with a centered, readable shared word grid. */
+@media screen, print {
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-grid,
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-three-word-grid .wordsearch-grid {display:flex;flex-direction:column;width:max-content;max-width:100%;margin-left:auto!important;margin-right:auto!important;justify-content:center}
+ .print-packet .print-child-sheet[data-sheet-kind="task"] .print-three-word-grid .wordsearch-cell,
+ .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-three-word-grid .wordsearch-cell {width:5mm;height:5mm;font-size:9pt}
+}
+
+/* Additional palette entries are applied consistently to all organizer and child print surfaces. */
+.print-code-line[data-team-color="türkis"],.print-child-sheet[data-team-color="türkis"],.print-label[data-team-color="türkis"],.team-route-line[data-team-color="türkis"],.print-checklist-row[data-team-color="türkis"]{--team-accent:#0f766e;--team-tint:#e6f5f2}
+.print-code-line[data-team-color="silber"],.print-child-sheet[data-team-color="silber"],.print-label[data-team-color="silber"],.team-route-line[data-team-color="silber"],.print-checklist-row[data-team-color="silber"]{--team-accent:#64748b;--team-tint:#eef2f6}
+.print-code-line[data-team-color="gold"],.print-child-sheet[data-team-color="gold"],.print-label[data-team-color="gold"],.team-route-line[data-team-color="gold"],.print-checklist-row[data-team-color="gold"]{--team-accent:#a16207;--team-tint:#fff7df}
+.print-code-line[data-team-color="pink"],.print-child-sheet[data-team-color="pink"],.print-label[data-team-color="pink"],.team-route-line[data-team-color="pink"],.print-checklist-row[data-team-color="pink"]{--team-accent:#be185d;--team-tint:#fcebf3}
+.print-worked-example{border:1px solid #b9c4cb;padding:1.5mm 2mm;margin:1mm 0;font-size:8pt;background:#f7f9fa}
+@media print{.print-code-line[data-team-color="türkis"],.print-child-sheet[data-team-color="türkis"],.print-label[data-team-color="türkis"],.team-route-line[data-team-color="türkis"],.print-checklist-row[data-team-color="türkis"],.print-code-line[data-team-color="silber"],.print-child-sheet[data-team-color="silber"],.print-label[data-team-color="silber"],.team-route-line[data-team-color="silber"],.print-checklist-row[data-team-color="silber"],.print-code-line[data-team-color="gold"],.print-child-sheet[data-team-color="gold"],.print-label[data-team-color="gold"],.team-route-line[data-team-color="gold"],.print-checklist-row[data-team-color="gold"],.print-code-line[data-team-color="pink"],.print-child-sheet[data-team-color="pink"],.print-label[data-team-color="pink"],.team-route-line[data-team-color="pink"],.print-checklist-row[data-team-color="pink"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media screen,print{.arrow-grid[data-grid-size="5"] .wordsearch-cell,.arrow-grid[data-grid-size="6"] .wordsearch-cell{width:9mm;height:9mm;font-size:12pt}.arrow-grid[data-grid-size="7"] .wordsearch-cell,.arrow-grid[data-grid-size="8"] .wordsearch-cell{width:8mm;height:8mm;font-size:11pt}.arrow-grid[data-grid-size="9"] .wordsearch-cell,.arrow-grid[data-grid-size="10"] .wordsearch-cell,.arrow-grid[data-grid-size="11"] .wordsearch-cell{width:7mm;height:7mm;font-size:10pt}}
+@media screen,print{.print-packet-packed .arrow-grid[data-grid-size="5"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="5"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="6"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="6"] .wordsearch-cell{width:9mm;height:9mm}.print-packet-packed .arrow-grid[data-grid-size="7"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="7"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="8"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="8"] .wordsearch-cell{width:8mm;height:8mm}.print-packet-packed .arrow-grid[data-grid-size="9"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="9"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="10"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="10"] .wordsearch-cell,.print-packet-packed .arrow-grid[data-grid-size="11"] .wordsearch-cell,.print-packet .arrow-grid[data-grid-size="11"] .wordsearch-cell{width:7mm;height:7mm}}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPlan } from '../src/generator.ts';
+import { createPlan, teamSizes } from '../src/generator.ts';
 
 const config = (overrides = {}) => ({
   players: 12,
@@ -155,4 +155,121 @@ test('Teams share station IDs but not mutable station objects',()=>{
  a.name='Changed';
  assert.notEqual(b.name,'Changed');
  assert.notEqual(c.locations[0].name,'Changed');
+});
+
+test('13 Kinder werden bei maximal drei pro Team ausgewogen verteilt',()=>{
+ const result=createPlan(config({players:13,groupSize:3}));
+ assert.deepEqual(result.teams.map(team=>team.memberCount),[3,3,3,2,2]);
+ assert.equal(result.teams.reduce((sum,team)=>sum+team.memberCount,0),13);
+});
+
+test('Gruppenvorschau stimmt bei jeder Kinderzahl mit dem Spielplan überein',()=>{
+ for(let players=1;players<=100;players++){
+  for(let groupSize=1;groupSize<=10;groupSize++){
+   const sizes=teamSizes(players,groupSize);
+   assert.equal(sizes.reduce((sum,n)=>sum+n,0),players);
+   assert.ok(sizes.every(n=>n>=1&&n<=groupSize));
+   assert.ok(Math.max(...sizes)-Math.min(...sizes)<=1);
+   const actual=createPlan(config({players,groupSize})).teams.map(team=>team.memberCount);
+   assert.deepEqual(sizes,actual);
+  }
+ }
+});
+
+test('Einzelkind-Gruppe erscheint als Hinweis für die Spielleitung',()=>{
+ const result=createPlan(config({players:5,groupSize:2}));
+ assert.deepEqual(result.teams.map(team=>team.memberCount),[2,2,1]);
+ assert.ok(result.cautions.some(w=>w.includes('nur einem Kind')));
+ const balanced=createPlan(config({players:13,groupSize:3}));
+ assert.equal(balanced.cautions.some(w=>w.includes('nur einem Kind')),false);
+});
+
+test('Unterschiedliche Routen mit nur einem Stopp werden als wirkungslos erklärt',()=>{
+ const one=createPlan(config({durationMinutes:30,routeMode:'varied'}));
+ assert.equal(one.stopsPerTeam,1);
+ assert.ok(one.cautions.some(message=>message.includes('keine unterschiedlichen Stationsfolgen')));
+ const several=createPlan(config({durationMinutes:60,routeMode:'varied'}));
+ assert.equal(several.cautions.some(message=>message.includes('keine unterschiedlichen Stationsfolgen')),false);
+});
+
+test('Stationskennungen dürfen sich nicht nur durch Leerzeichen unterscheiden',()=>{
+ const locations=config().locations.map(x=>({...x}));
+ locations[1].id=' '+locations[0].id+' ';
+ assert.throws(()=>createPlan(config({locations})),/Stations-IDs/);
+});
+
+test('Zu lange Standortnamen werden vor der Routenberechnung abgewiesen',()=>{
+ const locations=config().locations.map(x=>({...x}));
+ locations[0].name='A'.repeat(81);
+ assert.throws(()=>createPlan(config({locations})),/80 Zeichen/);
+ locations[0].name='A'.repeat(80);
+ assert.doesNotThrow(()=>createPlan(config({locations})));
+});
+
+test('Rückkehr zum Start bei nur einer Station wird ausdrücklich gekennzeichnet',()=>{
+ const one=createPlan(config({durationMinutes:30,finishMode:'start'}));
+ assert.equal(one.stopsPerTeam,1);
+ assert.ok(one.cautions.some(message=>message.includes('Ziel identisch mit der einzigen Rätselstation')));
+ const longer=createPlan(config({durationMinutes:60,finishMode:'start'}));
+ assert.equal(longer.cautions.some(message=>message.includes('Ziel identisch mit der einzigen Rätselstation')),false);
+});
+
+test('Stationsreihenfolge stimmt für alle Start- und Richtungsvarianten',()=>{
+ for(let count=1;count<=20;count++){
+  const locations=Array.from({length:count},(_,i)=>({id:String(i),name:'Ort '+i,description:''}));
+  for(const startMode of ['shared','distributed']) for(const routeMode of ['same','varied']){
+   const plan=createPlan(config({locations,players:24,groupSize:2,durationMinutes:480,startMode,routeMode}));
+   assert.equal(plan.stopsPerTeam,count);
+   for(let i=0;i<plan.teams.length;i++){
+    const start=startMode==='shared'?0:i%count;
+    const direction=routeMode==='varied'&&i%2===1?-1:1;
+    const expected=Array.from({length:count},(_,j)=>String((start+direction*j+count*j)%count));
+    assert.deepEqual(plan.teams[i].stations.map(station=>station.id),expected);
+   }
+  }
+ }
+});
+
+test('Ungültige Zeitwerte und Routenoptionen werden konsequent abgewiesen',()=>{
+ for(const [field,values] of Object.entries({players:[-1,101,1.5,NaN],groupSize:[-1,11,1.5],durationMinutes:[14,481,30.5],puzzleMinutes:[0,61,1.5],walkingMinutes:[-1,61,0.5],startFinishMinutes:[-1,121,0.5]})){
+  for(const value of values) assert.throws(()=>createPlan(config({[field]:value})),/ungültiger Wert/);
+ }
+ for(const [field,value] of [['startMode','unknown'],['routeMode','unknown'],['finishMode','unknown']]){
+  assert.throws(()=>createPlan(config({[field]:value})),/Ungültige Routenoption/);
+ }
+});
+
+test('Zeitmodell bleibt über die gesamte zulässige Spieldauer konsistent',()=>{
+ for(let durationMinutes=15;durationMinutes<=480;durationMinutes+=5){
+  const c=config({durationMinutes,puzzleMinutes:1,walkingMinutes:0,startFinishMinutes:0});
+  const plan=createPlan(c);
+  assert.equal(plan.estimatedMinutes,plan.stopsPerTeam);
+  assert.equal(plan.remainderMinutes,durationMinutes-plan.estimatedMinutes);
+  assert.ok(plan.estimatedMinutes<=durationMinutes);
+  assert.ok(plan.stopsPerTeam>=1&&plan.stopsPerTeam<=c.locations.length);
+ }
+});
+
+test('Maximal 20 Standorte und eindeutige Namen werden erzwungen',()=>{
+ const locations=Array.from({length:20},(_,i)=>({id:'s'+i,name:'Station '+i,description:''}));
+ assert.doesNotThrow(()=>createPlan(config({locations})));
+ assert.throws(()=>createPlan(config({locations:[...locations,{id:'s20',name:'Station 20',description:''}]})),/1 bis 20/);
+ assert.throws(()=>createPlan(config({locations:[]})),/1 bis 20/);
+ const duplicate=locations.map(x=>({...x}));
+ duplicate[1].name=' STATION 0 ';
+ assert.throws(()=>createPlan(config({locations:duplicate})),/eindeutig/);
+});
+
+test('Importierte Standortbeschreibungen beachten die Druckgrenze von 400 Zeichen',()=>{
+ const valid=config();
+ valid.locations[0].description='x'.repeat(400);
+ assert.doesNotThrow(()=>createPlan(valid));
+ valid.locations[0].description='x'.repeat(401);
+ assert.throws(()=>createPlan(valid),/Standortbeschreibungen dürfen maximal 400 Zeichen enthalten/);
+});
+
+test('Stations-IDs mit Rand-Leerzeichen werden nicht akzeptiert', () => {
+  const c = config();
+  c.locations[0].id = ' ' + c.locations[0].id;
+  assert.throws(() => createPlan(c), /Stations-IDs enthalten Leerzeichen am Rand/);
 });

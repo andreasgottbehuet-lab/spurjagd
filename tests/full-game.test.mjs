@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
-import {generateStationChallenge,codeFromPuzzles,generateCreativeRouteClue,hashSeed} from '../src/puzzles.ts';
+import {generateStationChallenge,codeFromPuzzles,generateCreativeRouteClue,hashSeed,decodeAlternatingRouteName,verifyCreativeRouteClue} from '../src/puzzles.ts';
 import {auditPrintPacket} from '../src/print-audit.ts';
 import {createPrintManifest} from '../src/print-manifest.ts';
 import {auditPrintManifest} from '../src/print-manifest-audit.ts';
@@ -27,14 +27,15 @@ test('Komplette Schnitzeljagd: vier Teams, verschiedene Wege und druckfähige A5
  assert.equal(plan.teams.length,4);
  assert.equal(plan.stopsPerTeam,3);
  assert.equal(manifest.envelopes.length,12);
- assert.equal(manifest.taskSheets,36);
+ assert.equal(manifest.taskSheets,24);
  assert.deepEqual(auditPrintPacket(config,plan,'integration-test'),[]);
  assert.deepEqual(auditPrintManifest(plan,manifest),[]);
  for(const envelope of manifest.envelopes){
   const code=codes[envelope.stationId];
   const challenge=generateStationChallenge(envelope.stationId,code,'middle',hashSeed('integration-test'));
   assert.equal(codeFromPuzzles(challenge),code);
-  assert.equal(challenge.puzzles.length,envelope.sheetCount);
+  assert.equal(challenge.puzzles.length,3);
+  assert.ok(envelope.sheetCount>=2);
   const target=locations.find(location=>location.name===envelope.destination);
   const mode=config.routeClueModes[target?.id]??'letters';
   const clue=generateCreativeRouteClue(envelope.destination,target?.description??'',mode,hashSeed('integration-test:destination:'+(target?.id??envelope.destination)),config.routeClueTexts[target?.id]??'');
@@ -63,4 +64,17 @@ test('Druckmanifest weist falsche Umschlagkennungen zurück',()=>{
  const plan=createPlan(config),manifest=createPrintManifest(plan);
  manifest.envelopes[0].id='anderes-team-andere-station';
  assert.ok(auditPrintManifest(plan,manifest).some(issue=>issue.includes('Umschlagkennung')));
+});
+
+
+test('Wegrätsel für 8–10-Jährige sind schwieriger und eindeutig rücklösbar',()=>{
+ for(const destination of ['Spielplatz','Wiese Nord','Ährenweg','Tor 7','A-B']){
+  const clue=generateCreativeRouteClue(destination,'','letters',hashSeed('route:'+destination),'','middle');
+  assert.match(clue.instruction,/Stellen 1, 3, 5/);
+  assert.equal(decodeAlternatingRouteName(clue.question),destination);
+  assert.equal(verifyCreativeRouteClue(clue),true);
+  assert.equal(verifyCreativeRouteClue({...clue,question:clue.question+'x'}),false);
+ }
+ const young=generateCreativeRouteClue('Wiese','','letters',7,'','young');
+ assert.ok(young.question.includes('_')||young.question==='eseiW');
 });

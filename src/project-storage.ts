@@ -64,7 +64,9 @@ export function isSavedGame(raw: unknown): raw is SavedGame {
 }
 export function parseGameBackup(raw: string): SavedGame {
   if (new TextEncoder().encode(raw).byteLength > MAX_FILE_BYTES) throw new Error('Die Sicherungsdatei ist zu groß.');
-  const value: unknown = JSON.parse(raw);
+  let value: unknown;
+  try { value = JSON.parse(raw); }
+  catch { throw new Error('Sicherungsdatei ist kein gültiges JSON.'); }
   if (!value || typeof value !== 'object' || (value as Record<string, unknown>).format !== 'spurjagd-backup-1') throw new Error('Kein Spurjagd-Backup.');
   const game = (value as { project?: unknown }).project;
   if (!isSavedGame(game)) throw new Error('Ungültige oder nicht unterstützte Projektdaten.');
@@ -80,42 +82,53 @@ export function loadGames(): SavedGame[] {
   const raw = localStorage.getItem(KEY);
   if (raw === null) return [];
   if (raw === '') throw new Error('Lokale Projektdaten sind leer oder beschädigt.');
-  const items: unknown = JSON.parse(raw);
+  let items: unknown;
+  try { items = JSON.parse(raw); }
+  catch { throw new Error('Lokale Projektdaten enthalten ungültiges JSON. Bitte eine Sicherung importieren.'); }
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
   const projects=items as SavedGame[];
   if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
-  return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return [...projects].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
 }
 /** Writes project list and active selection together, restoring both on a partial failure. */
 function persistProjects(next:SavedGame[],active:string|null):void {
  const oldList=localStorage.getItem(KEY);
  const oldActive=localStorage.getItem(ACTIVE);
- localStorage.setItem(KEY,JSON.stringify(next));
  try{
+  localStorage.setItem(KEY,JSON.stringify(next));
   if(active===null)localStorage.removeItem(ACTIVE);
   else localStorage.setItem(ACTIVE,active);
  }catch(error){
   try{
-   if(oldList===null)localStorage.removeItem(KEY);
-   else localStorage.setItem(KEY,oldList);
-   if(oldActive===null)localStorage.removeItem(ACTIVE);
-   else localStorage.setItem(ACTIVE,oldActive);
+   if(localStorage.getItem(KEY)!==oldList){
+    if(oldList===null)localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY,oldList);
+   }
+   if(localStorage.getItem(ACTIVE)!==oldActive){
+    if(oldActive===null)localStorage.removeItem(ACTIVE);
+    else localStorage.setItem(ACTIVE,oldActive);
+   }
   }catch{
    throw new Error('Speichern fehlgeschlagen; Wiederherstellung der Projektdaten ist nicht bestätigt.');
   }
   throw error;
  }
 }
-export function saveGame(project: SavedGame): SavedGame[] {
+export function saveGame(project: SavedGame, expectedUpdatedAt?:string|null): SavedGame[] {
  if(!isSavedGame(project))throw new Error('Projekt ungültig.');
  const existing=loadGames();
+ if(expectedUpdatedAt!==undefined){
+  const stored=existing.find(p=>p.id===project.id);
+  if((stored?.updatedAt??null)!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Bitte die aktuelle Fassung prüfen und eine JSON-Sicherung exportieren.');
+ }
  const next=[project,...existing.filter(p=>p.id!==project.id)];
  if(next.length>MAX_PROJECTS)throw new Error('Maximal 40 Projekte. Bitte alte Projekte löschen.');
  persistProjects(next,project.id);
  return next;
 }
-export function deleteGame(id:string):SavedGame[] {
+export function deleteGame(id:string,expectedUpdatedAt?:string):SavedGame[] {
  const existing=loadGames();
+ if(expectedUpdatedAt!==undefined && existing.find(p=>p.id===id)?.updatedAt!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Löschen abgebrochen.');
  const remaining=existing.filter(p=>p.id!==id);
  if(remaining.length===existing.length)throw new Error('Projekt nicht gefunden.');
  const active=localStorage.getItem(ACTIVE);
@@ -124,10 +137,11 @@ export function deleteGame(id:string):SavedGame[] {
  return remaining;
 }
 /** Replace the final saved project without ever writing an empty project list. */
-export function replaceLastGame(oldId:string,replacement:SavedGame):SavedGame[] {
+export function replaceLastGame(oldId:string,replacement:SavedGame,expectedUpdatedAt?:string):SavedGame[] {
  if(!isSavedGame(replacement)||replacement.id===oldId) throw new Error('Ersatzprojekt ungültig.');
  const existing=loadGames();
  if(existing.length!==1||existing[0].id!==oldId) throw new Error('Das Projekt ist nicht das letzte gespeicherte Projekt.');
+ if(expectedUpdatedAt!==undefined && existing[0].updatedAt!==expectedUpdatedAt) throw new Error('Projekt wurde zwischenzeitlich verändert. Ersetzen abgebrochen.');
  persistProjects([replacement],replacement.id);
  return [replacement];
 }
@@ -142,12 +156,17 @@ export function importedProjectTitle(title:string):string {
   const suffix=' (Import)';
   return title.slice(0,100-suffix.length).trimEnd()+suffix;
 }
+export function backupFilename(project: Pick<SavedGame, 'title' | 'id'>): string {
+  const title = project.title.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'projekt';
+  const id = project.id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8) || 'sicherung';
+  return 'spurjagd-' + title + '-' + id + '.json';
+}
 export function downloadBackup(project: SavedGame): void {
   const blob = new Blob([serializeGameBackup(project)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'spurjagd-' + project.id.slice(0, 8) + '.json';
+  link.download = backupFilename(project);
   document.body.appendChild(link);
   link.click();
   link.remove();

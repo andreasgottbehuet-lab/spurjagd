@@ -2,7 +2,7 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame, backupFilename } from '../src/project-storage.ts';
 
 const sample = () => ({
   version:1,
@@ -25,6 +25,7 @@ test('Ungültige und falsche Backups werden abgewiesen',()=>{
   assert.throws(()=>parseGameBackup('{"format":"anderes","project":{}}'),/Kein Spurjagd/);
   assert.throws(()=>parseGameBackup('{"format":"spurjagd-backup-1","project":{"version":1}}'),/Ungültige/);
   assert.throws(()=>parseGameBackup('x'.repeat(200_001)),/zu groß/);
+  assert.throws(()=>parseGameBackup('{invalid'),/kein gültiges JSON/);
 });
 test('Routendaten und Standorte werden überprüft',()=>{
   assert.equal(isGameConfig({...sample().config,routeMode:'random'}),false);
@@ -120,15 +121,15 @@ test('Neue und nach Löschung erzeugte Entwürfe verwenden dieselben neutralen V
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
  assert.ok(creation.includes('config:createDefaultGameConfig()'));
  assert.ok(deletion.includes('config:createDefaultGameConfig()'));
- assert.ok(deletion.includes('deleteGame(projectId)'));
- assert.ok(deletion.includes('replaceLastGame(projectId,fresh)'));
+ assert.ok(deletion.includes('deleteGame(projectId,expected??undefined)'));
+ assert.ok(deletion.includes('replaceLastGame(projectId,fresh,expected??undefined)'));
  assert.ok(deletion.includes('applyGame(fresh)'));
 });
 
 test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwurfs',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const helper=source.slice(source.indexOf('const saveCurrentBeforeSwitch ='),source.indexOf('const newProject ='));
- assert.ok(helper.includes('saveGame(current)'));
+ assert.ok(helper.includes('saveGame(current,expected)'));
  assert.ok(helper.includes('return false'));
  const selector=source.slice(source.indexOf('id="savedProjects"'),source.indexOf('</select>',source.indexOf('id="savedProjects"')));
  assert.ok(selector.includes('saveCurrentBeforeSwitch()'));
@@ -156,8 +157,8 @@ test('Beschädigte Browserdaten bleiben beim fehlgeschlagenen Speichern unverän
   removeItem:key=>memory.delete(key)
  };
  try{
-  assert.throws(()=>loadGames(),SyntaxError);
-  assert.throws(()=>saveGame(sample()),SyntaxError);
+  assert.throws(()=>loadGames(),/ungültiges JSON/);
+  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
   assert.equal(memory.get('spurjagd-projects-v1'),'{kaputt');
  }finally{
   if(old===undefined) delete globalThis.localStorage;
@@ -288,7 +289,7 @@ test('Pending edits are saved on pagehide and tab backgrounding',()=>{
  assert.ok(source.includes("window.addEventListener('pagehide',flushOnExit)"));
  assert.ok(source.includes("document.addEventListener('visibilitychange',onVisibilityChange)"));
  assert.ok(source.includes("document.visibilityState==='hidden'"));
- assert.ok(source.includes('saveGame(current)'));
+ assert.ok(source.includes('saveGame(current,expected)'));
  assert.ok(source.includes('if(!storageReady || storageConflict.current) return;'));
 });
 
@@ -318,7 +319,7 @@ test('After deleting the final project a clean replacement can be persisted and 
 test('Deleting final project immediately persists replacement in the UI',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const deletion=source.slice(source.indexOf('const removeProject = () =>'),source.indexOf('const exportProject = () =>'));
- assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh)'));
+ assert.ok(deletion.includes('const saved=replaceLastGame(projectId,fresh,expected??undefined)'));
  assert.ok(deletion.includes('setProjects(saved);'));
  assert.ok(deletion.includes('applyGame(fresh);'));
 });
@@ -449,4 +450,186 @@ test('Deleting active project with surviving draft rolls back on failed active s
   assert.equal(loadGames().length,2);
   assert.equal(activeGameId(),'second');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('JSON-Sicherungen erhalten lesbare und sichere Dateinamen',()=>{
+ assert.equal(backupFilename({title:'Doras Schatzsuche',id:'abc12345-0000'}),'spurjagd-Doras-Schatzsuche-abc12345.json');
+ assert.equal(backupFilename({title:'///',id:'!'}),'spurjagd-projekt-sicherung.json');
+ assert.equal(backupFilename({title:'Rätsel für Groß & Klein',id:'abcdef12'}),'spurjagd-Raetsel-fuer-Gross-Klein-abcdef12.json');
+ assert.ok(backupFilename({title:'A'.repeat(200),id:'12345678'}).length<80);
+});
+
+test('Projektwechsel behandelt Fehler der aktiven Projektauswahl',()=>{
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const start=source.indexOf('id="savedProjects"');
+ const select=source.slice(start,source.indexOf('</select>',start));
+ assert.ok(select.includes('try { setActiveGameId(project.id); applyGame(project);'));
+ assert.ok(select.includes('Projektwechsel fehlgeschlagen:'));
+});
+
+test('Sicherung bleibt auch nach dem Loeschen eines Projekts importierbar',()=>{
+ const source=sample();
+ const backup=serializeGameBackup(source);
+ const restored=parseGameBackup(backup);
+ assert.deepEqual(restored,source);
+ assert.equal(backupFilename(restored).endsWith('.json'),true);
+});
+
+test('Browser acceptance exercises the complete local project lifecycle',()=>{
+ const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ for(const marker of ['Autosave','JSON export','Immediate export includes unsaved edits','New project','Save before project switch','Switch and reload','JSON import','Invalid backup rejected','Cancel deletion','Delete project','Last project replacement','Concurrent tab change detected']) assert.ok(script.includes(marker),marker);
+ assert.ok(script.includes('project-browser-report.json'));
+ assert.ok(script.includes('project-browser-failure.png'));
+ assert.ok(workflow.includes('node scripts/verify-project-browser.mjs'));
+});
+
+test('Browserprojekt-Pruefung wartet auf echte Zustandsaenderungen',()=>{
+ const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('waitForFunction'));
+ assert.ok(script.includes('Import fehlgeschlagen'));
+ assert.ok(script.includes('waitForTimeout(850)')); // Negative assertion: allow the 650ms autosave debounce to elapse.
+});
+
+test('Deletion confirmation explains irreversible loss in both languages',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(ui.includes('Die Löschung kann nicht rückgängig gemacht werden.'));
+ assert.ok(ui.includes('This cannot be undone.'));
+});
+
+test('Import starts planning at step one without changing the original project',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const begin=ui.indexOf('const importProject = async');
+ const end=ui.indexOf('return (',begin);
+ const handler=ui.slice(begin,end);
+ assert.ok(handler.includes('id:newGameId()'));
+ assert.ok(handler.includes('setActiveStep(1)'));
+ assert.ok(handler.includes('importedProjectTitle(imported.title)'));
+});
+
+test('Queued autosave checks cross-tab conflict before writing',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const start=ui.indexOf('const timeout = window.setTimeout(() => {');
+ const end=ui.indexOf('}, 650);',start);
+ const callback=ui.slice(start,end);
+ assert.ok(callback.includes('if (storageConflict.current) return;'));
+ assert.ok(callback.indexOf('if (storageConflict.current) return;') < callback.indexOf('saveGame(project,expected)'));
+});
+
+test('Partial project-list write is rolled back when storage throws',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ let fail=false;
+ globalThis.localStorage={
+  getItem:key=>entries.get(key)??null,
+  setItem:(key,value)=>{
+   entries.set(key,String(value));
+   if(fail&&key==='spurjagd-projects-v1'){fail=false;throw new Error('partial write');}
+  },
+  removeItem:key=>entries.delete(key)
+ };
+ try{
+  saveGame(sample());
+  const before=globalThis.localStorage.getItem('spurjagd-projects-v1');
+  fail=true;
+  assert.throws(()=>saveGame({...sample(),title:'Not saved'}),/partial write/);
+  assert.equal(globalThis.localStorage.getItem('spurjagd-projects-v1'),before);
+  assert.equal(activeGameId(),'test-one');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Project list sorts timestamps with different UTC offsets correctly',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map();
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
+ try{
+  saveGame({...sample(),id:'older',updatedAt:'2026-11-02T20:00:00+02:00'});
+  saveGame({...sample(),id:'newer',updatedAt:'2026-11-02T19:30:00Z'});
+  assert.deepEqual(loadGames().map(x=>x.id),['newer','older']);
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Atomic storage rejection preserves original error without unnecessary rollback writes',()=>{
+ const previous=globalThis.localStorage;
+ const memory=new Map();
+ let rejectedWrites=0;
+ globalThis.localStorage={
+  getItem:key=>memory.get(key)??null,
+  setItem:(key,value)=>{
+   if(key==='spurjagd-projects-v1' && memory.has(key)){rejectedWrites++;throw new Error('quota exceeded');}
+   memory.set(key,String(value));
+  },
+  removeItem:key=>memory.delete(key)
+ };
+ try{
+  saveGame(sample());
+  assert.throws(()=>saveGame({...sample(),title:'Updated'}),/quota exceeded/);
+  assert.equal(rejectedWrites,1);
+  assert.equal(loadGames()[0].title,'Geburtstag');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Windows browser acceptance is optional and checks real browser plus A5 tools',()=>{
+ const script=readFileSync(new URL('../scripts/verify-windows-browser.ps1',import.meta.url),'utf8');
+ assert.ok(script.includes('verify-project-browser.mjs'));
+ assert.ok(script.includes('verify-a5-browser.mjs'));
+ assert.ok(script.includes('Get-Command pdfinfo'));
+ assert.ok(script.includes('Start-Process'));
+ assert.ok(script.includes('taskkill.exe'));
+ assert.ok(script.includes('strictPort'));
+});
+
+test('Deleting a project resets the planner before editing another saved project',()=>{
+ const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const deletion=ui.slice(ui.indexOf('const removeProject = () =>'),ui.indexOf('const exportProject = () =>'));
+ assert.ok(deletion.includes('applyGame(remaining[0]); setActiveStep(1);'));
+});
+
+test('Browser report records an explicit result and timestamps',()=>{
+ const script=readFileSync(new URL('../scripts/verify-project-browser.mjs',import.meta.url),'utf8');
+ assert.ok(script.includes('startedAt'));
+ assert.ok(script.includes('finishedAt'));
+ assert.ok(script.includes('passed: errors.length === 0'));
+});
+
+test('Malformed local project JSON is rejected without being overwritten',()=>{
+ const previous=globalThis.localStorage;
+ const entries=new Map([['spurjagd-projects-v1','{invalid']]);
+ globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
+ try{
+  assert.throws(()=>loadGames(),/ungültiges JSON/);
+  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
+  assert.equal(entries.get('spurjagd-projects-v1'),'{invalid');
+ }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('Optimistische Revisionsprüfung verhindert stilles Überschreiben fremder Änderungen',()=>{
+ const memory=new Map();
+ const old=globalThis.localStorage;
+ globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+ try{
+  const initial=sample();
+  saveGame(initial);
+  const changed={...initial,title:'Geändert',updatedAt:'2026-11-03T20:00:00.000Z'};
+  saveGame(changed,initial.updatedAt);
+  assert.throws(()=>saveGame({...initial,title:'Veraltet'},initial.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames()[0].title,'Geändert');
+  assert.throws(()=>saveGame({...initial,id:'neu'},initial.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames().length,1);
+ }finally{globalThis.localStorage=old;}
+});
+
+test('Löschen und Ersetzen des letzten Projekts prüfen die Revision',()=>{
+ const memory=new Map(),old=globalThis.localStorage;
+ globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+ try{
+  const original=sample();saveGame(original);
+  const newer={...original,updatedAt:'2026-11-04T16:00:00.000Z'};
+  saveGame(newer,original.updatedAt);
+  assert.throws(()=>deleteGame(original.id,original.updatedAt),/zwischenzeitlich verändert/);
+  assert.throws(()=>replaceLastGame(original.id,{...original,id:'replacement'},original.updatedAt),/zwischenzeitlich verändert/);
+  assert.equal(loadGames()[0].updatedAt,newer.updatedAt);
+  const result=replaceLastGame(original.id,{...original,id:'replacement'},newer.updatedAt);
+  assert.equal(result[0].id,'replacement');
+ }finally{globalThis.localStorage=old;}
 });
