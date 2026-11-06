@@ -137,3 +137,9 @@ test('Organizer 50-percent compaction pairs at most two short pages and preserve
  const pages=packA5Blocks([b('one','leitung',60,'organizer'),b('two','leitung',60,'organizer'),b('three','leitung',60,'organizer')]);
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['one','two'],['three']]);
 });
+
+test('Organizer pages fall back to one-per-page when physical layout cannot compact safely',()=>{
+ const compact=packA5Blocks([b('short-1','leitung',60,'organizer'),b('short-2','leitung',60,'organizer')]);
+ const safe=packA5Blocks([b('short-1','leitung',60,'organizer'),b('short-2','leitung',60,'organizer')],190,{compactOrganizer:false});
+ assert.equal(compact.length,1);assert.equal(safe.length,2);
+});
