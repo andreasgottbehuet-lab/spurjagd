@@ -68,8 +68,8 @@ test('Sieben Altersgruppen bleiben bei Routen, Codes und Umschlagkontrolle kompa
  const codePages=organizerGroupPageRanges(plan.teams.map(team=>team.stations.length));
  assert.equal(plan.teams.length,7);
  assert.equal(routePages,1);
- assert.deepEqual(codePages,[{start:0,end:3},{start:3,end:5},{start:5,end:7}]);
- assert.ok(codePages.every(page=>plan.teams.slice(page.start,page.end).length<=3));
+ assert.deepEqual(codePages,[{start:0,end:2},{start:2,end:4},{start:4,end:6},{start:6,end:7}]);
+ assert.ok(codePages.every(page=>plan.teams.slice(page.start,page.end).length<=2));
  assert.equal(Math.ceil(plan.teams.reduce((sum,team)=>sum+team.stations.length,0)/ORGANIZER_ENVELOPES_PER_A5_SHEET),3);
 });
 
