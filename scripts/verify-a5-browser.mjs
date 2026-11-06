@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 mkdirSync('verification', { recursive: true });
 let browser;
@@ -830,7 +830,10 @@ try {
     throw new Error(failures.join('\n'));
   }
   // The combined Chromium proof passed. Export the six production packets from its exact packed-page order.
-  mkdirSync('verification/print-pdfs',{recursive:true});
+  rmSync('verification/print-pdfs/source-pages',{recursive:true,force:true});
+  mkdirSync('verification/print-pdfs/source-pages',{recursive:true});
+  const splitPages=spawnSync('pdfseparate',['verification/a5-browser-packed.pdf','verification/print-pdfs/source-pages/source-%d.pdf'],{encoding:'utf8'});
+  if(splitPages.status!==0)failures.push('Unable to split the accepted packed A5 PDF: '+splitPages.stderr);
   const packedPageGroups=await page.locator('.print-packet-packed > .print-packed-page').evaluateAll(elements=>elements.map((element,index)=>({
     page:index+1,
     organizer:element.classList.contains('print-organizer-sheet'),
@@ -860,7 +863,9 @@ try {
   for(const spec of pdfSpecs){
     if(!spec.pages.length){failures.push('Separated PDF has no pages: '+spec.name);continue;}
     const path='verification/print-pdfs/'+spec.name;
-    await page.pdf({path,format:'A5',printBackground:true,preferCSSPageSize:true,pageRanges:rangeFor(spec.pages)});
+    const sourcePages=spec.pages.map(number=>'verification/print-pdfs/source-pages/source-'+number+'.pdf');
+    const united=spawnSync('pdfunite',[...sourcePages,path],{encoding:'utf8'});
+    if(united.status!==0)failures.push('Unable to assemble separated PDF: '+spec.name+' '+united.stderr);
     const info=spawnSync('pdfinfo',[path],{encoding:'utf8'});
     const count=Number(info.stdout.match(/^Pages:\s*(\d+)/m)?.[1]);
     const size=info.stdout.match(/^Page size:\s*([\d.]+) x ([\d.]+) pts/m);
@@ -878,6 +883,7 @@ try {
     if(spec.key==='labels'&&(!extracted.stdout.includes('Umschlag')||spec.pages.length!==categories.labels))failures.push('Envelope-label PDF differs from the label manifest');
     separatedPdfs.push({file:spec.name,path,pages:spec.pages.length,sourcePages:spec.pages});
   }
+  rmSync('verification/print-pdfs/source-pages',{recursive:true,force:true});
   writeFileSync('verification/a5-separated-pdf-report.json',JSON.stringify({source:'Chromium packed A5 PDF',totalPackedPages:packedExport.pages,pdfs:separatedPdfs,failures},null,2));
   if(failures.length)throw new Error(failures.join('\\n'));
   console.log('A5 browser print verified:', expected, 'pages');

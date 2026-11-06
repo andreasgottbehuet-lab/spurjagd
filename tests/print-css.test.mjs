@@ -475,5 +475,7 @@ test('Chromium print acceptance exports six separate A5 packets only after the c
  const gate=script.indexOf('if (failures.length) {');
  const exportAt=script.indexOf('const pdfSpecs=[');
  assert.ok(gate>=0&&exportAt>gate);
+ assert.ok(script.includes("'pdfunite'"));
+ assert.ok(script.includes("'pdfseparate'"));
  for(const name of ['SPURJAGD_Spielleitung_A5.pdf','SPURJAGD_Team_Rot_A5.pdf','SPURJAGD_Team_Blau_A5.pdf','SPURJAGD_Team_Gruen_A5.pdf','SPURJAGD_Team_Gelb_A5.pdf','SPURJAGD_Umschlagetiketten_A5.pdf'])assert.ok(script.includes(name));
 });
