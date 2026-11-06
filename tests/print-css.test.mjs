@@ -464,3 +464,8 @@ test('Packed A5 pages reserve fractional CSS pixel space below the strict 128 mm
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
  assert.match(css,/\.print-packet-packed > \.print-packed-page.print-sheet {width:127mm!important;max-width:127mm!important/);
 });
+
+test('Packed A5 preflight includes the same wrapper flow and separator as print',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/@media screen\s*\{\s*\.print-packet-packed \.print-packed-content \{display:flow-root;\}\s*\.print-packet-packed \.print-packed-content \+ \.print-packed-content \{margin-top:2mm;\}/);
+});

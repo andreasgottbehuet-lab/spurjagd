@@ -275,6 +275,12 @@
  .print-packed-content + .print-packed-content { margin-top:2mm; }
 }
 
+/* Keep packed-page wrapper geometry identical between screen preflight and printed PDF. */
+@media screen {
+ .print-packet-packed .print-packed-content {display:flow-root;}
+ .print-packet-packed .print-packed-content + .print-packed-content {margin-top:2mm;}
+}
+
 /* Undo offscreen measurement styles in print media. */
 @media print {
  .print-packet.print-packet-packed {
