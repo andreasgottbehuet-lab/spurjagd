@@ -505,3 +505,9 @@ test('Das gemeinsame Buchstabengitter ist auf Quellblatt und Druckkopie mittig u
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-cell\s*\{width:6mm;height:6mm/);
 });
+
+
+test('Organizer print cautions have identical screen-preflight and print geometry',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/@media screen, print\s*\{\s*\.print-caution\s*\{[^}]*margin:5mm 0;[^}]*padding:2mm 0;[^}]*line-height:1\.4;[^}]*border-bottom:1px solid #bbb;/);
+});
