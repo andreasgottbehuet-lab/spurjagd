@@ -72,7 +72,7 @@ export function measureA5Elements(elements:readonly HTMLElement[],cssPxPerMm=96/
   const marginTop=parseFloat(style.marginTop),marginBottom=parseFloat(style.marginBottom);
   const rect=element.getBoundingClientRect();
   if(!Number.isFinite(marginTop)||!Number.isFinite(marginBottom)||marginTop<0||marginBottom<0)throw new Error('Ungültiger A5-Seitenabstand');
-  return {id:'physical-'+index,owner:element.classList.contains('print-organizer-sheet')?'leitung':element.classList.contains('print-label-sheet')?'etiketten':(element.dataset.teamColor??'')+':'+(element.dataset.envelopeId??''),section:element.classList.contains('print-organizer-sheet')||element.classList.contains('print-label-sheet')?'fixed-sheet-'+index:element.dataset.sheetKind??'labels',heightPx:Math.max(rect.height,element.scrollHeight)+marginTop+marginBottom};
+  return {id:'physical-'+index,owner:element.classList.contains('print-organizer-sheet')?'leitung':element.classList.contains('print-label-sheet')?'etiketten':(element.dataset.teamColor??'')+':'+(element.dataset.envelopeId??''),section:element.classList.contains('print-organizer-sheet')?'organizer':element.classList.contains('print-label-sheet')?'fixed-sheet-'+index:element.dataset.sheetKind??'labels',heightPx:Math.max(rect.height,element.scrollHeight)+marginTop+marginBottom};
  });
  return measureA5Sheets(sheets,cssPxPerMm);
 }
