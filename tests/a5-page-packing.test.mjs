@@ -145,7 +145,7 @@ test('Organizer pages fall back to one-per-page when physical layout cannot comp
 });
 
 test('Overflow recovery can disable every packing group while preserving source order',()=>{
- const blocks=[b('org','leitung',60,'organizer'),b('r1','rot:env','60,'route'),b('r2','rot:env','60','route')];
+ const blocks=[b('org','leitung',60,'organizer'),b('r1','rot:env',60,'route'),b('r2','rot:env','60','route')];
  const pages=packA5Blocks(blocks,190,{compactAll:false});
  assert.deepEqual(pages.map(page=>page.blocks.map(block=>block.id)),[['org'],['r1'],['r2']]);
 });
