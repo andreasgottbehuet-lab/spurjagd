@@ -116,8 +116,8 @@ export function buildPackedA5PrintCopy(packet:HTMLElement):{copy:HTMLElement;pag
  const originals=Array.from(packet.querySelectorAll<HTMLElement>(':scope > .print-sheet'));
  if(!originals.length)throw new Error('Keine A5-Druckseiten vorhanden');
  const blocks=measureA5Elements(originals);
- // Reserve the 2 mm inter-block separator before the browser prints the copy.
- const packingBlocks=blocks.map(block=>({...block,heightMm:block.heightMm+2}));
+ // Reserve wrapper and separator space before the browser prints the copy.
+ const packingBlocks=blocks.map(block=>({...block,heightMm:block.heightMm+(block.owner==='leitung'?3:2)}));
  const pages=packA5Blocks(packingBlocks,A5_USABLE_HEIGHT_MM+2);
  // A single original block must fit on its own page; the separator allowance
  // is only available between blocks and must not hide oversized originals.
