@@ -9,7 +9,7 @@ export interface Puzzle {
   hint: string;
   explanation: string;
   expectedDigit: number;
-  render?: { symbol: string; count: number };
+  render?: { symbol: string; count: number; items?: string[] };
   wordGrid?: { rows: string[]; startRow: number; startCol: number; deltaRow: number; deltaCol: number; word: string };
   arrowGrid?: {rows:string[]; startRow:number; startCol:number; arrows:string};
 }
@@ -66,10 +66,10 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
     // The missing final number is always the exact target digit.
-    const step=age==='young'?1:chooseInt(rng,1,age==='middle'?3:5);
-    const ascending=target>=3*step && rng()<0.5;
-    const values=Array.from({length:4},(_,i)=>ascending?target-(3-i)*step:target+(3-i)*step);
-    return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,3).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
+    const step=age==='young'?1:chooseInt(rng,age==='middle'?2:3,age==='middle'?5:8);
+    const ascending=target>=4*step && rng()<0.5;
+    const values=Array.from({length:5},(_,i)=>ascending?target-(4-i)*step:target+(4-i)*step);
+    return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,4).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
   }
   if (kind === 'arrowpath') {
     const size=age==='young'?5:age==='middle'?6:7;
@@ -117,9 +117,13 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     throw new Error('Kein eindeutiges Zahlwort-Suchgitter erzeugbar');
   }
   if (kind === 'symbols') {
-    // Counted symbols are placed on the worksheet; zero is represented explicitly.
+    // School-age children count one target among decoys in a fixed 4×4 field.
     const symbol = SYMBOLS[chooseInt(rng, 0, SYMBOLS.length - 1)];
-    return { id, kind, instruction: 'Zähle die abgebildeten Zeichen.', question: target === 0 ? 'Wie viele Zeichen siehst du im leeren Feld?' : 'Wie viele Zeichen sind im Kasten?', hint: 'Zeige auf jedes Zeichen und zähle langsam.', explanation: target + ' Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target} };
+    if(age==='young') return { id, kind, instruction: 'Zähle die abgebildeten Zeichen.', question: target === 0 ? 'Wie viele Zeichen siehst du im leeren Feld?' : 'Wie viele Zeichen sind im Kasten?', hint: 'Zeige auf jedes Zeichen und zähle langsam.', explanation: target + ' Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target} };
+    const items=Array.from({length:target},()=>symbol);
+    while(items.length<16) items.push(SYMBOLS.filter(candidate=>candidate!==symbol)[chooseInt(rng,0,SYMBOLS.length-2)]);
+    for(let i=items.length-1;i>0;i--){const j=chooseInt(rng,0,i);[items[i],items[j]]=[items[j],items[i]];}
+    return { id, kind, instruction: 'Zähle in den Kästchen nur das gesuchte Zeichen. Andere Zeichen sind Ablenkung.', question: 'Wie oft findest du dieses Zeichen? '+symbol, hint: 'Gehe Reihe für Reihe vor und zähle das gesuchte Zeichen nur einmal pro Kästchen.', explanation: target + ' passende Zeichen ergeben die Ziffer ' + target + '.', expectedDigit: target, render: {symbol, count: target, items} };
   }
   if (kind === 'arithmetic') {
     let question: string;
@@ -169,11 +173,11 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   const target = puzzle.expectedDigit;
   if (puzzle.kind === 'sequence') {
     const parts=puzzle.question.split('  ·  ');
-    if(parts.length!==4||parts[3]!=='?') return false;
-    const nums=parts.slice(0,3).map(Number);
+    if(parts.length!==5||parts[4]!=='?') return false;
+    const nums=parts.slice(0,4).map(Number);
     if(nums.some(n=>!Number.isInteger(n))) return false;
     const delta=nums[1]-nums[0];
-    return delta!==0 && nums[2]-nums[1]===delta && nums[2]+delta===target;
+    return delta!==0 && nums.slice(2).every((value,index)=>value-nums[index+1]===delta) && nums[3]+delta===target;
   }
   if (puzzle.kind === 'arrowpath') {
     const g=puzzle.arrowGrid;
@@ -197,7 +201,11 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     const matches=findDigitWords(g.rows);
     return matches.length===1 && matches[0].digit===target;
   }
-  if (puzzle.kind === 'symbols') return puzzle.render?.count === target && typeof puzzle.render.symbol === 'string' && puzzle.render.symbol.length > 0 && puzzle.render.symbol.length <= 4 && puzzle.render.symbol.trim().length > 0;
+  if (puzzle.kind === 'symbols') {
+    const render=puzzle.render;
+    if(!render||render.count!==target||typeof render.symbol!=='string'||!render.symbol.trim()||render.symbol.length>4) return false;
+    return render.items===undefined || (render.items.length===16 && render.items.every(item=>SYMBOLS.includes(item)) && render.items.filter(item=>item===render.symbol).length===target);
+  }
   if (puzzle.kind === 'arithmetic') {
     const q = puzzle.question.match(/^(-?\d+)\s*([+−×])\s*(-?\d+)(?:\s*−\s*\((-?\d+)\)|\s*−\s*(-?\d+))?\s*=\s*\?$/);
     if (!q) return false;
@@ -349,10 +357,11 @@ export function generateCreativeRouteClue(destination: string, description: stri
    return {mode,instruction:'Findet heraus, welcher Ort gemeint ist.',question:custom.trim(),hint:'Lest die Hinweise genau.',answer};
  }
  if(mode==='description') {
-   const safe=maskDestination(description,answer);
+   const safe=maskDestination(description,answer).replace(/\\s+/g,' ').trim();
    if(safe.length<12) throw new Error('Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.');
    if(clueRevealsDestination(safe,answer)) throw new Error('Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.');
-   return {mode,instruction:'Welcher Ort passt zu dieser Beschreibung?',question:safe,hint:'Achtet auf besondere Merkmale des Ortes.',answer};
+   const prose=/[.!?]$/.test(safe) ? safe : 'Hinweis: '+safe.replace(/[,;]\\s*/g,', ')+'.';
+   return {mode,instruction:'Lest den Hinweistext und findet heraus, welcher Ort gemeint ist.',question:prose+'\\n\\nWelcher Ort passt zu diesem Text?',hint:'Achtet darauf, welche Merkmale im Text wirklich genannt werden.',answer};
  }
  if(mode==='questions') {
    if (/\d/.test(answer)) throw new Error('Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.');
