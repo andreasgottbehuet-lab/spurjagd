@@ -261,7 +261,8 @@ test('Lock-code input identifies invalid values and preserves three-digit text e
 
 test('Each team carries its own labeled age group through organizer and child print pages',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- for(const age of ['4–6','6–8','8–10','10–12','12–14','14+']) assert.ok(source.includes(age)||source.includes('AGE_GROUPS.map'),age);
+ const ageGroups=readFileSync(new URL('../src/age-groups.ts',import.meta.url),'utf8');
+ assert.match(ageGroups,/\['4–6','6–8','8–10','10–12','12–14','14\+'\]/);
  assert.ok(source.includes('Jede Gruppe erhält Aufgaben und Wegrätsel'));
  assert.ok(source.includes('data-age-group={team.profile?.age??age}'));
  assert.ok(source.includes('Team {team.name} · {team.profile?.age??age} Jahre'));
