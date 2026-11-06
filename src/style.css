@@ -405,3 +405,7 @@
  .symbol-grid{grid-template-columns:repeat(4,8mm);gap:.7mm}
  .arrow-grid .arrow-start-cell,.symbol-cell{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+.print-code-line[data-team-color="lila"]{--team-accent:#7446a6;--team-tint:#f2ecfb}
+.print-child-sheet[data-team-color="lila"],.print-label[data-team-color="lila"],.team-route-line[data-team-color="lila"],.print-checklist-row[data-team-color="lila"]{--team-accent:#7446a6;--team-tint:#f2ecfb}
+@media print{.print-code-line[data-team-color="lila"],.print-child-sheet[data-team-color="lila"],.print-label[data-team-color="lila"],.team-route-line[data-team-color="lila"],.print-checklist-row[data-team-color="lila"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
