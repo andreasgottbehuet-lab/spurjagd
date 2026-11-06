@@ -782,9 +782,13 @@ try {
       childBlocks:el.querySelectorAll(':scope > .print-packed-content').length,
       scrollHeightMm:Math.round(el.scrollHeight*25.4/96*100)/100,
       kind:el.getAttribute('data-sheet-kind'),
+      organizer:el.classList.contains('print-organizer-sheet'),
+      label:el.classList.contains('print-label-sheet'),
+      packedBlockCount:Number(el.dataset.packedBlockCount),
       envelope:el.getAttribute('data-envelope-id')
     })));
     writeFileSync('verification/a5-packed-geometry.json',JSON.stringify({packedPageCount,expected:packedExport.pages,pages:packedGeometry},null,2));
+    console.log('Packed A5 geometry diagnostic:',JSON.stringify(packedGeometry.filter(sheet=>sheet.page<=8)));
     for(const sheet of packedGeometry){
       if(sheet.heightMm>190.01 || sheet.scrollHeightMm>190.01)
         failures.push('Packed PDF A5 page '+sheet.page+' exceeds 190 mm: box '+sheet.heightMm+' mm, content '+sheet.scrollHeightMm+' mm');
