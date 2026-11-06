@@ -507,6 +507,6 @@ test('Neue Spiele wählen Textbeschreibungen und die Wiese beschreibt Blumen sta
 });
 
 test('Altersgruppen decken den Zweijahresrhythmus von 4 bis 14 ab',()=>{
- assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14']);
- assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','young','middle','older','older']);
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','young','middle','older','older','older']);
 });
