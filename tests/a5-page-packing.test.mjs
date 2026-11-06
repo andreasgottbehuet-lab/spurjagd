@@ -84,6 +84,8 @@ test('A5 50-percent rule compacts compatible short pages without crossing owners
  assert.equal(isolated.length,3);
  assert.deepEqual(underfilledA5Pages(isolated),[0,1,2]);
  assert.deepEqual(compactableUnderfilledPages(isolated),[]);
+ const boundary=packA5Blocks([b('half','leitung',95,'organizer'),b('next','leitung',50,'organizer')]);
+ assert.deepEqual(boundary.map(page=>page.blocks.map(block=>block.id)),[['half'],['next']]);
 });
 
 test('Different envelopes of the same team must remain separate physical pages',()=>{

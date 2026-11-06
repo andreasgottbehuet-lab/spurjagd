@@ -352,7 +352,7 @@
 
 /* The A5 content width must match in preflight and PDF pagination. */
 @media screen, print {
- .print-packet-packed > .print-packed-page {width:127.5mm!important;max-width:127.5mm!important;margin:0!important;padding:0!important;box-sizing:border-box;}
+ .print-packet-packed > .print-packed-page {width:127mm!important;max-width:127mm!important;margin:0!important;padding:0!important;box-sizing:border-box;}
  .print-packet-packed > .print-packed-page .print-packed-content {margin-bottom:0;}
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content {font-size:9pt;line-height:1.12;}
  .print-packet-packed > .print-child-sheet[data-sheet-kind="task"] .print-packed-content .print-question {font-size:10pt;line-height:1.12;}
