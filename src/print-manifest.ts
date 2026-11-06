@@ -14,6 +14,10 @@ export const ORGANIZER_ROUTES_PER_A5_SHEET = 7;
 export const ORGANIZER_CODES_PER_A5_SHEET = 9;
 export const ORGANIZER_ENVELOPES_PER_A5_SHEET = 7;
 export const ORGANIZER_CAUTIONS_PER_A5_SHEET = 6;
+/** Ignore teams whose challenge data is not generated yet during initial editing. */
+export function nonEmptyOrganizerGroups<T>(groups:T[],getSize:(group:T)=>number):T[] {
+ return groups.filter(group=>getSize(group)>0);
+}
 /** Keep each team's code bundle together and balance remaining groups across pages. */
 export function organizerGroupPageRanges(groupSizes:number[],capacity=ORGANIZER_CODES_PER_A5_SHEET,maxGroups=3):{start:number;end:number}[] {
  if(groupSizes.some(size=>!Number.isInteger(size)||size<1)||!Number.isInteger(capacity)||capacity<1||!Number.isInteger(maxGroups)||maxGroups<1)
