@@ -344,7 +344,7 @@ function App() {
             <button type="button" className="text-button" onClick={removeProject}>{tx('Löschen','Delete')}</button>
             <input ref={importRef} type="file" accept=".json,application/json" className="visually-hidden" onChange={e=>void importProject(e.target.files?.[0])}/>
           </div>
-          {storageMessage && <p className="storage-message" role="status">{storageMessage}</p>}
+          {storageMessage && <p className="storage-message" role="status" aria-live="polite">{storageMessage}</p>}
           <p className="storage-note">{tx('Automatische Speicherung in diesem Browser. Für andere Geräte die JSON-Sicherung verwenden.', 'Automatically saved in this browser. Export a JSON backup to use another device.')}</p>
         </section>
         <section id="planer" className="wizard">
@@ -360,9 +360,9 @@ function App() {
             {activeStep === 1 && <>
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
-              <p className="helper" role="status">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.length <= 12 ? groupDistribution.join(" / ") : `${Math.min(...groupDistribution)}–${Math.max(...groupDistribution)} (${groupDistribution.length})`}. {tx('Jede Gruppe erhält Rätsel passend zur Altersstufe.','Each team receives puzzles for its age group.')}</p>
+              <p className="helper" role="status" aria-live="polite">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.length <= 12 ? groupDistribution.join(" / ") : `${Math.min(...groupDistribution)}–${Math.max(...groupDistribution)} (${groupDistribution.length})`}. {tx('Jede Gruppe erhält Rätsel passend zur Altersstufe.','Each team receives puzzles for its age group.')}</p>
               <div className="team-age-assignments" aria-label="Altersgruppen je Team">{groupDistribution.map((_,i)=>{const teamName=['Rot','Blau','Grün','Gelb','Orange','Lila','Türkis','Silber','Gold','Pink'][i]??String(i+1);const key=String(i);return <label key={key}>Team {teamName} – Altersgruppe<select value={teamProfiles[key]?.age??age} onChange={event=>setTeamProfiles(old=>({...old,[key]:{age:event.target.value,difficulty:old[key]?.difficulty??'normal'}}))}>{AGE_GROUPS.map(group=><option key={group}>{group}</option>)}</select></label>;})}</div>
-               {groupDistribution.includes(1) && players>1 && <p className="warnings" role="status">{tx("Mindestens eine Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "At least one team would contain only one child. Review team size or participant count and adjust the grouping before the event.")}</p>}
+               {groupDistribution.includes(1) && players>1 && <p className="warnings" role="status" aria-live="polite">{tx("Mindestens eine Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "At least one team would contain only one child. Review team size or participant count and adjust the grouping before the event.")}</p>}
               <p className="helper">{tx("Die maximale Gruppengröße ist eine Obergrenze. Die Kinder werden möglichst gleichmäßig verteilt.", "Maximum team size is a limit. Participants are distributed as evenly as possible.")}</p>
               <div className="form-grid">
                 <label className="range-field"><span>{t.children}: <strong>{players}</strong></span><input min="1" max="100" type="range" value={players} onChange={e => setPlayers(Number(e.target.value))}/></label>
@@ -379,7 +379,7 @@ function App() {
               <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>changeStationCount(Number(e.target.value))}/></label>
               <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
               <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
-              {goal==='locks' && <p className="helper" role="status">{locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]??'')).length} von {locations.filter(l=>visitedStationIds.has(l.id)).length} {tx('benötigten Schloss-Codes vollständig','required lock codes complete')}.</p>}
+              {goal==='locks' && <p className="helper" role="status" aria-live="polite">{locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]??'')).length} von {locations.filter(l=>visitedStationIds.has(l.id)).length} {tx('benötigten Schloss-Codes vollständig','required lock codes complete')}.</p>}
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
@@ -395,7 +395,7 @@ function App() {
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
               <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
               {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><div className="preflight-issue" key={i}><span>{issue}</span><button type="button" className="secondary" onClick={()=>setActiveStep(issueStep(issue))}>{tx('Eingabe bearbeiten','Edit input')}</button></div>)}</div>}
-              {printIssues.length===0 && <p className="helper" role="status">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
+              {printIssues.length===0 && <p className="helper" role="status" aria-live="polite">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
             </>}
             {activeStep === 2 && <>
               <div className="section-line"><span className="step">02</span><h2>{tx('Spielziel und Zeitansätze','Game rules and timing')}</h2></div>
@@ -457,7 +457,7 @@ function App() {
                   <div className="stat"><strong>{plan.value.estimatedMinutes}</strong><span>{tx('Geschätzte Minuten','Estimated minutes')}</span></div>
                 </div>
                 <p className="helper">{tx('Noch frei im Zeitbudget','Remaining time buffer')}: {plan.value.remainderMinutes} min</p>
-                {plan.value.cautions.length>0 && <div className="warnings" role="status"><strong>{tx("Hinweise für die Spielleitung", "Organizer notes")}</strong>{plan.value.cautions.map((warning,i)=><p key={i}>{warning}</p>)}</div>}
+                {plan.value.cautions.length>0 && <div className="warnings" role="status" aria-live="polite"><strong>{tx("Hinweise für die Spielleitung", "Organizer notes")}</strong>{plan.value.cautions.map((warning,i)=><p key={i}>{warning}</p>)}</div>}
                 <div className="team-list">{plan.value.teams.map((team,i)=>
                   <article className="team" key={i}>
                     <h3>{en ? 'Team ' + (i+1) : 'Team '+team.name}<span>{team.memberCount} {en?'participants':'Kinder'}</span></h3>
