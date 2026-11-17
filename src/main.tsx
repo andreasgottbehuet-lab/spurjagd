@@ -60,6 +60,57 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
+  const teamColors: Record<string,string> = {Rot:'Red',Blau:'Blue','Grün':'Green',Gelb:'Yellow',Orange:'Orange',Lila:'Purple','Türkis':'Turquoise',Silber:'Silver',Gold:'Gold',Pink:'Pink'};
+  const teamLabel = (name: string) => en ? (teamColors[name] ?? name) : name;
+  const planText = (text: string) => {
+    if (!en) return text;
+    const fixed: Record<string,string> = {
+      'Ungültige Routenoption':'Invalid route option',
+      'Ungültige Umgebung':'Invalid setting',
+      'Start- und Abschlusszeit überschreitet die Spieldauer':'Start and wrap-up time is longer than the whole game',
+      'Bitte 1 bis 20 Standorte angeben':'Please enter 1 to 20 locations',
+      'Jeder Standort benötigt einen Namen':'Every location needs a name',
+      'Standortnamen müssen eindeutig sein':'Location names must all be different',
+      'Standortnamen dürfen maximal 80 Zeichen enthalten':'Location names can have at most 80 characters',
+      'Standortbeschreibungen dürfen maximal 400 Zeichen enthalten':'Location descriptions can have at most 400 characters',
+      'Stations-IDs müssen eindeutig und ausgefüllt sein':'Station IDs must be filled in and all different',
+      'Stations-IDs enthalten Leerzeichen am Rand':'Station IDs have spaces at the start or end',
+      'Die Zeit reicht nicht für eine Station. Dauer erhöhen oder Zeitansätze reduzieren.':'There is not enough time for even one stop. Make the game longer or shorten the time per step.',
+      'Mindestens eine Gruppe besteht aus nur einem Kind. Gruppeneinteilung und Aufsicht vor Ort prüfen.':'At least one team has only one child. Check the teams and supervision on site.',
+      'Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.':'More teams than locations: several teams start at the same place.',
+      'Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.':'All teams start at the same stop. If they begin together, plan for some waiting time.',
+      'Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.':'Different route directions need at least three locations.',
+      'Bei nur einer Station pro Team entstehen trotz unterschiedlicher Umlaufrichtung keine unterschiedlichen Stationsfolgen.':'With only one stop per team, different route directions do not change the order of stops.',
+      'Die Teams starten verteilt an Rätselstationen und kehren zum gemeinsamen Startort zurück.':'Teams start at different puzzle stops and return to the shared start location.',
+      'Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.':'Each team returns to its own first stop. There is no shared finale.',
+      'Bei nur einer Station ist das Ziel identisch mit der einzigen Rätselstation. Für einen echten Rückweg ein anderes Ziel wählen oder mehr Stationen einplanen.':'With only one stop, the finish is the same as the only puzzle stop. For a real way back, choose a different finish or add more stops.',
+      'Zeitbudget: Nicht alle Standorte werden pro Team besucht.':'Time budget: not every team visits every location.',
+      'Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.':'Walking and stop times are estimates. Check paths, road crossings, access and supervision on site.',
+      'Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Räume, Zugänglichkeit und Aufsicht vor Ort prüfen.':'Walking and stop times are estimates. Check rooms, access and supervision on site.',
+      'Im Haus: Treppen und Türen sichern, Zerbrechliches und Heißes wegschließen, verbotene Zimmer klar benennen, Aufsicht festlegen und auf Lautstärke und Nachbarn Rücksicht nehmen.':'Indoors: secure stairs and doors, put away fragile and hot things, clearly name off-limits rooms, agree on supervision and keep noise down for the neighbours.',
+    };
+    if (fixed[text]) return fixed[text];
+    const fields: Record<string,string> = {'Teilnehmerzahl':'Number of players','Gruppengröße':'Team size','Spieldauer':'Game length','Rätselzeit':'Puzzle time','Gehzeit':'Walking time','Start- und Abschlusszeit':'Start and wrap-up time'};
+    const invalidValue = text.match(/^(.*): ungültiger Wert$/);
+    if (invalidValue && fields[invalidValue[1]]) return fields[invalidValue[1]]+': invalid value';
+    const crowd = text.match(/^Möglicher Andrang an Station (\d+) \((.*)\): (\d+) Teams bei gleichzeitigem Start\. Startzeiten oder Stationskapazität prüfen\.$/s);
+    if (crowd) return 'Possible crowding at stop '+crowd[1]+' ('+crowd[2]+'): '+crowd[3]+' teams if everyone starts together. Check start times or how many teams the stop can hold.';
+    return text;
+  };
+  const issueText = (issue: string) => {
+    if (!en) return issue;
+    const fixed: Record<string,string> = {
+      'Das Druckpaket unterstützt derzeit nur Schloss-Codes.':'The print packet currently supports lock codes only.',
+      'Startort fehlt.':'Start location is missing.',
+      'Zielort fehlt.':'Finish location is missing.',
+    };
+    if (fixed[issue]) return fixed[issue];
+    const missing = issue.match(/^Mindestens ein Stationsname fehlt \((\d+)\)\.$/);
+    if (missing) return 'At least one station name is missing ('+missing[1]+').';
+    const invalid = issue.match(/^Ungültiger Code: (.*)$/);
+    if (invalid) return 'Invalid code: '+invalid[1];
+    return planText(issue);
+  };
   const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
@@ -183,7 +234,7 @@ function App() {
         applyGame(current);
       }
       setStorageReady(true);
-    } catch(e) { setStorageMessage('Lokale Speicherung beschädigt oder nicht verfügbar. Automatisches Speichern bleibt zum Schutz der vorhandenen Daten deaktiviert: ' + String(e));
+    } catch(e) { setStorageMessage(tx('Lokale Speicherung beschädigt oder nicht verfügbar. Automatisches Speichern bleibt zum Schutz der vorhandenen Daten deaktiviert: ', 'Local storage is damaged or unavailable. Automatic saving stays off to protect your existing data: ') + String(e));
       setStorageReady(false);
     }
   }, []);
@@ -193,7 +244,7 @@ function App() {
       if(projectListChanged(event.key)){
         storageConflict.current=true;
         setStorageReady(false);
-        setStorageMessage('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte hier zunächst eine JSON-Sicherung der offenen Eingaben herunterladen. Danach die Seite neu laden und die aktuelle Projektfassung prüfen.');
+        setStorageMessage(tx('Die Projekte wurden in einem anderen Tab verändert. Diese Ansicht speichert nicht mehr automatisch. Bitte hier zunächst eine JSON-Sicherung der offenen Eingaben herunterladen. Danach die Seite neu laden und die aktuelle Projektfassung prüfen.', 'The projects were changed in another tab. This view no longer saves automatically. Please download a JSON backup of your open entries here first, then reload the page and check the current version of the project.'));
       }
     };
     window.addEventListener('storage',onStorageChange);
@@ -212,7 +263,7 @@ function App() {
         setProjects(saved);
         setSelectedProject(projectId);
         setStorageMessage('');
-      } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage('Automatisches Speichern gestoppt: ' + String(e) + ' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.'); }
+      } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + String(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
@@ -228,7 +279,7 @@ function App() {
         savedRevision.current={id:projectId,updatedAt:current.updatedAt};
       }catch(error){
         // Browsers may discard UI updates during pagehide; preserve data where possible.
-        setStorageMessage('Speichern beim Verlassen fehlgeschlagen: '+String(error));
+        setStorageMessage(tx('Speichern beim Verlassen fehlgeschlagen: ', 'Saving when leaving the page failed: ')+String(error));
       }
     };
     const onVisibilityChange=()=>{if(document.visibilityState==='hidden')flushOnExit();};
@@ -241,8 +292,8 @@ function App() {
   },[storageReady,projectId,projectTitle,config]);
   // Flush the currently edited draft before changing projects; debounce alone can lose edits.
   const saveCurrentBeforeSwitch = (): boolean => {
-    if(storageConflict.current){setStorageMessage('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.');return false;}
-    if (!storageReady){setStorageMessage('Projektwechsel gesperrt: Lokale Speicherung ist nicht verfügbar. Bitte zuerst eine JSON-Sicherung exportieren.');return false;}
+    if(storageConflict.current){setStorageMessage(tx('Projektwechsel gesperrt: Die Projektliste wurde in einem anderen Tab verändert.', 'Project switch blocked: the project list was changed in another tab.'));return false;}
+    if (!storageReady){setStorageMessage(tx('Projektwechsel gesperrt: Lokale Speicherung ist nicht verfügbar. Bitte zuerst eine JSON-Sicherung exportieren.', 'Project switch blocked: local storage is unavailable. Please export a JSON backup first.'));return false;}
     try {
       const current:SavedGame={version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null;
@@ -251,7 +302,7 @@ function App() {
       return true;
     } catch(error) {
       if(String(error).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
-      setStorageMessage('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. '+String(error)+' Bitte bei Versionskonflikten zuerst eine JSON-Sicherung exportieren.');
+      setStorageMessage(tx('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. ', 'Project switch cancelled: your current changes could not be saved. ')+String(error)+tx(' Bitte bei Versionskonflikten zuerst eine JSON-Sicherung exportieren.', ' If versions conflict, please export a JSON backup first.'));
       return false;
     }
   };
@@ -262,18 +313,18 @@ function App() {
       config:createDefaultGameConfig(),
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
-    catch(e){ setStorageMessage('Neues Projekt: '+String(e)); }
+    catch(e){ setStorageMessage(tx('Neues Projekt: ', 'New project: ')+String(e)); }
   };
   const removeProject = () => {
     if(storageConflict.current || !storageReady){
-      setStorageMessage('Löschen gesperrt: Die lokale Projektliste ist nicht sicher verfügbar.');
+      setStorageMessage(tx('Löschen gesperrt: Die lokale Projektliste ist nicht sicher verfügbar.', 'Delete blocked: the local project list is not safely available.'));
       return;
     }
     if (!window.confirm(tx('Dieses Projekt wirklich löschen? Vorher bei Bedarf über Sichern eine JSON-Datei herunterladen. Die Löschung kann nicht rückgängig gemacht werden.', 'Delete this project? Export a JSON backup first if needed. This cannot be undone.'))) return;
     try {
       const stored=loadGames();
       const expected=savedRevision.current?.id===projectId?savedRevision.current.updatedAt:undefined;
-      if(expected===undefined) throw new Error('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.');
+      if(expected===undefined) throw new Error(tx('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.', 'Project version unknown. Delete cancelled to protect your data.'));
       if(stored.length===1 && stored[0].id===projectId){
         const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:nextProjectRevision(),config:createDefaultGameConfig()};
         const saved=replaceLastGame(projectId,fresh,expected??undefined);
@@ -287,7 +338,7 @@ function App() {
       }
     }catch(e){
       if(String(e).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
-      setStorageMessage('Löschen fehlgeschlagen: '+String(e));
+      setStorageMessage(tx('Löschen fehlgeschlagen: ', 'Delete failed: ')+String(e));
     }
   };
   const exportProject = () => {
@@ -295,12 +346,12 @@ function App() {
       const project: SavedGame = {version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
       downloadBackup(project);
       setStorageMessage(tx('Projektdatei wurde zum Download vorbereitet.', 'Project backup prepared for download.'));
-    } catch(e){ setStorageMessage('Export fehlgeschlagen: '+String(e)); }
+    } catch(e){ setStorageMessage(tx('Export fehlgeschlagen: ', 'Export failed: ')+String(e)); }
   };
   const importProject = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 200_000) throw new Error('Datei zu groß.');
+      if (file.size > 200_000) throw new Error(tx('Datei zu groß.', 'File too large.'));
       const imported = parseGameBackup(await file.text());
       if(!saveCurrentBeforeSwitch()) return;
       const restored: SavedGame = {...imported,id:newGameId(),title:importedProjectTitle(imported.title),updatedAt:nextProjectRevision()};
@@ -309,15 +360,15 @@ function App() {
       applyGame(restored);
       setActiveStep(1);
       setStorageMessage(tx('Projekt aus Sicherung wiederhergestellt.', 'Project restored from backup.'));
-    } catch(e){ setStorageMessage('Import fehlgeschlagen: '+String(e)); }
+    } catch(e){ setStorageMessage(tx('Import fehlgeschlagen: ', 'Import failed: ')+String(e)); }
     finally { if (importRef.current) importRef.current.value=''; }
   };
   return (
     <div className="app">
       <header className="site-header">
-        <a className="brand" href="/" aria-label="Spurjagd Startseite"><span className="mark">↗</span> SPURJAGD</a>
-        <div className="header-actions"><span className="prototype">PROTOTYP 0.3</span>
-          <label className="visually-hidden" htmlFor="language">Sprache</label>
+        <a className="brand" href="/" aria-label={tx('Spurjagd Startseite','Spurjagd home page')}><span className="mark">↗</span> SPURJAGD</a>
+        <div className="header-actions"><span className="prototype">{tx('PROTOTYP 0.3','PROTOTYPE 0.3')}</span>
+          <label className="visually-hidden" htmlFor="language">{tx('Sprache','Language')}</label>
           <select id="language" value={lang} onChange={e => setLang(e.target.value as Language)}><option value="de">DE</option><option value="en">EN</option></select>
         </div>
       </header>
@@ -339,7 +390,7 @@ function App() {
               const project=projects.find(p=>p.id===e.target.value);
               if(project && project.id!==projectId && saveCurrentBeforeSwitch()){
                 try { setActiveGameId(project.id); applyGame(project); setActiveStep(1); }
-                catch(error) { setStorageMessage('Projektwechsel fehlgeschlagen: '+String(error)); }
+                catch(error) { setStorageMessage(tx('Projektwechsel fehlgeschlagen: ', 'Project switch failed: ')+String(error)); }
               }
             }}>
               {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}
@@ -370,7 +421,7 @@ function App() {
               <div className="section-line"><span className="step">01</span><h2>{tx('Teilnehmer & Dauer','Participants & duration')}</h2></div>
               <p className="helper">{tx('Diese Angaben bestimmen die Anzahl der Gruppen und wie viele Stationen zeitlich passen.','These settings determine team sizes and the number of stops that fit the schedule.')}</p>
               <p className="helper" role="status" aria-live="polite">{tx("Geplante Gruppen", "Planned teams")}: {groupDistribution.length}. {tx("Gruppengrößen", "Team sizes")}: {groupDistribution.length <= 12 ? groupDistribution.join(" / ") : `${Math.min(...groupDistribution)}–${Math.max(...groupDistribution)} (${groupDistribution.length})`}. {tx('Jede Gruppe erhält Rätsel passend zur Altersstufe.','Each team receives puzzles for its age group.')}</p>
-              <div className="team-age-assignments" aria-label="Altersgruppen je Team">{groupDistribution.map((_,i)=>{const teamName=['Rot','Blau','Grün','Gelb','Orange','Lila','Türkis','Silber','Gold','Pink'][i]??String(i+1);const key=String(i);return <label key={key}>Team {teamName} – Altersgruppe<select value={teamProfiles[key]?.age??age} onChange={event=>setTeamProfiles(old=>({...old,[key]:{age:event.target.value,difficulty:old[key]?.difficulty??'normal'}}))}>{AGE_GROUPS.map(group=><option key={group}>{group}</option>)}</select></label>;})}</div>
+              <div className="team-age-assignments" aria-label={tx('Altersgruppen je Team','Age groups per team')}>{groupDistribution.map((_,i)=>{const teamName=['Rot','Blau','Grün','Gelb','Orange','Lila','Türkis','Silber','Gold','Pink'][i]??String(i+1);const key=String(i);return <label key={key}>{tx('Team '+teamName+' – Altersgruppe','Team '+(i+1)+' – age group')}<select value={teamProfiles[key]?.age??age} onChange={event=>setTeamProfiles(old=>({...old,[key]:{age:event.target.value,difficulty:old[key]?.difficulty??'normal'}}))}>{AGE_GROUPS.map(group=><option key={group}>{group}</option>)}</select></label>;})}</div>
                {groupDistribution.includes(1) && players>1 && <p className="warnings" role="status" aria-live="polite">{tx("Mindestens eine Gruppe hätte nur ein Kind. Bitte Gruppengröße oder Kinderzahl prüfen und die Einteilung vor Ort anpassen.", "At least one team would contain only one child. Review team size or participant count and adjust the grouping before the event.")}</p>}
               <p className="helper">{tx("Die maximale Gruppengröße ist eine Obergrenze. Die Kinder werden möglichst gleichmäßig verteilt.", "Maximum team size is a limit. Participants are distributed as evenly as possible.")}</p>
               <div className="form-grid">
@@ -389,22 +440,22 @@ function App() {
               <label className="range-field location-range"><span>{tx("Anzahl Rätselstationen", "Number of puzzle stations")}: <strong>{locations.length}</strong></span><input type="range" min="1" max="20" value={locations.length} onChange={e=>changeStationCount(Number(e.target.value))}/></label>
               <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
               <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
-              {goal==='locks' && <p className="helper" role="status" aria-live="polite">{locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]??'')).length} von {locations.filter(l=>visitedStationIds.has(l.id)).length} {tx('benötigten Schloss-Codes vollständig','required lock codes complete')}.</p>}
+              {goal==='locks' && <p className="helper" role="status" aria-live="polite">{locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]??'')).length} {tx('von','of')} {locations.filter(l=>visitedStationIds.has(l.id)).length} {tx('benötigten Schloss-Codes vollständig','required lock codes complete')}.</p>}
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>
                   <label>{tx('Name des Ortes','Location name')}<input value={location.name} maxLength={80} placeholder={tx('z. B. Spielplatz','e.g. playground')} onChange={e=>updateLocation(location.id,'name',e.target.value)}/></label>
                   <label>{tx('Beschreibung (optional)','Description (optional)')}<textarea rows={2} maxLength={400} value={location.description} onChange={e=>updateLocation(location.id,'description',e.target.value)} placeholder={tx('Was gibt es hier?','What is there?')}/></label>
                   <p className="helper">{tx("Der Ortsname ist die Lösung des Wegrätsels und darf nicht bereits im Aufgabentext stehen.", "The location name is the route-clue answer and must not already appear in the question.")}</p>
-                  <label>{tx('Wegrätsel, das zu diesem Ort führt','Route clue leading to this place')}<select value={routeClueModes[location.id]??'letters'} onChange={e=>setRouteClueModes(old=>({...old,[location.id]:e.target.value as RouteClueMode}))}><option value="description">Ortsbeschreibung erraten</option><option value="questions">Fragen mit Lösungswort</option><option value="letters">Buchstabenspiel</option><option value="custom">Eigenes Wegrätsel</option></select></label>
+                  <label>{tx('Wegrätsel, das zu diesem Ort führt','Route clue leading to this place')}<select value={routeClueModes[location.id]??'letters'} onChange={e=>setRouteClueModes(old=>({...old,[location.id]:e.target.value as RouteClueMode}))}><option value="description">{tx('Ortsbeschreibung erraten','Guess the place from its description')}</option><option value="questions">{tx('Fragen mit Lösungswort','Questions with a solution word')}</option><option value="letters">{tx('Buchstabenspiel','Letter game')}</option><option value="custom">{tx('Eigenes Wegrätsel','Custom route clue')}</option></select></label>
                   {routeClueModes[location.id]==='custom' && <label>{tx('Eigener Rätseltext','Custom clue')}<textarea rows={3} maxLength={400} value={routeClueTexts[location.id]??''} onChange={e=>setRouteClueTexts(old=>({...old,[location.id]:e.target.value}))}/></label>}
-                  {goal==='locks' && <label>{tx('Dreistelliger Schloss-Code','Three-digit lock code')}{plan.value && !visitedStationIds.has(location.id) && <span className="helper">{tx('Diese Station wird nach aktuellem Plan nicht besucht – Code optional.','No team visits this station in the current plan – code optional.')}</span>}<input inputMode="numeric" pattern="[0-9]{3}" maxLength={3} placeholder="z. B. 007" aria-invalid={visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'')} aria-describedby={'code-help-'+location.id} value={stationCodes[location.id] ?? ''} onChange={e=>setStationCodes(old=>({...old,[location.id]:e.target.value.replace(/[^0-9]/g,'').slice(0,3)}))}/><span className="helper" id={'code-help-'+location.id}>{visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'') ? tx('Bitte genau drei Ziffern eingeben; 000 und führende Nullen sind erlaubt.','Enter exactly three digits; 000 and leading zeroes are allowed.') : tx('Drei Ziffern, wie auf dem echten Schloss eingestellt.','Three digits, matching the physical lock.')}</span></label>}
+                  {goal==='locks' && <label>{tx('Dreistelliger Schloss-Code','Three-digit lock code')}{plan.value && !visitedStationIds.has(location.id) && <span className="helper">{tx('Diese Station wird nach aktuellem Plan nicht besucht – Code optional.','No team visits this station in the current plan – code optional.')}</span>}<input inputMode="numeric" pattern="[0-9]{3}" maxLength={3} placeholder={tx('z. B. 007','e.g. 007')} aria-invalid={visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'')} aria-describedby={'code-help-'+location.id} value={stationCodes[location.id] ?? ''} onChange={e=>setStationCodes(old=>({...old,[location.id]:e.target.value.replace(/[^0-9]/g,'').slice(0,3)}))}/><span className="helper" id={'code-help-'+location.id}>{visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'') ? tx('Bitte genau drei Ziffern eingeben; 000 und führende Nullen sind erlaubt.','Enter exactly three digits; 000 and leading zeroes are allowed.') : tx('Drei Ziffern, wie auf dem echten Schloss eingestellt.','Three digits, matching the physical lock.')}</span></label>}
                 </div>
               )}</div>
               {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
               <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
-              {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><div className="preflight-issue" key={i}><span>{issue}</span><button type="button" className="secondary" onClick={()=>setActiveStep(issueStep(issue))}>{tx('Eingabe bearbeiten','Edit input')}</button></div>)}</div>}
+              {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><div className="preflight-issue" key={i}><span>{issueText(issue)}</span><button type="button" className="secondary" onClick={()=>setActiveStep(issueStep(issue))}>{tx('Eingabe bearbeiten','Edit input')}</button></div>)}</div>}
               {printIssues.length===0 && <p className="helper" role="status" aria-live="polite">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
             </>}
             {activeStep === 2 && <>
@@ -460,14 +511,14 @@ function App() {
                   ? tx('Bitte die unten genannten Eingaben korrigieren. Das Druckpaket wird danach automatisch aktualisiert.', 'Correct the inputs listed below. The print packet updates automatically.')
                   : tx('Alle automatischen Plausibilitätsprüfungen sind bestanden. Vor der Ausgabe die Druckvorschau und die echten Schlösser prüfen.', 'All automated consistency checks passed. Check the print preview and physical locks before use.')}</span>
               </div>
-              {plan.error ? <p className="error" role="alert">{plan.error}</p> : plan.value && <>
+              {plan.error ? <p className="error" role="alert">{planText(plan.error)}</p> : plan.value && <>
                 <div className="stats">
                   <div className="stat"><strong>{plan.value.teams.length}</strong><span>{t.teams}</span></div>
                   <div className="stat"><strong>{plan.value.stopsPerTeam}</strong><span>{tx('Stationen je Team','Stops per team')}</span></div>
                   <div className="stat"><strong>{plan.value.estimatedMinutes}</strong><span>{tx('Geschätzte Minuten','Estimated minutes')}</span></div>
                 </div>
                 <p className="helper">{tx('Noch frei im Zeitbudget','Remaining time buffer')}: {plan.value.remainderMinutes} min</p>
-                {plan.value.cautions.length>0 && <div className="warnings" role="status" aria-live="polite"><strong>{tx("Hinweise für die Spielleitung", "Organizer notes")}</strong>{plan.value.cautions.map((warning,i)=><p key={i}>{warning}</p>)}</div>}
+                {plan.value.cautions.length>0 && <div className="warnings" role="status" aria-live="polite"><strong>{tx("Hinweise für die Spielleitung", "Organizer notes")}</strong>{plan.value.cautions.map((warning,i)=><p key={i}>{planText(warning)}</p>)}</div>}
                 <div className="team-list">{plan.value.teams.map((team,i)=>
                   <article className="team" key={i}>
                     <h3>{en ? 'Team ' + (i+1) : 'Team '+team.name}<span>{team.memberCount} {en?'participants':'Kinder'}</span></h3>
@@ -478,23 +529,23 @@ function App() {
                   const target=locations.find(l=>l.name.trim()===destination.trim());
                   try {
                     const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??(target?'description':'letters'),hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);
-                    return <article className="location-card" key={destination}><strong>{tx("Ziel", "Destination")}: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} (Buchstabe {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">{tx("Lösung für die Spielleitung", "Organizer answer")}: {clue.answer}</p></article>;
+                    return <article className="location-card" key={destination}><strong>{tx("Ziel", "Destination")}: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} ({tx('Buchstabe','letter')} {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">{tx("Lösung für die Spielleitung", "Organizer answer")}: {clue.answer}</p></article>;
                   } catch(error) {
-                    return <article className="location-card" key={destination}><strong>Ziel: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
+                    return <article className="location-card" key={destination}><strong>{tx('Ziel','Destination')}: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
                   }
                 })}</section>}
-                {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge,teamName,teamIndex,ageGroup})=><article className="location-card" key={teamIndex+'-'+location.id}><strong>Team {teamName} · {ageGroup} Jahre · {location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || "□ (leer)"}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label="Buchstabengitter">{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid arrow-grid" data-grid-size={p.arrowGrid.rows.length} aria-label="Pfeilpfad-Zahlengitter">{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className={r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'wordsearch-cell arrow-start-cell':'wordsearch-cell'} key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?<><small>S</small><strong>{p.arrowGrid!.arrows[0]}</strong></>:digit}</span>)}</div>)}</div>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
-                {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. {measuredPrintSummary?.error ? 'A5-Messung: '+measuredPrintSummary.error : measuredPrintSummary ? 'Nach der Browsermessung: '+measuredPrintSummary.total+' A5-Seiten ('+measuredPrintSummary.children+' Kinder, '+measuredPrintSummary.organizer+' Spielleitung, '+measuredPrintSummary.labels+' Etiketten).' : 'Die tatsächliche Seitenzahl wird auf der Druckseite im Browser gemessen.'}</p></div>}
-                {printManifest && <div className="print-guidance" aria-label="A5-Druckanleitung">
+                {goal==='locks' && <section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge,teamName,teamIndex,ageGroup})=><article className="location-card" key={teamIndex+'-'+location.id}><strong>{tx('Team '+teamName+' · '+ageGroup+' Jahre','Team '+teamLabel(teamName)+' · ages '+ageGroup)} · {location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || tx("□ (leer)","□ (empty)")}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label={tx("Buchstabengitter","Letter grid")}>{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid arrow-grid" data-grid-size={p.arrowGrid.rows.length} aria-label={tx("Pfeilpfad-Zahlengitter","Arrow path number grid")}>{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className={r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'wordsearch-cell arrow-start-cell':'wordsearch-cell'} key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?<><small>S</small><strong>{p.arrowGrid!.arrows[0]}</strong></>:digit}</span>)}</div>)}</div>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
+                {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{en ? <>{printManifest.envelopes.length} envelopes with at least 2 sheets each; {printManifest.taskSheets} child sheets in total, plus {printManifest.organizerSheets} organizer sheets and {printManifest.labelSheets} label sheets. Before automatic A5 packing: {printManifest.minimumSheets} A5 pages. {measuredPrintSummary?.error ? 'A5 measurement: '+measuredPrintSummary.error : measuredPrintSummary ? 'After browser measurement: '+measuredPrintSummary.total+' A5 pages ('+measuredPrintSummary.children+' children, '+measuredPrintSummary.organizer+' organizer, '+measuredPrintSummary.labels+' labels).' : 'The actual page count is measured in the browser on the print page.'}</> : <>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. {measuredPrintSummary?.error ? 'A5-Messung: '+measuredPrintSummary.error : measuredPrintSummary ? 'Nach der Browsermessung: '+measuredPrintSummary.total+' A5-Seiten ('+measuredPrintSummary.children+' Kinder, '+measuredPrintSummary.organizer+' Spielleitung, '+measuredPrintSummary.labels+' Etiketten).' : 'Die tatsächliche Seitenzahl wird auf der Druckseite im Browser gemessen.'}</>}</p></div>}
+                {printManifest && <div className="print-guidance" aria-label={tx('A5-Druckanleitung','A5 print instructions')}>
                   <strong>{tx('Druckeinstellungen und Packen','Print settings and packing')}</strong>
                   <p>{tx('A5 Hochformat · Maßstab 100 % · Browser-Kopf- und Fußzeilen ausschalten. Prüfe die Druckvorschau auf abgeschnittene Texte und zusätzliche Seiten.','A5 portrait · 100% scale · disable browser headers and footers. Check the preview for clipped text and extra pages.')}</p>
                   <p>{tx('Nach dem Druck: zuerst die Spielleitungsblätter beiseitelegen. Dann je Umschlag Aufgabenblatt und alle Wegrätselblätter in der gedruckten Reihenfolge zusammenlegen. Die Etiketten zuletzt zuordnen und die Umschlagkontrolle abhaken.','After printing, set organizer pages aside. Pack task and route sheets in printed order per envelope. Match labels last and tick the packing checklist.')}</p>
-                  <p><strong>{tx('Packübersicht nach Team:','Packing totals by team:')}</strong> {plan.value.teams.map(team=>{const items=printManifest.envelopes.filter(envelope=>envelope.team===team.name);return team.name+': '+items.length+' '+tx('Umschläge','envelopes')+', '+items.reduce((sum,envelope)=>sum+envelope.sheetCount,0)+' '+tx('Kinderblätter','child sheets');}).join(' · ')}</p>
+                  <p><strong>{tx('Packübersicht nach Team:','Packing totals by team:')}</strong> {plan.value.teams.map(team=>{const items=printManifest.envelopes.filter(envelope=>envelope.team===team.name);return teamLabel(team.name)+': '+items.length+' '+tx('Umschläge','envelopes')+', '+items.reduce((sum,envelope)=>sum+envelope.sheetCount,0)+' '+tx('Kinderblätter','child sheets');}).join(' · ')}</p>
                   <details className="packing-preview">
                     <summary>{tx('Umschläge vor dem Drucken einzeln kontrollieren','Review envelopes before printing')} ({printManifest.envelopes.length})</summary>
                     <p className="helper">{tx('Nur für die Spielleitung: Schloss-Codes und nächste Zielorte nicht an Kinder weitergeben.','Organizer only: do not share lock codes or next destinations with children.')}</p>
                     {plan.value.teams.map(team=><section className="packing-preview-team" key={team.name}>
-                      <h4>{tx('Team','Team')} {team.name}</h4>
+                      <h4>{tx('Team','Team')} {teamLabel(team.name)}</h4>
                       <ol>{printManifest.envelopes.filter(envelope=>envelope.team===team.name).map(envelope=><li key={envelope.id}>
                         <strong>{tx('Station','Station')} {envelope.stationNumber}: {envelope.stationName}</strong>
                         <span>{envelope.sheetCount} {tx('A5-Kinderblätter','A5 child sheets')} · {tx('Schloss','Lock')}: <strong>{stationCodes[envelope.stationId]??'—'}</strong> · {tx('Danach','Next')}: <strong>{envelope.destination}</strong></span>
@@ -504,7 +555,7 @@ function App() {
                   <p>{tx('Papierbedarf: Die angezeigte Seitenzahl bezieht sich auf A5-Einzelseiten. Bei zwei A5-Seiten pro A4-Bogen oder Duplexdruck hängt die benötigte Bogenanzahl von der gewählten Druckeinstellung ab.','Paper estimate: the displayed count refers to individual A5 pages. Sheets needed for two A5 pages per A4 sheet or duplex printing depend on printer settings.')}</p>
                   <p>{tx('Schloss-Codes am echten Schloss prüfen. Die automatische Prüfung ersetzt keinen A5-Probedruck.','Check each code on the actual lock. Automated checks do not replace a physical A5 test print.')}</p>
                 </div>}
-                {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issue}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
+                {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issueText(issue)}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
                   <article className="print-sheet print-organizer-sheet" key="safety-check">
                     <h1>Spielleitung – Start und Sicherheit</h1>
@@ -585,8 +636,8 @@ function App() {
                     </article>
                   ))}
                 </section>}
-                <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {warning}</p>)}</div>
-                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const packet=document.querySelector('.print-packet');const actual={total:packet?.querySelectorAll('.print-sheet').length??0,organizer:packet?.querySelectorAll('.print-organizer-sheet').length??0,children:packet?.querySelectorAll('.print-child-sheet').length??0,labels:packet?.querySelectorAll('.print-label-sheet').length??0};const issues=auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0,organizerSheets:printManifest?.organizerSheets??0,taskSheets:printManifest?.taskSheets??0,labelSheets:printManifest?.labelSheets??0},actual);const renderedEnvelopes=Array.from(packet?.querySelectorAll<HTMLElement>('.print-child-sheet')??[]).map(sheet=>({envelopeId:sheet.dataset.envelopeId??'',kind:sheet.dataset.sheetKind??'',routePage:sheet.dataset.routePage?Number(sheet.dataset.routePage):undefined}));issues.push(...auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes));const labelIds=Array.from(packet?.querySelectorAll<HTMLElement>('.print-label')??[]).map(label=>label.dataset.envelopeId??'');issues.push(...auditRenderedLabels(printManifest?.envelopes??[],labelIds));const readPacking=(selector:string)=>Array.from(packet?.querySelectorAll<HTMLElement>(selector)??[]).map(el=>({envelopeId:el.dataset.envelopeId??'',team:el.dataset.team??'',stationName:el.dataset.station??'',stationNumber:Number(el.dataset.number),sheetCount:Number(el.dataset.count)}));issues.push(...auditRenderedPackingItems((printManifest?.envelopes??[]).map(e=>({envelopeId:e.id,team:e.team,stationName:e.stationName,stationNumber:e.stationNumber,sheetCount:e.sheetCount})),readPacking('.print-label'),readPacking('.print-checklist-row')));issues.push(...auditRenderedOrganizerSecrets((printManifest?.envelopes??[]).map(e=>({envelopeId:e.id,code:stationCodes[e.stationId]??'',destination:e.destination})),Array.from(packet?.querySelectorAll<HTMLElement>('.print-checklist-row')??[]).map(row=>({envelopeId:row.dataset.envelopeId??'',code:row.dataset.code??'',destination:row.dataset.destination??''}))));const physicalSheets=Array.from(packet?.querySelectorAll<HTMLElement>('.print-sheet')??[]);try{const blocks=measureA5Elements(physicalSheets);if(blocks.length!==physicalSheets.length)issues.push('A5-DOM-Messung ist unvollständig. Druck gesperrt.');else if(blocks.some(block=>block.heightMm>A5_USABLE_HEIGHT_MM)){issues.push('A5-Seiten über 190 mm: '+blocks.filter(block=>block.heightMm>A5_USABLE_HEIGHT_MM).map(block=>block.id+' ('+block.owner+'/'+block.section+': '+block.heightMm.toFixed(1)+' mm)').join(', ')+'. Druck gesperrt.');}else{const packed=packA5Blocks(blocks);if(packed.some(page=>page.usedMm>A5_USABLE_HEIGHT_MM))issues.push('A5-Seitenaufteilung überschreitet 190 mm. Druck gesperrt.');}}catch(error){issues.push('A5-Höhenprüfung fehlgeschlagen: '+String(error));}if(issues.length){window.alert(issues.join('\\n'));return;}if(!(packet instanceof HTMLElement)){window.alert('A5-Druckpaket fehlt');return;}let packedCopy:HTMLElement|null=null;try{let prepared=buildPackedA5PrintCopy(packet);let physical=prepared.manifest;const expectedIds=new Set((printManifest?.envelopes??[]).map(envelope=>envelope.id));if(physical.totalSheets!==physical.organizerSheets+physical.childSheets+physical.labelSheets)throw new Error('A5-Manifest: Gesamtseitenzahl stimmt nicht');if(physical.childSheets!==(printManifest?.taskSheets??0))throw new Error('A5-Manifest: Kinderblattzahl stimmt nicht');if(Object.keys(physical.envelopeSheets).length!==expectedIds.size||Object.keys(physical.envelopeSheets).some(id=>!expectedIds.has(id)))throw new Error('A5-Manifest: Umschläge fehlen oder sind unbekannt');for(const envelope of printManifest?.envelopes??[]){if(physical.envelopeSheets[envelope.id]!==envelope.sheetCount)throw new Error('A5-Manifest: Blattzahl für Umschlag '+envelope.id+' stimmt nicht');}const setPackedMetadata=()=>{packedCopy!.dataset.physicalSheets=String(physical.totalSheets);packedCopy!.dataset.organizerSheets=String(physical.organizerSheets);packedCopy!.dataset.childSheets=String(physical.childSheets);packedCopy!.dataset.labelSheets=String(physical.labelSheets);};packedCopy=prepared.copy;setPackedMetadata();packet.parentElement?.appendChild(packedCopy);let packedPages=Array.from(packedCopy.querySelectorAll<HTMLElement>(':scope > .print-packed-page'));const getOverflow=(pages:HTMLElement[])=>pages.flatMap((sheet,index)=>{const height=sheet.getBoundingClientRect().height*25.4/96;const content=sheet.scrollHeight*25.4/96;return Math.max(height,content)>A5_USABLE_HEIGHT_MM+0.01?[(index+1)+': '+Math.max(height,content).toFixed(1)+' mm']:[];});let overflow=getOverflow(packedPages);if(overflow.length){const noCompactBlockIds=packedPages.filter(sheet=>Math.max(sheet.getBoundingClientRect().height,sheet.scrollHeight)*25.4/96>A5_USABLE_HEIGHT_MM+0.01).flatMap(sheet=>(sheet.dataset.packedBlockIds??'').split(',').filter(Boolean));if(!noCompactBlockIds.length)throw new Error('A5-Überlaufseite ohne zugeordnete Inhaltsblöcke');packedCopy.remove();prepared=buildPackedA5PrintCopy(packet,{noCompactBlockIds});physical=prepared.manifest;packedCopy=prepared.copy;setPackedMetadata();packet.parentElement?.appendChild(packedCopy);packedPages=Array.from(packedCopy.querySelectorAll<HTMLElement>(':scope > .print-packed-page'));overflow=getOverflow(packedPages);}if(overflow.length)throw new Error('Verdichtete A5-Seiten überschreiten 190 mm: '+overflow.join(', '));const tooWide=packedPages.flatMap((sheet,index)=>{const width=Math.max(sheet.getBoundingClientRect().width,sheet.scrollWidth)*25.4/96;return width>128.01?[(index+1)+': '+width.toFixed(1)+' mm']:[];});if(tooWide.length)throw new Error('Verdichtete A5-Seiten überschreiten 128 mm Breite: '+tooWide.join(', '));packet.classList.add('print-packet-source');window.print();}catch(error){window.alert('A5-Druckaufbereitung fehlgeschlagen: '+String(error));}finally{packedCopy?.remove();packet.classList.remove('print-packet-source');}}}>{t.print} ↗</button>
+                <div className="warnings">{plan.value.cautions.map((warning,i)=><p key={i}>• {planText(warning)}</p>)}</div>
+                <button type="button" className="print" disabled={printIssues.length>0} onClick={()=>{const packet=document.querySelector('.print-packet');const actual={total:packet?.querySelectorAll('.print-sheet').length??0,organizer:packet?.querySelectorAll('.print-organizer-sheet').length??0,children:packet?.querySelectorAll('.print-child-sheet').length??0,labels:packet?.querySelectorAll('.print-label-sheet').length??0};const issues=auditRenderedPrintCategories({minimumSheets:printManifest?.minimumSheets??0,organizerSheets:printManifest?.organizerSheets??0,taskSheets:printManifest?.taskSheets??0,labelSheets:printManifest?.labelSheets??0},actual);const renderedEnvelopes=Array.from(packet?.querySelectorAll<HTMLElement>('.print-child-sheet')??[]).map(sheet=>({envelopeId:sheet.dataset.envelopeId??'',kind:sheet.dataset.sheetKind??'',routePage:sheet.dataset.routePage?Number(sheet.dataset.routePage):undefined}));issues.push(...auditRenderedEnvelopes(printManifest?.envelopes??[],renderedEnvelopes));const labelIds=Array.from(packet?.querySelectorAll<HTMLElement>('.print-label')??[]).map(label=>label.dataset.envelopeId??'');issues.push(...auditRenderedLabels(printManifest?.envelopes??[],labelIds));const readPacking=(selector:string)=>Array.from(packet?.querySelectorAll<HTMLElement>(selector)??[]).map(el=>({envelopeId:el.dataset.envelopeId??'',team:el.dataset.team??'',stationName:el.dataset.station??'',stationNumber:Number(el.dataset.number),sheetCount:Number(el.dataset.count)}));issues.push(...auditRenderedPackingItems((printManifest?.envelopes??[]).map(e=>({envelopeId:e.id,team:e.team,stationName:e.stationName,stationNumber:e.stationNumber,sheetCount:e.sheetCount})),readPacking('.print-label'),readPacking('.print-checklist-row')));issues.push(...auditRenderedOrganizerSecrets((printManifest?.envelopes??[]).map(e=>({envelopeId:e.id,code:stationCodes[e.stationId]??'',destination:e.destination})),Array.from(packet?.querySelectorAll<HTMLElement>('.print-checklist-row')??[]).map(row=>({envelopeId:row.dataset.envelopeId??'',code:row.dataset.code??'',destination:row.dataset.destination??''}))));const physicalSheets=Array.from(packet?.querySelectorAll<HTMLElement>('.print-sheet')??[]);try{const blocks=measureA5Elements(physicalSheets);if(blocks.length!==physicalSheets.length)issues.push(tx('A5-DOM-Messung ist unvollständig. Druck gesperrt.','A5 DOM measurement is incomplete. Printing blocked.'));else if(blocks.some(block=>block.heightMm>A5_USABLE_HEIGHT_MM)){issues.push(tx('A5-Seiten über 190 mm: ','A5 pages over 190 mm: ')+blocks.filter(block=>block.heightMm>A5_USABLE_HEIGHT_MM).map(block=>block.id+' ('+block.owner+'/'+block.section+': '+block.heightMm.toFixed(1)+' mm)').join(', ')+tx('. Druck gesperrt.','. Printing blocked.'));}else{const packed=packA5Blocks(blocks);if(packed.some(page=>page.usedMm>A5_USABLE_HEIGHT_MM))issues.push(tx('A5-Seitenaufteilung überschreitet 190 mm. Druck gesperrt.','A5 page layout exceeds 190 mm. Printing blocked.'));}}catch(error){issues.push(tx('A5-Höhenprüfung fehlgeschlagen: ','A5 height check failed: ')+String(error));}if(issues.length){window.alert(issues.join('\\n'));return;}if(!(packet instanceof HTMLElement)){window.alert(tx('A5-Druckpaket fehlt','A5 print packet is missing'));return;}let packedCopy:HTMLElement|null=null;try{let prepared=buildPackedA5PrintCopy(packet);let physical=prepared.manifest;const expectedIds=new Set((printManifest?.envelopes??[]).map(envelope=>envelope.id));if(physical.totalSheets!==physical.organizerSheets+physical.childSheets+physical.labelSheets)throw new Error(tx('A5-Manifest: Gesamtseitenzahl stimmt nicht','A5 manifest: total page count does not match'));if(physical.childSheets!==(printManifest?.taskSheets??0))throw new Error(tx('A5-Manifest: Kinderblattzahl stimmt nicht','A5 manifest: child sheet count does not match'));if(Object.keys(physical.envelopeSheets).length!==expectedIds.size||Object.keys(physical.envelopeSheets).some(id=>!expectedIds.has(id)))throw new Error(tx('A5-Manifest: Umschläge fehlen oder sind unbekannt','A5 manifest: envelopes are missing or unknown'));for(const envelope of printManifest?.envelopes??[]){if(physical.envelopeSheets[envelope.id]!==envelope.sheetCount)throw new Error(tx('A5-Manifest: Blattzahl für Umschlag ','A5 manifest: sheet count for envelope ')+envelope.id+tx(' stimmt nicht',' does not match'));}const setPackedMetadata=()=>{packedCopy!.dataset.physicalSheets=String(physical.totalSheets);packedCopy!.dataset.organizerSheets=String(physical.organizerSheets);packedCopy!.dataset.childSheets=String(physical.childSheets);packedCopy!.dataset.labelSheets=String(physical.labelSheets);};packedCopy=prepared.copy;setPackedMetadata();packet.parentElement?.appendChild(packedCopy);let packedPages=Array.from(packedCopy.querySelectorAll<HTMLElement>(':scope > .print-packed-page'));const getOverflow=(pages:HTMLElement[])=>pages.flatMap((sheet,index)=>{const height=sheet.getBoundingClientRect().height*25.4/96;const content=sheet.scrollHeight*25.4/96;return Math.max(height,content)>A5_USABLE_HEIGHT_MM+0.01?[(index+1)+': '+Math.max(height,content).toFixed(1)+' mm']:[];});let overflow=getOverflow(packedPages);if(overflow.length){const noCompactBlockIds=packedPages.filter(sheet=>Math.max(sheet.getBoundingClientRect().height,sheet.scrollHeight)*25.4/96>A5_USABLE_HEIGHT_MM+0.01).flatMap(sheet=>(sheet.dataset.packedBlockIds??'').split(',').filter(Boolean));if(!noCompactBlockIds.length)throw new Error(tx('A5-Überlaufseite ohne zugeordnete Inhaltsblöcke','A5 overflow page without assigned content blocks'));packedCopy.remove();prepared=buildPackedA5PrintCopy(packet,{noCompactBlockIds});physical=prepared.manifest;packedCopy=prepared.copy;setPackedMetadata();packet.parentElement?.appendChild(packedCopy);packedPages=Array.from(packedCopy.querySelectorAll<HTMLElement>(':scope > .print-packed-page'));overflow=getOverflow(packedPages);}if(overflow.length)throw new Error(tx('Verdichtete A5-Seiten überschreiten 190 mm: ','Packed A5 pages exceed 190 mm: ')+overflow.join(', '));const tooWide=packedPages.flatMap((sheet,index)=>{const width=Math.max(sheet.getBoundingClientRect().width,sheet.scrollWidth)*25.4/96;return width>128.01?[(index+1)+': '+width.toFixed(1)+' mm']:[];});if(tooWide.length)throw new Error(tx('Verdichtete A5-Seiten überschreiten 128 mm Breite: ','Packed A5 pages exceed 128 mm width: ')+tooWide.join(', '));packet.classList.add('print-packet-source');window.print();}catch(error){window.alert(tx('A5-Druckaufbereitung fehlgeschlagen: ','A5 print preparation failed: ')+String(error));}finally{packedCopy?.remove();packet.classList.remove('print-packet-source');}}}>{t.print} ↗</button>
               </>}
               <p className="disclaimer">{t.note}</p>
             </>}
