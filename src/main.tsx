@@ -2,11 +2,11 @@ import { generateThreeDigitWordGrid } from './three-word-grid';
 import { nextProjectRevision } from './project-revision';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile } from './generator';
+import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile, type Environment } from './generator';
 import { messages, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode } from './puzzles';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
-import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { auditPrintPacket } from './print-audit';
 import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_CODES_PER_A5_SHEET, ORGANIZER_ROUTES_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerGroupPageRanges, nonEmptyOrganizerGroups } from './print-manifest';
@@ -15,6 +15,7 @@ import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabe
 import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
 import {allocateLocationIds,nextLocationId as findNextLocationId} from './location-ids';
 import {issueStep} from './issue-navigation';
+import {applyEnvironmentPreset,siteSafetyCheck} from './environment';
 import './style.css';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
@@ -37,6 +38,7 @@ function App() {
   const [meetingPoint, setMeetingPoint] = useState('Treffpunkt');
   const [startPoint, setStartPoint] = useState('Treffpunkt');
   const [sameStartFinish, setSameStartFinish] = useState(false);
+  const [environment, setEnvironment] = useState<Environment>('outdoor');
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
   const [teamProfiles, setTeamProfiles] = useState<Record<string,TeamProfile>>({});
   const [routeClueModes, setRouteClueModes] = useState<Record<string,RouteClueMode>>({});
@@ -58,11 +60,11 @@ function App() {
   const t = messages[lang];
   const en = lang === 'en';
   const tx = (de: string, english: string) => en ? english : de;
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
   const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
@@ -134,8 +136,14 @@ function App() {
     setLocations(old => [...old, { id, name: '', description: '' }]);
     setNextLocationId(findNextLocationId([...locations,{id,name:'',description:''}],hiddenLocations,nextLocationId));
   };
+  const changeEnvironment = (next: Environment) => {
+    const preset = applyEnvironmentPreset(next, {locations, walkingMinutes}, en);
+    setEnvironment(next);
+    setLocations(preset.locations);
+    setWalkingMinutes(preset.walkingMinutes);
+  };
   const applyGame = (project: SavedGame) => {
-    const c = project.config;
+    const c = normalizeGameConfig(project.config);
     skipSave.current = true;
     savedRevision.current={id:project.id,updatedAt:project.updatedAt};
     setProjectId(project.id);
@@ -157,6 +165,7 @@ function App() {
     setMeetingPoint(c.meetingPoint ?? 'Treffpunkt');
     setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Treffpunkt');
     setSameStartFinish(c.finishMode === 'origin');
+    setEnvironment(c.environment);
     setStationCodes(c.stationCodes ?? {});
     setTeamProfiles(c.teamProfiles ?? {});
     setRouteClueModes(c.routeClueModes ?? {});
@@ -206,7 +215,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage('Automatisches Speichern gestoppt: ' + String(e) + ' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.'); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -369,6 +378,7 @@ function App() {
                 <label className="range-field"><span>{t.size}: <strong>{groupSize}</strong></span><input min="1" max="10" type="range" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))}/></label>
                 <label>{t.age}<select value={age} onChange={e => setAge(e.target.value)}>{AGE_GROUPS.map(group=><option key={group}>{group}</option>)}</select></label>
                 <label>{t.duration}<select value={duration} onChange={e => setDuration(Number(e.target.value))}><option value={30}>30 min</option><option value={45}>45 min</option><option value={60}>60 min</option><option value={90}>90 min</option><option value={120}>120 min</option><option value={180}>180 min</option></select></label>
+                <label>{tx('Umgebung','Setting')}<select value={environment} onChange={e => changeEnvironment(e.target.value as Environment)}><option value="outdoor">{tx('Draußen','Outdoors')}</option><option value="indoor">{tx('Im Haus','Indoors')}</option><option value="mixed">{tx('Gemischt','Mixed')}</option></select></label>
               </div>
               <button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx("Weiter zu den Spielregeln", "Continue to game rules")}</button>
             </>}
@@ -502,7 +512,7 @@ function App() {
                     <p>Pro Umschlag: ein A5-Aufgabenblatt mit Antwortfeldern und die zugehörigen Wegrätselblätter. Teamname, Station, Umschlagnummer und Blattzahl gegen die Gruppenroute prüfen.</p>
                     <p>Schlösser auf die Codes einstellen und an den tatsächlichen Schlössern testen. Schloss-Code und Wegrätsel müssen beide gelöst werden.</p>
                     <h2>Vor Ort kontrollieren</h2>
-                    <p>Strecken, Straßenquerungen, Gewässer, Baustellen, Wetter, Zugänglichkeit und Aufsicht prüfen. Keine Aufgaben an gefährlichen oder unzugänglichen Orten platzieren. Den Kindern den nächsten Zielort nicht vor dem Rätsel verraten.</p>
+                    <p>{siteSafetyCheck(environment,en)}</p>
                     <h2>Hinweise aus der Routenplanung</h2>
                     {plan.value.cautions.length===0?<p>Keine zusätzlichen Planungshinweise ermittelt. Örtliche Gefahren trotzdem prüfen.</p>:<p>Die vollständigen Planungshinweise auf den nachfolgenden A5-Blättern vor dem Start durchgehen und die örtlichen Bedingungen kontrollieren.</p>}
                     <h2>Zum Spielende</h2>

@@ -3,6 +3,7 @@ export type StartMode = 'shared' | 'distributed';
 export type RouteMode = 'same' | 'varied';
 export type FinishMode = 'meeting' | 'start' | 'origin';
 export type Location = { id: string; name: string; description: string };
+export type Environment = 'outdoor' | 'indoor' | 'mixed';
 export type TeamDifficulty = 'easy' | 'normal' | 'hard';
 export interface TeamProfile { age: string; difficulty: TeamDifficulty }
 export interface GameConfig {
@@ -20,6 +21,8 @@ export interface GameConfig {
   finishMode?: FinishMode;
   meetingPoint?: string;
   startPoint?: string;
+  /** Missing in older projects; treated as 'outdoor'. */
+  environment?: Environment;
   stationCodes?: Record<string, string>;
   routeClueModes?: Record<string, 'description' | 'questions' | 'letters' | 'custom'>;
   routeClueTexts?: Record<string, string>;
@@ -40,6 +43,7 @@ export interface GamePlan {
   remainderMinutes: number;
   cautions: string[];
 }
+export const INDOOR_CAUTION = 'Im Haus: Treppen und Türen sichern, Zerbrechliches und Heißes wegschließen, verbotene Zimmer klar benennen, Aufsicht festlegen und auf Lautstärke und Nachbarn Rücksicht nehmen.';
 const COLORS = ['Rot', 'Blau', 'Grün', 'Gelb', 'Orange', 'Lila', 'Türkis', 'Silber', 'Gold', 'Pink'];
 function checkInt(value: number, min: number, max: number, description: string) {
   if (!Number.isInteger(value) || value < min || value > max) throw new Error(description + ': ungültiger Wert');
@@ -59,7 +63,9 @@ export function createPlan(config: GameConfig): GamePlan {
   const finishMode = config.finishMode ?? 'meeting';
   const meetingPoint = config.meetingPoint?.trim() || 'Treffpunkt';
   const startPoint = config.startPoint?.trim() || meetingPoint;
+  const environment = config.environment ?? 'outdoor';
   if (!['shared','distributed'].includes(startMode) || !['same','varied'].includes(routeMode) || !['meeting','start','origin'].includes(finishMode)) throw new Error('Ungültige Routenoption');
+  if (!['outdoor','indoor','mixed'].includes(environment)) throw new Error('Ungültige Umgebung');
   checkInt(players, 1, 100, 'Teilnehmerzahl');
   checkInt(groupSize, 1, 10, 'Gruppengröße');
   checkInt(durationMinutes, 15, 480, 'Spieldauer');
@@ -125,7 +131,9 @@ export function createPlan(config: GameConfig): GamePlan {
   if (finishMode === 'start') cautions.push('Jedes Team kehrt zur ersten eigenen Station zurück. Ein gemeinsames Finale ist nicht eingeplant.');
   if (finishMode === 'start' && stopsPerTeam === 1) cautions.push('Bei nur einer Station ist das Ziel identisch mit der einzigen Rätselstation. Für einen echten Rückweg ein anderes Ziel wählen oder mehr Stationen einplanen.');
   if (stopsPerTeam < places.length) cautions.push('Zeitbudget: Nicht alle Standorte werden pro Team besucht.');
-  cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.');
+  if (environment !== 'indoor') cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Wege, Querungen, Zugänglichkeit und Aufsicht vor Ort prüfen.');
+  else cautions.push('Gehzeiten und Aufenthaltszeiten sind Schätzwerte. Räume, Zugänglichkeit und Aufsicht vor Ort prüfen.');
+  if (environment !== 'outdoor') cautions.push(INDOOR_CAUTION);
   return {
     teams,
     stopsPerTeam,

@@ -1,4 +1,4 @@
-import type { GameConfig, Location } from './generator';
+import type { Environment, GameConfig, Location } from './generator';
 
 export interface SavedGame {
   version: 1;
@@ -27,6 +27,8 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
   if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start', 'origin'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
   if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
+  // Older projects have no environment field and are read as 'outdoor'.
+  if (p.environment !== undefined && !['outdoor', 'indoor', 'mixed'].includes(String(p.environment))) return false;
   if (p.teamProfiles !== undefined) {
     if (!p.teamProfiles || typeof p.teamProfiles !== 'object' || Array.isArray(p.teamProfiles)) return false;
     const profiles=Object.entries(p.teamProfiles as Record<string,unknown>);
@@ -54,6 +56,10 @@ export function isGameConfig(data: unknown): data is GameConfig {
   const locations = places as Location[];
   return new Set(locations.map(x => x.id)).size === locations.length
     && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLocaleLowerCase('de'))).size === locations.filter(x=>x.name.trim()).length;
+}
+/** Older projects have no environment field; they load as 'outdoor'. */
+export function normalizeGameConfig(config: GameConfig): GameConfig & { environment: Environment } {
+  return { ...config, environment: config.environment ?? 'outdoor' };
 }
 export function isSavedGame(raw: unknown): raw is SavedGame {
   if (!raw || typeof raw !== 'object') return false;
@@ -88,7 +94,7 @@ export function loadGames(): SavedGame[] {
   if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
   const projects=items as SavedGame[];
   if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
-  return [...projects].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  return projects.map(project => ({ ...project, config: normalizeGameConfig(project.config) })).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
 }
 /** Writes project list and active selection together, restoring both on a partial failure. */
 function persistProjects(next:SavedGame[],active:string|null):void {

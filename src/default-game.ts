@@ -14,7 +14,7 @@ export function createDefaultGameConfig():GameConfig {
   locations:DEFAULT_LOCATIONS.map(location=>({...location})),
   puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,
   startMode:'distributed',routeMode:'same',finishMode:'meeting',
-  meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',
+  meetingPoint:'Treffpunkt',startPoint:'Treffpunkt',environment:'outdoor',
   stationCodes:{},teamProfiles:{},routeClueModes:{'loc-1':'description','loc-2':'description','loc-3':'description','loc-4':'description'},routeClueTexts:{}
  };
 }
