@@ -9,6 +9,8 @@ import {generateMissingCodes} from '../src/station-codes.ts';
 import {suggestSolutionWord,codeForStation,letterFromCode} from '../src/solution-word.ts';
 import {AGE_GROUPS,ageLevelFor} from '../src/age-groups.ts';
 import {STATION_MODES,resolveStationMode} from '../src/station-mode.ts';
+import {SUBJECTS} from '../src/question-bank.ts';
+import {readFileSync} from 'node:fs';
 
 // Ortsnamen und Startpunkte so, wie sie in der deutschen bzw. englischen Oberfläche eingegeben werden.
 const PLACES={
@@ -20,11 +22,11 @@ const VARIANTS=['perTeam','same'];
 const CLUE_SETS=['mixed','questions'];
 const CLUE_MODES=['questions','description','letters'];
 
-function build({goal,variants,stationMode,profiles,sameFinish,teams,stations,age,lang,clueSet}){
+function build({goal,variants,stationMode,profiles,sameFinish,teams,stations,age,lang,clueSet,environment='outdoor',subjects=SUBJECTS}){
  const p=PLACES[lang];
  const locations=p.names.slice(0,stations).map((name,k)=>({id:'loc-'+(k+1),name,description:'Ort'+p.tail+' Nummer '+(k+1)}));
  const config={
-  players:teams*2,groupSize:2,durationMinutes:300,age,goal,locations,
+  players:teams*2,groupSize:2,durationMinutes:300,age,goal,locations,environment,subjects,
   puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,
   startMode:'distributed',routeMode:'varied',
   // Start=Ziel setzt im Planer den Zielmodus 'origin'; sonst gemeinsamer, vom Start verschiedener Zielort.
@@ -108,4 +110,10 @@ test('Kombinationen: alle Altersstufen × Schwierigkeit je Team × Rätselarten 
 
 test('Kombinationen: Einzel/Gruppe/abwechselnd × Start=Ziel/verschieden × Schwierigkeit je Team × Spielziel × Rätsel je Gruppe/gleich × Sprache',()=>{
  runAll({...BASE,stationMode:STATION_MODES,sameFinish:[true,false],profiles:[false,true],teams:[3],stations:[4],age:['6–8'],clueSet:['mixed']},3*2*2*3*2*2);
+});
+
+test('Kombinationen: Umgebungen × Fächerauswahl × Lösungswort mit Abschluss-Fragenrätsel × Sprache; A5 bleibt Druckformat',()=>{
+ runAll({...BASE,goal:['word'],variants:['perTeam','same'],environment:['outdoor','indoor','mixed'],subjects:[[...SUBJECTS],['Erdkunde']],teams:[2],stations:[3],age:['8–10'],clueSet:['questions'],stationMode:['auto'],profiles:[false],sameFinish:[false]},3*2*2*2);
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(css,/@page\s*\{[^}]*size:\s*A5\s+portrait/s,'Kinderblätter bleiben DIN A5 Hochformat');
 });
