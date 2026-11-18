@@ -30,6 +30,8 @@ export interface GameConfig {
   routeClueTexts?: Record<string, string>;
   /** Fehlt in alten Projekten; gilt als 'perTeam'. */
   routeVariants?: RouteVariants;
+  /** Aufgabenmodus je Station-ID; fehlt = 'auto'. */
+  stationModes?: Record<string, 'auto' | 'single' | 'group'>;
   /** Future paid option: per-team age and difficulty. Not enabled by default. */
   teamProfiles?: Record<string, TeamProfile>;
 }

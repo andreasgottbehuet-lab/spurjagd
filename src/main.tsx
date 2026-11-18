@@ -7,6 +7,7 @@ import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, type RouteClueMode } from './puzzles';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { stationModeLine, type StationMode } from './station-mode';
 import { storageErrorText } from './storage-messages';
 import { auditPrintPacket, routeClueFor } from './print-audit';
 import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
@@ -45,6 +46,7 @@ function App() {
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
   const [teamProfiles, setTeamProfiles] = useState<Record<string,TeamProfile>>({});
   const [routeClueModes, setRouteClueModes] = useState<Record<string,RouteClueMode>>({});
+  const [stationModes, setStationModes] = useState<Record<string,StationMode>>({});
   const [routeVariants, setRouteVariants] = useState<RouteVariants>('perTeam');
   const [routeClueTexts, setRouteClueTexts] = useState<Record<string,string>>({});
   const [hiddenLocations, setHiddenLocations] = useState<Location[]>([]);
@@ -196,11 +198,11 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles]);
   const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
@@ -307,6 +309,7 @@ function App() {
     setRouteClueModes(c.routeClueModes ?? {});
     setRouteClueTexts(c.routeClueTexts ?? {});
     setRouteVariants(c.routeVariants==='same'?'same':'perTeam');
+    setStationModes(c.stationModes ?? {});
     setNextLocationId(findNextLocationId(c.locations,[],5));
     setStorageMessage('');
   };
@@ -352,7 +355,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -534,6 +537,7 @@ function App() {
                   <label>{tx('Beschreibung (optional)','Description (optional)')}<textarea rows={2} maxLength={400} value={location.description} onChange={e=>updateLocation(location.id,'description',e.target.value)} placeholder={tx('Was gibt es hier?','What is there?')}/></label>
                   <p className="helper">{tx("Der Ortsname ist die Lösung des Wegrätsels und darf nicht bereits im Aufgabentext stehen.", "The location name is the route-clue answer and must not already appear in the question.")}</p>
                   <label>{tx('Wegrätsel, das zu diesem Ort führt','Route clue leading to this place')}<select value={routeClueModes[location.id]??'letters'} onChange={e=>setRouteClueModes(old=>({...old,[location.id]:e.target.value as RouteClueMode}))}><option value="description">{tx('Ortsbeschreibung erraten','Guess the place from its description')}</option><option value="questions">{tx('Fragen mit Lösungswort','Questions with a solution word')}</option><option value="letters">{tx('Buchstabenspiel','Letter game')}</option><option value="custom">{tx('Eigenes Wegrätsel','Custom route clue')}</option></select></label>
+                  <label>{tx('Aufgabenmodus','Task mode')}<select value={stationModes[location.id]??'auto'} onChange={e=>setStationModes(old=>({...old,[location.id]:e.target.value as StationMode}))}><option value="auto">{tx('automatisch abwechselnd','alternating automatically')}</option><option value="single">{tx('Einzelaufgabe','Individual task')}</option><option value="group">{tx('Gruppenaufgabe','Group task')}</option></select></label>
                   {routeClueModes[location.id]==='custom' && <label>{tx('Eigener Rätseltext','Custom clue')}<textarea rows={3} maxLength={400} value={routeClueTexts[location.id]??''} onChange={e=>setRouteClueTexts(old=>({...old,[location.id]:e.target.value}))}/></label>}
                   {goal==='locks' && <label>{tx('Dreistelliger Schloss-Code','Three-digit lock code')}{plan.value && !visitedStationIds.has(location.id) && <span className="helper">{tx('Diese Station wird nach aktuellem Plan nicht besucht – Code optional.','No team visits this station in the current plan – code optional.')}</span>}<input inputMode="numeric" pattern="[0-9]{3}" maxLength={3} placeholder={tx('z. B. 007','e.g. 007')} aria-invalid={visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'')} aria-describedby={'code-help-'+location.id} value={stationCodes[location.id] ?? ''} onChange={e=>setStationCodes(old=>({...old,[location.id]:e.target.value.replace(/[^0-9]/g,'').slice(0,3)}))}/><span className="helper" id={'code-help-'+location.id}>{visitedStationIds.has(location.id) && !validCode(stationCodes[location.id]??'') ? tx('Bitte genau drei Ziffern eingeben; 000 und führende Nullen sind erlaubt.','Enter exactly three digits; 000 and leading zeroes are allowed.') : tx('Drei Ziffern, wie auf dem echten Schloss eingestellt.','Three digits, matching the physical lock.')}</span></label>}
                 </div>
@@ -674,7 +678,7 @@ function App() {
                   {organizerChallengePages.map((challengePage,page)=><article className="print-sheet print-organizer-sheet" key={'codes-'+page}>
                     <h1>Spielleitung – Codes {page+1}</h1>
                     <h2>Codes und Lösungen</h2>
-                    {challengePage.map(({location,challenge,teamName,teamIndex,ageGroup})=><div className="print-code-line" data-team-color={teamName.toLowerCase()} data-age-group={ageGroup} key={teamIndex+'-'+location.id}><strong>Team {teamName} · {ageGroup} Jahre · {location.name}: {challenge.code}</strong><p>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Drei Zahlwörter im gemeinsamen Suchgitter: '+generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+teamIndex+':'+location.id)).words.join(' → '):challenge.puzzles.map(p=>p.explanation).join(' | ')}</p></div>)}
+                    {challengePage.map(({location,challenge,teamName,teamIndex,ageGroup})=><div className="print-code-line" data-team-color={teamName.toLowerCase()} data-age-group={ageGroup} key={teamIndex+'-'+location.id}><strong>Team {teamName} · {ageGroup} Jahre · {location.name}: {challenge.code}</strong><p className="print-mode-line">{stationModeLine(stationModes[location.id],plan.value.teams[teamIndex].stations.findIndex(s=>s.id===location.id))}</p><p>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Drei Zahlwörter im gemeinsamen Suchgitter: '+generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+teamIndex+':'+location.id)).words.join(' → '):challenge.puzzles.map(p=>p.explanation).join(' | ')}</p></div>)}
                   </article>)}
                   {(()=>{const entries=plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((_,i)=>({team,teamIndex,stationIndex:i,destination:team.stations[i+1]?.name??team.finish}))).filter((e,i,all)=>all.findIndex(o=>o.destination===e.destination&&(routeVariants==='same'||o.teamIndex===e.teamIndex))===i);
                   return Array.from({length:Math.ceil(entries.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'clue-solutions-'+page}>
@@ -706,6 +710,7 @@ function App() {
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name} · {team.profile?.age??age} Jahre</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{1+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
+                        <p className="print-mode-line"><strong>{stationModeLine(stationModes[location.id],stationIndex)}</strong></p>
                         <p><strong>Schloss-Code:</strong> {challenge.puzzles.some(p=>p.kind==='wordsearch')?'Findet die drei Zahlwörter im Gitter. Ihre Reihenfolge von oben nach unten ergibt den dreistelligen Code.':'Aufgabe 1 = erste Ziffer · Aufgabe 2 = zweite Ziffer · Aufgabe 3 = dritte Ziffer. Tragt die Ergebnisse von links nach rechts ein.'}</p>
                         {challenge.puzzles.some(p=>p.kind==='wordsearch') && <div className="print-task print-three-word-grid"><h3>Geheimcode im Buchstabengitter</h3><p>Im Gitter sind genau drei ausgeschriebene Zahlen versteckt. Sucht waagerecht, senkrecht und diagonal. Kreist alle drei Zahlwörter ein.</p><p className="print-question"><strong>Reihenfolge:</strong> Das Zahlwort, das am weitesten oben beginnt, ist die erste Ziffer. Danach folgt das mittlere und zuletzt das unterste Zahlwort.</p><div className="wordsearch-grid" aria-label="Drei Zahlwörter für den Schloss-Code">{generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+location.id)).rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div><p className="print-question">Unser Code von oben nach unten: □ □ □</p></div>}
                         {!challenge.puzzles.some(p=>p.kind==='wordsearch') && challenge.puzzles.map((p,i)=><div className="print-task" key={p.id}><h3>Aufgabe {i+1}</h3><p>{p.instruction}</p><p className="print-question">{p.question}</p><p className="print-hint">Tipp: {p.hint}</p>{p.kind==='cipher' && !p.workedExample && <div className="print-alphabet-guide" aria-label="Zwei ausgerichtete Alphabete"><div><span>Alphabet</span><code>ABCDEFGHIJKLMNOPQRSTUVWXYZ</code></div><div><span>Zurück um {Number(p.instruction.match(/um (\d+) Stelle/)?.[1]??1)}</span><code>{[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map((_,index)=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[(index-Number(p.instruction.match(/um (\d+) Stelle/)?.[1]??1)+26)%26]).join('')}</code></div></div>}{p.workedExample && <p className="print-worked-example">{p.workedExample}</p>}{p.render && (p.render.items ? <div className="symbol-grid" style={{gridTemplateColumns:'repeat('+(p.render.columns??4)+', 7mm)'}} aria-label={p.render.items.length+' Zeichen; gesucht: '+p.render.symbol}>{p.render.items.map((symbol,index)=><span className="symbol-cell" style={{width:'auto',height:'auto'}} key={index}>{symbol}</span>)}</div> : <p className="symbols">{p.render.symbol.repeat(p.render.count)}</p>)}{p.wordGrid && <div className="wordsearch-grid" aria-label="Buchstabengitter">{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid arrow-grid" data-grid-size={p.arrowGrid.rows.length} aria-label="Pfeilpfad-Zahlengitter">{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className={r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'wordsearch-cell arrow-start-cell':'wordsearch-cell'} key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?<><small>S</small><strong>{p.arrowGrid!.arrows[0]}</strong></>:digit}</span>)}</div>)}</div>}</div>)}

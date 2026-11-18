@@ -1,3 +1,4 @@
+import { isStationMode } from './station-mode.ts';
 import type { Environment, GameConfig, Location } from './generator';
 
 export interface SavedGame {
@@ -45,6 +46,11 @@ export function isGameConfig(data: unknown): data is GameConfig {
     if(!value || typeof value!=='object' || Array.isArray(value)) return false;
     const entries=Object.entries(value as Record<string,unknown>);
     if(entries.length>25 || entries.some(([key,v])=>key.length>80 || typeof v!=='string' || (field==='routeClueModes'?!['description','questions','letters','custom'].includes(v):v.length>1500))) return false;
+  }
+  if (p.stationModes !== undefined) {
+    if (!p.stationModes || typeof p.stationModes !== 'object' || Array.isArray(p.stationModes)) return false;
+    const modes = Object.entries(p.stationModes as Record<string, unknown>);
+    if (modes.length > 25 || modes.some(([key, v]) => key.length > 80 || !isStationMode(v))) return false;
   }
   if (!Array.isArray(p.locations) || p.locations.length < 1 || p.locations.length > 20) return false;
   const places = p.locations as unknown[];
