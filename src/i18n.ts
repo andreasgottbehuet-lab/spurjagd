@@ -18,6 +18,9 @@ export const messages = {
     print: 'Plan drucken',
     note: 'Rätsel und A5-Druckpakete können erstellt werden. Tatsächliche Wege, Aufsicht und Schloss-Codes müssen vor Ort geprüft werden.',
     siteName: 'Standort',
+    subjects: 'Fächer der Fragenbank',
+    subjectsHint: 'Für Schulklassen kann auch nur ein Fach gewählt werden. Mindestens ein Fach bleibt gewählt.',
+    subjectNames: { Sachkunde: 'Sachkunde', Biologie: 'Biologie', Chemie: 'Chemie', Physik: 'Physik', Erdkunde: 'Erdkunde', Allgemeinwissen: 'Allgemeinwissen' },
     privacy: 'Ohne Konto. Keine eingegebenen Spielinformationen werden an unseren Server übertragen.',
   },
   en: {
@@ -39,6 +42,9 @@ export const messages = {
     print: 'Print plan',
     note: 'Puzzles and A5 print packets can be generated. Actual routes, supervision and lock codes must be checked on site.',
     siteName: 'Location',
+    subjects: 'Question bank subjects',
+    subjectsHint: 'For school classes, a single subject can be chosen. At least one subject stays selected.',
+    subjectNames: { Sachkunde: 'General studies', Biologie: 'Biology', Chemie: 'Chemistry', Physik: 'Physics', Erdkunde: 'Geography', Allgemeinwissen: 'General knowledge' },
     privacy: 'No account. Entered game details are not sent to our server.',
   },
 } as const;

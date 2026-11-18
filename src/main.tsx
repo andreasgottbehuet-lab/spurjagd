@@ -3,6 +3,7 @@ import { nextProjectRevision } from './project-revision';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile, type Environment, type RouteVariants } from './generator';
+import { SUBJECTS, type Subject } from './question-bank';
 import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, normalizeSolutionWord, type RouteClueMode } from './puzzles';
 import { codeForStation, letterFromCode, suggestSolutionWord, LETTER_TABLE, MAX_SOLUTION_WORD_LENGTH } from './solution-word';
@@ -34,6 +35,7 @@ function App() {
   const [age, setAge] = useState('8–10');
   const [goal, setGoal] = useState<GameGoal>('locks');
   const [solutionWord, setSolutionWord] = useState('');
+  const [subjects, setSubjects] = useState<Subject[]>([...SUBJECTS]);
   const [locations, setLocations] = useState<Location[]>(initialLocations);
   const [puzzleMinutes, setPuzzleMinutes] = useState(10);
   const [walkingMinutes, setWalkingMinutes] = useState(5);
@@ -201,11 +203,11 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
   const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
@@ -299,6 +301,8 @@ function App() {
     setAge(c.age);
     setGoal(c.goal);
     setSolutionWord(normalizeSolutionWord(String((c as {solutionWord?:unknown}).solutionWord ?? '')).slice(0,MAX_SOLUTION_WORD_LENGTH));
+    const savedSubjects=(c as {subjects?:Subject[]}).subjects;
+    setSubjects(savedSubjects?.length?[...savedSubjects]:[...SUBJECTS]);
     setLocations(c.locations.map(x => ({...x})));
     setHiddenLocations([]);
     setPuzzleMinutes(c.puzzleMinutes);
@@ -362,7 +366,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -538,6 +542,7 @@ function App() {
               <div className="location-card"><div className="location-title"><strong>{tx("Start", "Start")}</strong></div><label>{tx("Name des Startorts", "Start location name")}<input maxLength={80} value={startPoint} onChange={e=>setStartPoint(e.target.value)}/></label></div>
               <label className="checkbox-line"><input type="checkbox" checked={sameStartFinish} onChange={e=>{const checked=e.target.checked;setSameStartFinish(checked);setFinishMode(checked?"origin":"meeting");}}/>{tx("Start ist Ziel", "Start is finish")}</label>
               {(goal==='locks'||goal==='cards') &&<p className="helper" role="status" aria-live="polite">{locations.filter(l=>visitedStationIds.has(l.id)&&validCode(stationCodes[l.id]??'')).length} {tx('von','of')} {locations.filter(l=>visitedStationIds.has(l.id)).length} {tx('benötigten Schloss-Codes vollständig','required lock codes complete')}.</p>}
+              <fieldset><legend>{t.subjects}</legend>{SUBJECTS.map(s=><label className="checkbox-line" key={s}><input type="checkbox" checked={subjects.includes(s)} disabled={subjects.length===1&&subjects.includes(s)} onChange={e=>setSubjects(old=>e.target.checked?SUBJECTS.filter(x=>x===s||old.includes(x)):old.filter(x=>x!==s))}/>{t.subjectNames[s]}</label>)}<p className="helper">{t.subjectsHint}</p></fieldset>
               <div className="location-list">{locations.map((location, index) =>
                 <div className="location-card" key={location.id}>
                   <div className="location-title"><strong>{tx('Station','Stop')} {index + 1}</strong><button type="button" className="text-button" disabled={locations.length === 1} onClick={()=>setLocations(old=>old.filter(p=>p.id !== location.id))}>{tx('Entfernen','Remove')}</button></div>

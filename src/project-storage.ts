@@ -1,4 +1,5 @@
 import { isStationMode } from './station-mode.ts';
+import { SUBJECTS } from './question-bank.ts';
 import type { Environment, GameConfig, Location } from './generator';
 
 export interface SavedGame {
@@ -35,6 +36,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
     const profiles=Object.entries(p.teamProfiles as Record<string,unknown>);
     if (profiles.length>100 || profiles.some(([key,value])=>!/^[0-9]{1,2}$/.test(key) || Number(key)>99 || !value || typeof value!=='object' || Array.isArray(value) || !text((value as Record<string,unknown>).age,24) || !(String((value as Record<string,unknown>).age).trim()) || !['easy','normal','hard'].includes(String((value as Record<string,unknown>).difficulty)))) return false;
   }
+  if (p.subjects !== undefined && (!Array.isArray(p.subjects) || p.subjects.length < 1 || p.subjects.length > SUBJECTS.length || new Set(p.subjects).size !== p.subjects.length || p.subjects.some(s => !(SUBJECTS as readonly unknown[]).includes(s)))) return false;
   if (p.stationCodes !== undefined) {
     if (!p.stationCodes || typeof p.stationCodes !== 'object' || Array.isArray(p.stationCodes)) return false;
     const codes = Object.entries(p.stationCodes as Record<string, unknown>);
