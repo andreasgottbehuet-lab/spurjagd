@@ -7,6 +7,7 @@ import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode } from './puzzles';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { storageErrorText } from './storage-messages';
 import { auditPrintPacket } from './print-audit';
 import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_CODES_PER_A5_SHEET, ORGANIZER_ROUTES_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerGroupPageRanges, nonEmptyOrganizerGroups } from './print-manifest';
@@ -63,6 +64,7 @@ function App() {
   const tx = (de: string, english: string) => en ? english : de;
   const teamColors: Record<string,string> = {Rot:'Red',Blau:'Blue','Grün':'Green',Gelb:'Yellow',Orange:'Orange',Lila:'Purple','Türkis':'Turquoise',Silber:'Silver',Gold:'Gold',Pink:'Pink'};
   const teamLabel = (name: string) => en ? (teamColors[name] ?? name) : name;
+  const storageError = (error: unknown) => storageErrorText(error, en);
   const planText = (text: string) => {
     if (!en) return text;
     const fixed: Record<string,string> = {
@@ -311,7 +313,7 @@ function App() {
         applyGame(current);
       }
       setStorageReady(true);
-    } catch(e) { setStorageMessage(tx('Lokale Speicherung beschädigt oder nicht verfügbar. Automatisches Speichern bleibt zum Schutz der vorhandenen Daten deaktiviert: ', 'Local storage is damaged or unavailable. Automatic saving stays off to protect your existing data: ') + String(e));
+    } catch(e) { setStorageMessage(tx('Lokale Speicherung beschädigt oder nicht verfügbar. Automatisches Speichern bleibt zum Schutz der vorhandenen Daten deaktiviert: ', 'Local storage is damaged or unavailable. Automatic saving stays off to protect your existing data: ') + storageError(e));
       setStorageReady(false);
     }
   }, []);
@@ -340,7 +342,7 @@ function App() {
         setProjects(saved);
         setSelectedProject(projectId);
         setStorageMessage('');
-      } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + String(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
+      } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
   }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
@@ -356,7 +358,7 @@ function App() {
         savedRevision.current={id:projectId,updatedAt:current.updatedAt};
       }catch(error){
         // Browsers may discard UI updates during pagehide; preserve data where possible.
-        setStorageMessage(tx('Speichern beim Verlassen fehlgeschlagen: ', 'Saving when leaving the page failed: ')+String(error));
+        setStorageMessage(tx('Speichern beim Verlassen fehlgeschlagen: ', 'Saving when leaving the page failed: ')+storageError(error));
       }
     };
     const onVisibilityChange=()=>{if(document.visibilityState==='hidden')flushOnExit();};
@@ -379,7 +381,7 @@ function App() {
       return true;
     } catch(error) {
       if(String(error).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
-      setStorageMessage(tx('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. ', 'Project switch cancelled: your current changes could not be saved. ')+String(error)+tx(' Bitte bei Versionskonflikten zuerst eine JSON-Sicherung exportieren.', ' If versions conflict, please export a JSON backup first.'));
+      setStorageMessage(tx('Projektwechsel abgebrochen: Aktuelle Änderungen konnten nicht gespeichert werden. ', 'Project switch cancelled: your current changes could not be saved. ')+storageError(error)+tx(' Bitte bei Versionskonflikten zuerst eine JSON-Sicherung exportieren.', ' If versions conflict, please export a JSON backup first.'));
       return false;
     }
   };
@@ -390,7 +392,7 @@ function App() {
       config:createDefaultGameConfig(),
     };
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
-    catch(e){ setStorageMessage(tx('Neues Projekt: ', 'New project: ')+String(e)); }
+    catch(e){ setStorageMessage(tx('Neues Projekt: ', 'New project: ')+storageError(e)); }
   };
   const removeProject = () => {
     if(storageConflict.current || !storageReady){
@@ -415,7 +417,7 @@ function App() {
       }
     }catch(e){
       if(String(e).includes('zwischenzeitlich verändert')) { storageConflict.current=true;setStorageReady(false); }
-      setStorageMessage(tx('Löschen fehlgeschlagen: ', 'Delete failed: ')+String(e));
+      setStorageMessage(tx('Löschen fehlgeschlagen: ', 'Delete failed: ')+storageError(e));
     }
   };
   const exportProject = () => {
@@ -423,7 +425,7 @@ function App() {
       const project: SavedGame = {version:1,id:projectId,title:projectTitle.trim()||'Unbenanntes Projekt',updatedAt:nextProjectRevision(savedRevision.current?.id===projectId?savedRevision.current.updatedAt:null),config:{...config,locations:config.locations.map(x=>({...x}))}};
       downloadBackup(project);
       setStorageMessage(tx('Projektdatei wurde zum Download vorbereitet.', 'Project backup prepared for download.'));
-    } catch(e){ setStorageMessage(tx('Export fehlgeschlagen: ', 'Export failed: ')+String(e)); }
+    } catch(e){ setStorageMessage(tx('Export fehlgeschlagen: ', 'Export failed: ')+storageError(e)); }
   };
   const importProject = async (file?: File) => {
     if (!file) return;
@@ -437,7 +439,7 @@ function App() {
       applyGame(restored);
       setActiveStep(1);
       setStorageMessage(tx('Projekt aus Sicherung wiederhergestellt.', 'Project restored from backup.'));
-    } catch(e){ setStorageMessage(tx('Import fehlgeschlagen: ', 'Import failed: ')+String(e)); }
+    } catch(e){ setStorageMessage(tx('Import fehlgeschlagen: ', 'Import failed: ')+storageError(e)); }
     finally { if (importRef.current) importRef.current.value=''; }
   };
   return (
@@ -467,7 +469,7 @@ function App() {
               const project=projects.find(p=>p.id===e.target.value);
               if(project && project.id!==projectId && saveCurrentBeforeSwitch()){
                 try { setActiveGameId(project.id); applyGame(project); setActiveStep(1); }
-                catch(error) { setStorageMessage(tx('Projektwechsel fehlgeschlagen: ', 'Project switch failed: ')+String(error)); }
+                catch(error) { setStorageMessage(tx('Projektwechsel fehlgeschlagen: ', 'Project switch failed: ')+storageError(error)); }
               }
             }}>
               {!selectedProject && <option value="">{tx('Aktuelles Projekt','Current project')}</option>}

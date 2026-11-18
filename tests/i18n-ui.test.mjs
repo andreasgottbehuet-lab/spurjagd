@@ -95,3 +95,72 @@ test('Meldungen aus print-audit.ts, print-manifest-audit.ts und puzzles.ts werde
   }
   for(const de of keys.keys())if(de.length>25)assert.equal(ENGLISH_WORDS.test(de),false,'Englisches Wort im deutschen Text: '+de);
 });
+
+test('Projekt-/Speicheransicht zeigt im englischen Modus keinen deutschen Resttext',async()=>{
+  const {storageErrorText,STORAGE_ERRORS_EN}=await import('../src/storage-messages.ts');
+  const storage=await import('../src/project-storage.ts');
+  const {createDefaultGameConfig}=await import('../src/default-game.ts');
+  const noGerman=(text)=>{
+    assert.equal(/[äöüß]/i.test(text),false,'Deutsche Zeichen im englischen Text: '+text);
+    assert.equal(GERMAN_WORDS.test(text),false,'Deutsches Wort im englischen Text: '+text);
+  };
+  // Jede in project-storage.ts geworfene Meldung hat eine englische Fassung.
+  const storageSource=readFileSync(new URL('../src/project-storage.ts',import.meta.url),'utf8');
+  const thrown=[...storageSource.matchAll(/throw new Error\('((?:[^'\\]|\\.)*)'\)/g)].map(m=>m[1]);
+  assert.ok(thrown.length>=15,'zu wenige Meldungen: '+thrown.length);
+  for(const de of thrown)assert.ok(STORAGE_ERRORS_EN[de],'Übersetzung fehlt: '+de);
+  // Echte Fehler der Speicherfunktionen auslösen.
+  const memory=new Map();
+  const old=globalThis.localStorage;
+  globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+  const project=(id,updatedAt='2026-11-02T20:00:00.000Z')=>({version:1,id,title:'Test',updatedAt,config:createDefaultGameConfig()});
+  const errors=[];
+  const capture=(fn)=>{try{fn();assert.fail('kein Fehler ausgelöst');}catch(e){errors.push(e);}};
+  try{
+    capture(()=>storage.parseGameBackup('x'.repeat(200_001)));
+    capture(()=>storage.parseGameBackup('{invalid'));
+    capture(()=>storage.parseGameBackup('{"format":"anderes"}'));
+    capture(()=>storage.parseGameBackup('{"format":"spurjagd-backup-1","project":{}}'));
+    capture(()=>storage.serializeGameBackup({}));
+    memory.set('spurjagd-projects-v1','');capture(()=>storage.loadGames());
+    memory.set('spurjagd-projects-v1','{x');capture(()=>storage.loadGames());
+    memory.set('spurjagd-projects-v1','{}');capture(()=>storage.loadGames());
+    memory.set('spurjagd-projects-v1',JSON.stringify([project('a'),project('a')]));capture(()=>storage.loadGames());
+    memory.clear();
+    capture(()=>storage.saveGame({}));
+    storage.saveGame(project('a'));
+    capture(()=>storage.saveGame(project('a','2026-11-03T20:00:00.000Z'),'1999-01-01T00:00:00.000Z'));
+    capture(()=>storage.deleteGame('a','1999-01-01T00:00:00.000Z'));
+    capture(()=>storage.deleteGame('fehlt'));
+    capture(()=>storage.replaceLastGame('a',{}));
+    capture(()=>storage.replaceLastGame('fehlt',project('b')));
+    capture(()=>storage.replaceLastGame('a',project('b'),'1999-01-01T00:00:00.000Z'));
+    capture(()=>storage.setActiveGameId('fehlt'));
+  }finally{globalThis.localStorage=old;}
+  errors.push(
+    new Error('Unerwarteter Fehler: Daten konnten nicht gelesen werden.'),
+    'Speicher ist voll',
+    new Error('QuotaExceededError: storage quota exceeded'),
+    new Error('Datei konnte nicht geöffnet werden.'),
+    new Error('Daten konnten nicht gelesen werden.'),
+    new Error('Fehler beim Importieren'),
+  );
+  // Gesamtmeldungen so zusammensetzen, wie main.tsx sie im englischen Modus anzeigt.
+  const calls=source.split('\n').filter(line=>line.includes('setStorageMessage(')&&line.includes('storageError('));
+  assert.ok(calls.length>=9,'zu wenige Fehlermeldungen in der Ansicht: '+calls.length);
+  for(const line of calls){
+    const segment=line.slice(line.indexOf('setStorageMessage('));
+    const parts=[...segment.matchAll(/\btx\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*,\s*(['"])((?:(?!\3)[^\\]|\\.)*)\3\s*\)/g)].map(m=>m[4]);
+    assert.ok(parts.length>=1,'Meldung ohne tx: '+line.trim());
+    for(const error of errors)noGerman(parts[0]+storageErrorText(error,true)+parts.slice(1).join(''));
+  }
+  assert.equal(/setStorageMessage\([^\n]*String\(/.test(source),false,'String(...) in setStorageMessage ohne storageError');
+  for(const error of [
+    new Error('Datei konnte nicht geöffnet werden.'),
+    new Error('Daten konnten nicht gelesen werden.'),
+    new Error('Fehler beim Importieren'),
+    new Error('Unexpected storage failure'),
+  ])noGerman(storageErrorText(error,true));
+  // Deutscher Modus bleibt unverändert.
+  assert.equal(storageErrorText(new Error('Projekt nicht gefunden.'),false),'Error: Projekt nicht gefunden.');
+});
