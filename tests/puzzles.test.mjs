@@ -5,6 +5,27 @@ import { AGE_GROUPS, ageLevelFor } from '../src/age-groups.ts';
 import { createDefaultGameConfig } from '../src/default-game.ts';
 import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination, findDigitWords } from '../src/puzzles.ts';
 
+test('Bild-Suchrätsel: alle Ziffern und Altersstufen eindeutig, deterministisch, eigene Art', () => {
+  const modes = new Set();
+  for (const age of ['young','early','middle','older','advanced','expert','adult']) for (let d = 0; d <= 9; d++) for (let s = 0; s < 6; s++) {
+    const a = generateDigitPuzzle(d, 'picturesearch', age, 900 + d * 10 + s), b = generateDigitPuzzle(d, 'picturesearch', age, 900 + d * 10 + s);
+    assert.deepEqual(a, b);
+    assert.ok(verifyDigitPuzzle(a));
+    assert.equal(verifyDigitPuzzle({ ...a, expectedDigit: (d + 1) % 10 }), false);
+    modes.add(a.render.count ? 'count' : 'word');
+  }
+  assert.deepEqual([...modes].sort(), ['count', 'word']);
+  const word = Array.from({ length: 40 }, (_, s) => generateDigitPuzzle(4, 'picturesearch', 'middle', 5000 + s)).find(p => !p.render.count);
+  const free = word.render.items.findIndex(item => !/[A-Z]/.test(item));
+  const items = [...word.render.items]; items[free] = 'X';
+  assert.equal(verifyDigitPuzzle({ ...word, render: { ...word.render, items } }), false, 'fremde Buchstaben verboten');
+  const dbl = { ...word, render: { ...word.render, items: [...word.render.items] } };
+  const cols = dbl.render.columns, originalRow = Math.floor(dbl.render.items.findIndex(item => /[A-Z]/.test(item)) / cols);
+  const secondRow = (originalRow + 1) % cols;
+  [...'VIER'].forEach((l, i) => { dbl.render.items[secondRow * cols + i] = l; });
+  assert.equal(verifyDigitPuzzle(dbl), false, 'zweites Zahlwort macht das Rätsel mehrdeutig');
+});
+
 test('Labyrinth: alle Ziffern und Altersstufen lösbar, deterministisch, eindeutig', () => {
   for (const age of ['young','early','middle','older','advanced','expert','adult']) for (let d = 0; d <= 9; d++) {
     const a = generateDigitPuzzle(d, 'maze', age, 77 + d), b = generateDigitPuzzle(d, 'maze', age, 77 + d);

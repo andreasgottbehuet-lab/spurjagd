@@ -1,6 +1,6 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
 import {QUESTION_BANK as SUBJECT_BANK,type Subject} from './question-bank.ts';
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
@@ -92,7 +92,7 @@ export function mazePath(rows:string[]):number[]|null {
 }
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
-  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence','maze'].includes(kind)) throw new Error('Unbekannte Rätselart');
+  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
@@ -172,6 +172,25 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
       return {id,kind,instruction:'Finde ein ausgeschriebenes Zahlwort im Buchstabengitter. Die Zahl ist deine Code-Ziffer.',question:age==='young'?'Suche waagerecht oder senkrecht.':age==='middle'?'Suche auch diagonal.':'Suche waagerecht, senkrecht und diagonal – auch rückwärts.',hint:'Die Buchstaben stehen direkt nebeneinander in einer geraden Linie.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,wordGrid:{rows,startRow:selected.r,startCol:selected.c,deltaRow:selected.dr,deltaCol:selected.dc,word}};
     }
     throw new Error('Kein eindeutiges Zahlwort-Suchgitter erzeugbar');
+  }
+  if (kind === 'picturesearch') {
+    // Bild-Suchrätsel: ein Symbol zählen ODER ein in Symbolen verstecktes Zahlwort lesen (Buchstaben nur in einer Zeile).
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const columns=[6,6,7,7,8,8,9][rank],total=columns*columns;
+    const byWord=target===0||rng()<0.5;
+    const symbol=SYMBOLS[chooseInt(rng,0,SYMBOLS.length-1)];
+    const others=SYMBOLS.filter(candidate=>candidate!==symbol);
+    if(!byWord){
+      const items=Array.from({length:target},()=>symbol);
+      while(items.length<total) items.push(others[chooseInt(rng,0,others.length-1)]);
+      for(let i=items.length-1;i>0;i--){const j=chooseInt(rng,0,i);[items[i],items[j]]=[items[j],items[i]];}
+      return {id,kind,instruction:'Suche im Bilderfeld das gesuchte Zeichen und zähle es. Die Zahl ist deine Code-Ziffer.',question:'Wie oft findest du dieses Zeichen? '+symbol,hint:'Gehe Reihe für Reihe vor.',explanation:target+' passende Zeichen ergeben die Ziffer '+target+'.',expectedDigit:target,render:{symbol,count:target,items,columns}};
+    }
+    const word=DIGIT_WORDS[target],row=chooseInt(rng,0,columns-1),col=chooseInt(rng,0,columns-word.length);
+    // Füllfelder nur aus SYMBOLS (keine Buchstaben), daher entsteht kein weiteres Zahlwort; der Verifier prüft das zusätzlich.
+    const items=Array.from({length:total},()=>SYMBOLS[chooseInt(rng,0,SYMBOLS.length-1)]);
+    [...word].forEach((letter,i)=>{items[row*columns+col+i]=letter;});
+    return {id,kind,instruction:'Zwischen den Bildern steht ein Zahlwort aus Buchstaben. Lies es und schreibe die Zahl als Ziffer auf. Sie ist deine Code-Ziffer.',question:'Welches Zahlwort versteckt sich in den Bildern?',hint:'Suche Reihe für Reihe nach Buchstaben; sie stehen nebeneinander.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,render:{symbol:'',count:0,items,columns}};
   }
   if (kind === 'symbols') {
     // All age groups count a target among distractors; the field grows with age.
@@ -258,6 +277,16 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     if(![...g.word].every((letter,i)=>g.rows[r+i*dr]?.[c+i*dc]===letter)) return false;
     const matches=findDigitWords(g.rows);
     return matches.length===1 && matches[0].digit===target;
+  }
+  if (puzzle.kind === 'picturesearch') {
+    const r=puzzle.render,items=r?.items;
+    if(!r||!items||!r.columns||r.columns<6||r.columns>9||items.length!==r.columns*r.columns||items.some(item=>!SYMBOLS.includes(item)&&!/^[A-Z]$/.test(item))) return false;
+    const letters=items.map((item,i)=>/^[A-Z]$/.test(item)?i:-1).filter(i=>i>=0);
+    if(!letters.length) return r.count===target&&target>0&&SYMBOLS.includes(r.symbol)&&items.filter(item=>item===r.symbol).length===target;
+    const first=letters[0],cols=r.columns;
+    // Eindeutigkeit: im ganzen Raster (alle 8 Richtungen) darf genau ein Zahlwort lesbar sein.
+    const matches=findDigitWords(Array.from({length:cols},(_,y)=>items.slice(y*cols,y*cols+cols).map(item=>/^[A-Z]$/.test(item)?item:'.').join('')));
+    return matches.length===1&&matches[0].digit===target&&r.count===0&&r.symbol===''&&letters.every((x,i)=>x===first+i)&&Math.floor(first/r.columns)===Math.floor(letters[letters.length-1]/r.columns)&&letters.map(x=>items[x]).join('')===DIGIT_WORDS[target];
   }
   if (puzzle.kind === 'symbols') {
     const render=puzzle.render;
