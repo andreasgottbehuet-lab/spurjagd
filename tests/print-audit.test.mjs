@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
-import {auditPrintPacket} from '../src/print-audit.ts';
+import {auditPrintPacket,routeClueFor} from '../src/print-audit.ts';
 
 const config=()=>({
  players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',
@@ -258,5 +258,36 @@ test('End-to-End: Kürzere Routen verlangen nur die tatsächlich besuchten Codes
   const visited=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));
   c.stationCodes=Object.fromEntries(Object.entries(c.stationCodes).filter(([id])=>visited.has(id)));
   assert.deepEqual(auditPrintPacket(c,plan,'kurzstrecke'),[],JSON.stringify({players,durationMinutes}));
+ }
+});
+
+const variantClues=(c,projectId)=>{
+ const plan=createPlan(c);
+ return {plan,clues:plan.teams.map((team,t)=>team.stations.map((_,s)=>({destination:team.stations[s+1]?.name??team.finish,clue:routeClueFor(c,plan,projectId,t,s)})))};
+};
+test('Rätsel „alle Gruppen gleich“: identische Wegrätsel auch bei verschiedenen Teamaltern',()=>{
+ const c={...config(),routeVariants:'same',teamProfiles:{'0':{age:'4–6',difficulty:'normal'},'1':{age:'12–14',difficulty:'normal'}}};
+ const {plan,clues}=variantClues(c,'gleich');
+ const byDestination=new Map();
+ for(const entry of clues.flat()){
+  if(byDestination.has(entry.destination)) assert.deepEqual(entry.clue,byDestination.get(entry.destination),entry.destination);
+  else byDestination.set(entry.destination,entry.clue);
+ }
+ assert.ok(byDestination.size<clues.flat().length,'mehrere Teams teilen Ziele');
+ assert.deepEqual(auditPrintPacket(c,plan,'gleich'),[]);
+});
+test('Rätsel „je Gruppe unterschiedlich“ (Voreinstellung): deterministisch, verschieden, ohne Doppelung im Team',()=>{
+ for(const routeVariants of [undefined,'perTeam']){
+  const c={...config(),routeVariants};
+  const first=variantClues(c,'verschieden'),second=variantClues(c,'verschieden');
+  assert.deepEqual(first.clues,second.clues);
+  const flat=first.clues.flat();
+  assert.ok(flat.some(a=>flat.some(b=>a.destination===b.destination&&JSON.stringify(a.clue)!==JSON.stringify(b.clue))),'Teams erhalten unterschiedliche Versionen');
+  for(const team of first.clues){
+   assert.equal(new Set(team.map(entry=>entry.destination)).size,team.length);
+   const questions=team.flatMap(({clue})=>clue.rows?.map(row=>row.question)??[]);
+   assert.equal(new Set(questions).size,questions.length,'keine Frage doppelt im Team: '+JSON.stringify(team.map(({destination,clue})=>({destination,questions:clue.rows?.map(row=>row.question)}))));
+  }
+  assert.deepEqual(auditPrintPacket(c,first.plan,'verschieden'),[]);
  }
 });

@@ -2,13 +2,13 @@ import { generateThreeDigitWordGrid } from './three-word-grid';
 import { nextProjectRevision } from './project-revision';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile, type Environment } from './generator';
+import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile, type Environment, type RouteVariants } from './generator';
 import { messages, applyDocumentLanguage, type Language } from './i18n';
-import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode } from './puzzles';
+import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, type RouteClueMode } from './puzzles';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { storageErrorText } from './storage-messages';
-import { auditPrintPacket } from './print-audit';
+import { auditPrintPacket, routeClueFor } from './print-audit';
 import { measureA5Elements, packA5Blocks, A5_USABLE_HEIGHT_MM, buildPackedA5PrintCopy } from './a5-page-packing';
 import { createPrintManifest, LABELS_PER_A5_SHEET, ROUTE_QUESTIONS_PER_A5_SHEET, routeSheetCount, ORGANIZER_ITEMS_PER_A5_SHEET, ORGANIZER_CODES_PER_A5_SHEET, ORGANIZER_ROUTES_PER_A5_SHEET, ORGANIZER_ENVELOPES_PER_A5_SHEET, ORGANIZER_CAUTIONS_PER_A5_SHEET, organizerGroupPageRanges, nonEmptyOrganizerGroups } from './print-manifest';
 import { auditPrintManifest } from './print-manifest-audit';
@@ -45,6 +45,7 @@ function App() {
   const [stationCodes, setStationCodes] = useState<Record<string,string>>({});
   const [teamProfiles, setTeamProfiles] = useState<Record<string,TeamProfile>>({});
   const [routeClueModes, setRouteClueModes] = useState<Record<string,RouteClueMode>>({});
+  const [routeVariants, setRouteVariants] = useState<RouteVariants>('perTeam');
   const [routeClueTexts, setRouteClueTexts] = useState<Record<string,string>>({});
   const [hiddenLocations, setHiddenLocations] = useState<Location[]>([]);
   const [activeStep, setActiveStep] = useState(1);
@@ -195,11 +196,11 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles]);
   const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
@@ -213,7 +214,6 @@ function App() {
   const missingCodeIds = locations.filter(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??'')).map(l=>l.id);
   const printManifest = plan.value ? createPrintManifest(plan.value,config) : null;
   if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest,config));
-  const ageLevel=ageLevelFor(age);
   const challenges = useMemo(() => {
     if (goal !== 'locks' || printIssues.length || !plan.value) return [];
     return plan.value.teams.flatMap((team,teamIndex)=>{
@@ -306,6 +306,7 @@ function App() {
     setTeamProfiles(c.teamProfiles ?? {});
     setRouteClueModes(c.routeClueModes ?? {});
     setRouteClueTexts(c.routeClueTexts ?? {});
+    setRouteVariants(c.routeVariants==='same'?'same':'perTeam');
     setNextLocationId(findNextLocationId(c.locations,[],5));
     setStorageMessage('');
   };
@@ -351,7 +352,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, teamProfiles]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -568,6 +569,12 @@ function App() {
                       <option value="varied">{tx('Wechselnde Umlaufrichtung', 'Alternating circuit direction')}</option>
                     </select>
                   </label>
+                  <label>{tx('Rätsel', 'Puzzles')}
+                    <select value={routeVariants} onChange={e=>setRouteVariants(e.target.value as RouteVariants)}>
+                      <option value="perTeam">{tx('je Gruppe unterschiedlich', 'different for each team')}</option>
+                      <option value="same">{tx('alle Gruppen gleich', 'same for all teams')}</option>
+                    </select>
+                  </label>
                   <label>{tx('Zielpunkt', 'Finish location')}
                     <select value={finishMode} onChange={e=>{const value=e.target.value as FinishMode;setFinishMode(value);setSameStartFinish(value==='origin');}}>
                       <option value="origin">{tx("Gemeinsamer Startort", "Shared starting location")}</option>
@@ -611,10 +618,11 @@ function App() {
                     <p>{team.stations.map(s => s.name).join(' → ')} → {team.finish}</p>
                   </article>
                 )}</div>
-                {plan.value && <section className="challenge-preview"><h3>{tx("Wegrätsel – Vorschau nach Zielort", "Route clues – preview by destination")}</h3><p className="helper">{tx("Jedes Ziel erhält genau ein Wegrätsel. Die Gruppen bekommen unabhängig von ihrer Route dieselbe Version.", "Each destination has one route clue. Teams receive the same version regardless of their route.")}</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
-                  const target=locations.find(l=>l.name.trim()===destination.trim());
+                {plan.value && <section className="challenge-preview"><h3>{tx("Wegrätsel – Vorschau nach Zielort", "Route clues – preview by destination")}</h3><p className="helper">{tx("Die Vorschau zeigt die Version der ersten Gruppe mit diesem Ziel. Bei „je Gruppe unterschiedlich“ erhalten andere Gruppen andere Versionen (siehe Spielleitungsunterlagen).", "Preview shows the version of the first team heading there. With “different for each team” other teams get other versions (see organizer sheets).")}</p>{Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).map(destination=>{
                   try {
-                    const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??(target?'description':'letters'),hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);
+                    const teamIndex=plan.value.teams.findIndex(t=>t.stations.some((_,i)=>(t.stations[i+1]?.name??t.finish)===destination));
+                    const team=plan.value.teams[teamIndex];
+                    const clue=routeClueFor(config,plan.value,projectId,teamIndex,team.stations.findIndex((_,i)=>(team.stations[i+1]?.name??team.finish)===destination));
                     return <article className="location-card" key={destination}><strong>{tx("Ziel", "Destination")}: {destination}</strong><p>{clue.instruction}</p>{clue.rows?clue.rows.map((row,i)=><p key={i}>{i+1}. {row.question} ({tx('Buchstabe','letter')} {row.letterIndex+1})</p>):<p>{clue.question}</p>}<p className="helper">{tx("Lösung für die Spielleitung", "Organizer answer")}: {clue.answer}</p></article>;
                   } catch(error) {
                     return <article className="location-card" key={destination}><strong>{tx('Ziel','Destination')}: {destination}</strong><p className="error">{error instanceof Error?error.message:String(error)}</p></article>;
@@ -668,14 +676,14 @@ function App() {
                     <h2>Codes und Lösungen</h2>
                     {challengePage.map(({location,challenge,teamName,teamIndex,ageGroup})=><div className="print-code-line" data-team-color={teamName.toLowerCase()} data-age-group={ageGroup} key={teamIndex+'-'+location.id}><strong>Team {teamName} · {ageGroup} Jahre · {location.name}: {challenge.code}</strong><p>{challenge.puzzles.some(p=>p.kind==='wordsearch')?'Drei Zahlwörter im gemeinsamen Suchgitter: '+generateThreeDigitWordGrid(challenge.code,hashSeed(projectId+':'+teamIndex+':'+location.id)).words.join(' → '):challenge.puzzles.map(p=>p.explanation).join(' | ')}</p></div>)}
                   </article>)}
-                  {Array.from({length:Math.ceil(Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'clue-solutions-'+page}>
+                  {(()=>{const entries=plan.value.teams.flatMap((team,teamIndex)=>team.stations.map((_,i)=>({team,teamIndex,stationIndex:i,destination:team.stations[i+1]?.name??team.finish}))).filter((e,i,all)=>all.findIndex(o=>o.destination===e.destination&&(routeVariants==='same'||o.teamIndex===e.teamIndex))===i);
+                  return Array.from({length:Math.ceil(entries.length/ORGANIZER_ITEMS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'clue-solutions-'+page}>
                     <h1>Spielleitung – Wegrätsel-Lösungen {page+1}</h1>
-                    {Array.from(new Set(plan.value.teams.flatMap(team=>team.stations.map((_,i)=>team.stations[i+1]?.name??team.finish)))).slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(destination=>{
-                      const target=locations.find(l=>l.name.trim()===destination.trim());
-                      const clue=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??(target?'description':'letters'),hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevel);
-                      return <div className="print-solution-entry" key={destination}><strong>Ziel: {destination}</strong>{clue.mode==='questions'?<p>{clue.rows?.map(row=>row.solution+' ('+(row.letterIndex+1)+')').join(' · ')}</p>:<p>{clue.mode==='letters'?'Buchstabenspiel':clue.mode==='description'?'Text-Rätsel':'Eigener Rätseltext'}</p>}</div>;
+                    {entries.slice(page*ORGANIZER_ITEMS_PER_A5_SHEET,(page+1)*ORGANIZER_ITEMS_PER_A5_SHEET).map(({team,teamIndex,stationIndex,destination})=>{
+                      const clue=routeClueFor(config,plan.value,projectId,teamIndex,stationIndex);
+                      return <div className="print-solution-entry" key={teamIndex+'-'+destination}><strong>{routeVariants==='same'?'':'Team '+team.name+' · '}Ziel: {destination}</strong>{clue.mode==='questions'?<p>{clue.rows?.map(row=>row.solution+' ('+(row.letterIndex+1)+')').join(' · ')}</p>:<p>{clue.mode==='letters'?'Buchstabenspiel':clue.mode==='description'?'Text-Rätsel':'Eigener Rätseltext'}</p>}</div>;
                     })}
-                  </article>)}
+                  </article>);})()}
                   {Array.from({length:Math.ceil(plan.value.cautions.length/ORGANIZER_CAUTIONS_PER_A5_SHEET)},(_,page)=><article className="print-sheet print-organizer-sheet" key={'cautions-'+page}>
                     <h1>Spielleitung – Planungshinweise {page+1}</h1>
                     <p>Diese Hinweise sind Annahmen aus der Routenplanung und müssen vor Ort überprüft werden.</p>
@@ -690,9 +698,8 @@ function App() {
                     const challenge=challenges.find(c=>c.teamIndex===teamIndex&&c.location.id===location.id)?.challenge;
                     if(!challenge)return null;
                     const destination=team.stations[stationIndex+1]?.name??team.finish;
-                    const target=locations.find(l=>l.name.trim()===destination.trim());
                     let routePuzzle;
-                    try {routePuzzle=generateCreativeRouteClue(destination,target?.description??'',routeClueModes[target?.id??'']??(target?'description':'letters'),hashSeed(projectId+':destination:'+(target?.id??destination)),routeClueTexts[target?.id??'']??'',ageLevelFor(team.profile?.age??age));}
+                    try {routePuzzle=routeClueFor(config,plan.value,projectId,teamIndex,stationIndex);}
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-age-group={team.profile?.age??age} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">

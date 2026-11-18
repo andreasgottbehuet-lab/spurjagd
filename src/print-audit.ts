@@ -1,5 +1,36 @@
-import {createPlan, type GameConfig, type GamePlan} from './generator.ts';
-import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue,clueRevealsDestination} from './puzzles.ts';
+import {createPlan, type GameConfig, type GamePlan, type RouteVariants} from './generator.ts';
+import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue,clueRevealsDestination,type RouteClue} from './puzzles.ts';
+import {ageLevelFor} from './age-groups.ts';
+
+export function routeClueSeed(projectId:string,targetKey:string,teamIndex:number,variants?:RouteVariants):number {
+ const base=projectId+':destination:'+targetKey;
+ return hashSeed(variants==='same'?base:base+':team:'+teamIndex);
+}
+/** Wegraetsel genau so, wie es fuer Team/Station gedruckt wird. Bei 'same' gelten Seed und Alter der Gesamtgruppe fuer alle Teams. */
+export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,teamIndex:number,stationIndex:number):RouteClue {
+ const team=plan.teams[teamIndex];
+ const used=new Set<string>();
+ let result:RouteClue|undefined;
+ for(let index=0;index<=stationIndex;index++){
+  result=undefined;
+  const destination=team.stations[index+1]?.name??team.finish;
+  const target=config.locations.find(location=>location.name.trim()===destination.trim());
+  const mode=config.routeClueModes?.[target?.id??'']??(target?'description':'letters');
+  const age=ageLevelFor(config.routeVariants==='same'?config.age:team.profile?.age??config.age);
+  const base=routeClueSeed(projectId,target?.id??destination,teamIndex,config.routeVariants);
+  for(let attempt=0;attempt<100;attempt++){
+   const seed=attempt?hashSeed(base+':variant:'+attempt):base;
+   const clue=generateCreativeRouteClue(destination,target?.description??'',mode,seed,config.routeClueTexts?.[target?.id??'']??'',age);
+   if(config.routeVariants!=='same'&&clue.rows?.some(row=>used.has(row.question))) continue;
+   result=clue;
+   clue.rows?.forEach(row=>used.add(row.question));
+   break;
+  }
+  if(!result) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
+ }
+ if(!result) throw new Error('Stationsrätsel fehlt.');
+ return result;
+}
 
 /** Validates the complete printable packet before any sheet is shown or printed. */
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
@@ -43,12 +74,10 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    if(!locations.has(station.id)||!codeByStation.has(station.id)) issues.push(team.name+': Stationscode fehlt für '+station.name);
    const destination=team.stations[i+1]?.name??team.finish;
    if(!destination.trim()) {issues.push(team.name+': Nächster Zielort fehlt.');continue;}
-   const target=config.locations.find(location=>location.name.trim()===destination.trim());
-   const mode=config.routeClueModes?.[target?.id??'']??'letters';
    try{
-    const clue=generateCreativeRouteClue(destination,target?.description??'',mode,hashSeed(projectId+':destination:'+(target?.id??destination)),config.routeClueTexts?.[target?.id??'']??'');
+    const clue=routeClueFor(config,plan,projectId,plan.teams.indexOf(team),i);
     if(clue.answer!==destination) throw new Error('Zielort stimmt nicht überein');
-    if(mode==='custom' && clueRevealsDestination(clue.question,destination)) throw new Error('Das Rätsel nennt bereits den Zielort.');
+    if(clue.mode==='custom' && clueRevealsDestination(clue.question,destination)) throw new Error('Das Rätsel nennt bereits den Zielort.');
     if(!verifyCreativeRouteClue(clue)) throw new Error('Wegrätsel ist nicht eindeutig prüfbar oder verrät den Zielort.');
    }catch(error){
     issues.push(team.name+' / '+station.name+' → '+destination+': '+(error instanceof Error?error.message:String(error)));

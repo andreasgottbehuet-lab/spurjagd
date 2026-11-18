@@ -6,6 +6,8 @@ export type Location = { id: string; name: string; description: string };
 export type Environment = 'outdoor' | 'indoor' | 'mixed';
 export type TeamDifficulty = 'easy' | 'normal' | 'hard';
 export interface TeamProfile { age: string; difficulty: TeamDifficulty }
+/** Wegraetsel je Gruppe verschieden (Voreinstellung) oder fuer alle Gruppen gleich. */
+export type RouteVariants = 'perTeam' | 'same';
 export interface GameConfig {
   players: number;
   groupSize: number;
@@ -26,6 +28,8 @@ export interface GameConfig {
   stationCodes?: Record<string, string>;
   routeClueModes?: Record<string, 'description' | 'questions' | 'letters' | 'custom'>;
   routeClueTexts?: Record<string, string>;
+  /** Fehlt in alten Projekten; gilt als 'perTeam'. */
+  routeVariants?: RouteVariants;
   /** Future paid option: per-team age and difficulty. Not enabled by default. */
   teamProfiles?: Record<string, TeamProfile>;
 }
