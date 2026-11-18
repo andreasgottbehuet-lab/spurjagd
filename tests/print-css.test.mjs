@@ -238,8 +238,7 @@ test('A5 Chromium fixture checks leading zeroes and printable category order',()
 test('Wizard does not offer unsupported paid game goals as printable options',()=>{
  const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.match(ui,/checked={goal==='word'} onChange/);
- assert.match(ui,/checked={goal==='cards'} disabled/);
- assert.ok(ui.includes("Auf unterstütztes Spielziel wechseln"));
+ assert.match(ui,/checked={goal==='cards'} onChange/);
 });
 
 test('Lösungswort-Kinderblätter benennen Zahlencode und Gitter als Buchstaben-Code',()=>{const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(ui.includes("goal==='word'?'Buchstaben-Code:'"));assert.ok(ui.includes("goal==='word'?'Buchstaben-Code im Buchstabengitter'"));assert.ok(ui.includes("goal==='word'?'Drei Zahlwörter für den Buchstaben-Code'"));assert.ok(ui.includes("goal==='word'?'Unser Buchstaben-Code von oben nach unten: □ □ □'"));});

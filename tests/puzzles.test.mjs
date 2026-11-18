@@ -5,6 +5,19 @@ import { AGE_GROUPS, ageLevelFor } from '../src/age-groups.ts';
 import { createDefaultGameConfig } from '../src/default-game.ts';
 import { generateStationChallenge, codeFromPuzzles, generateDigitPuzzle, verifyDigitPuzzle, hashSeed, validCode, generateRoutePuzzle, generateCreativeRouteClue, normalizeSolutionWord, verifyRouteQuestions, verifyCreativeRouteClue, clueRevealsDestination, findDigitWords } from '../src/puzzles.ts';
 
+test('Labyrinth: alle Ziffern und Altersstufen lösbar, deterministisch, eindeutig', () => {
+  for (const age of ['young','early','middle','older','advanced','expert','adult']) for (let d = 0; d <= 9; d++) {
+    const a = generateDigitPuzzle(d, 'maze', age, 77 + d), b = generateDigitPuzzle(d, 'maze', age, 77 + d);
+    assert.deepEqual(a, b);
+    assert.ok(verifyDigitPuzzle(a));
+    assert.equal(verifyDigitPuzzle({ ...a, expectedDigit: (d + 1) % 10 }), false);
+  }
+  for (let n = 0; n <= 999; n += 37) {
+    const code = String(n).padStart(3, '0');
+    assert.equal(codeFromPuzzles(generateStationChallenge('s', code, 'young', 5, true)), code);
+  }
+});
+
 test('Alle dreistelligen Codes einschließlich führender Nullen sind rückwärts erzeugbar', () => {
   for (let n = 0; n <= 999; n++) {
     const code = String(n).padStart(3, '0');

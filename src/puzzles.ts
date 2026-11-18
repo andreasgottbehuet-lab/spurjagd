@@ -1,5 +1,5 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
@@ -13,6 +13,8 @@ export interface Puzzle {
   workedExample?: string;
   wordGrid?: { rows: string[]; startRow: number; startCol: number; deltaRow: number; deltaCol: number; word: string };
   arrowGrid?: {rows:string[]; startRow:number; startCol:number; arrows:string};
+  /** rows[r][c] = Hex-Maske offener Wände (N=1,O=2,S=4,W=8); Start links oben, Ziel rechts unten; stars = Zellindizes r*n+c. */
+  maze?: {rows:string[]; stars:number[]};
 }
 export interface StationChallenge {
   stationId: string;
@@ -60,9 +62,36 @@ export function findDigitWords(rows: string[]): {digit:number;row:number;col:num
   }
   return matches;
 }
+const MAZE_DIRS=[{bit:1,opp:4,dr:-1,dc:0},{bit:2,opp:8,dr:0,dc:1},{bit:4,opp:1,dr:1,dc:0},{bit:8,opp:2,dr:0,dc:-1}];
+/** Eindeutiger Weg (Zellindizes) von links oben nach rechts unten; null, wenn das Gitter kein gültiges Labyrinth (zusammenhängend, kreisfrei, symmetrisch) ist. */
+export function mazePath(rows:string[]):number[]|null {
+  const n=rows.length;
+  if(n<4||n>12||rows.some(row=>row.length!==n||!/^[0-9a-f]+$/.test(row))) return null;
+  const open=rows.flatMap(row=>[...row].map(ch=>parseInt(ch,16)));
+  let edges=0;
+  for(let i=0;i<n*n;i++){
+    const r=Math.floor(i/n),c=i%n;
+    for(const d of MAZE_DIRS){
+      if(!(open[i]&d.bit)) continue;
+      const nr=r+d.dr,nc=c+d.dc;
+      if(nr<0||nc<0||nr>=n||nc>=n||!(open[nr*n+nc]&d.opp)) return null;
+      edges++;
+    }
+  }
+  if(edges!==2*(n*n-1)) return null;
+  const parent=new Map<number,number>([[0,-1]]),queue=[0];
+  for(let q=0;q<queue.length;q++){
+    const i=queue[q],r=Math.floor(i/n),c=i%n;
+    for(const d of MAZE_DIRS){const j=(r+d.dr)*n+c+d.dc;if((open[i]&d.bit)&&!parent.has(j)){parent.set(j,i);queue.push(j);}}
+  }
+  if(parent.size!==n*n) return null;
+  const path:number[]=[];
+  for(let i=n*n-1;i>=0;i=parent.get(i)!) path.unshift(i);
+  return path;
+}
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
-  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence'].includes(kind)) throw new Error('Unbekannte Rätselart');
+  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence','maze'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
@@ -72,6 +101,29 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
     const givenCount=rank>=5?6:rank>=3?5:4;
     const values=Array.from({length:givenCount+1},(_,i)=>ascending?target-(givenCount-i)*step:target+(givenCount-i)*step);
     return {id,kind,instruction:'Erkenne die Zahlenfolge und ergänze die fehlende Zahl. Sie ist deine Code-Ziffer.',question:values.slice(0,-1).join('  ·  ')+'  ·  ?',hint:ascending?'Die Zahlen werden immer um denselben Wert größer.':'Die Zahlen werden immer um denselben Wert kleiner.',explanation:values.join(' → '),expectedDigit:target};
+  }
+  if (kind === 'maze') {
+    const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
+    const n=[5,5,6,6,7,8,9][rank];
+    for(let attempt=0;attempt<500;attempt++){
+      const open=new Array<number>(n*n).fill(0),seen=new Set([0]),stack=[0];
+      while(stack.length){
+        const i=stack[stack.length-1],r=Math.floor(i/n),c=i%n;
+        const options=MAZE_DIRS.filter(d=>r+d.dr>=0&&r+d.dr<n&&c+d.dc>=0&&c+d.dc<n&&!seen.has((r+d.dr)*n+c+d.dc));
+        if(!options.length){stack.pop();continue;}
+        const d=options[chooseInt(rng,0,options.length-1)],j=(r+d.dr)*n+c+d.dc;
+        open[i]|=d.bit;open[j]|=d.opp;seen.add(j);stack.push(j);
+      }
+      const rows=Array.from({length:n},(_,r)=>open.slice(r*n,r*n+n).map(v=>v.toString(16)).join(''));
+      const path=mazePath(rows)!;
+      const inner=path.slice(1,-1),onPath=new Set(path);
+      const off=Array.from({length:n*n},(_,i)=>i).filter(i=>!onPath.has(i));
+      if(inner.length<target||off.length<4) continue;
+      const pick=(list:number[],count:number)=>{const pool=[...list];const out:number[]=[];for(let k=0;k<count;k++)out.push(pool.splice(chooseInt(rng,0,pool.length-1),1)[0]);return out;};
+      const stars=[...pick(inner,target),...pick(off,chooseInt(rng,3,4))].sort((a,b)=>a-b);
+      return {id,kind,instruction:'Finde den Weg von S nach Z. Zähle die ★ auf diesem Weg. Die Zahl ist deine Code-Ziffer.',question:'Wie viele ★ liegen auf dem Weg von S nach Z?',hint:'Es gibt nur einen Weg ohne Umkehren. ★ in Sackgassen zählen nicht.',explanation:'Auf dem Lösungsweg liegen '+target+' ★.',expectedDigit:target,maze:{rows,stars}};
+    }
+    throw new Error('Kein Labyrinth erzeugbar');
   }
   if (kind === 'arrowpath') {
     const rank=['young','early','middle','older','advanced','expert','adult'].indexOf(age);
@@ -179,6 +231,11 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     const delta=nums[1]-nums[0];
     return delta!==0 && nums.slice(2).every((value,index)=>value-nums[index+1]===delta) && nums.at(-1)!+delta===target;
   }
+  if (puzzle.kind === 'maze') {
+    const m=puzzle.maze,path=m&&mazePath(m.rows);
+    if(!m||!path||new Set(m.stars).size!==m.stars.length||m.stars.some(i=>!Number.isInteger(i)||i<=0||i>=m.rows.length**2-1)) return false;
+    return m.stars.filter(i=>path.includes(i)).length===target;
+  }
   if (puzzle.kind === 'arrowpath') {
     const g=puzzle.arrowGrid;
     if(!g||g.rows.length<5||g.rows.some(row=>row.length!==g.rows.length||!/^[0-9]+$/.test(row))||![3,5,7,9,11,13,15].includes([...g.arrows].length)||puzzle.question!==[...g.arrows].join(' ')) return false;
@@ -221,7 +278,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
   }
   return false;
 }
-export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number): StationChallenge {
+export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number, picture = false): StationChallenge {
   if (!validCode(code)) throw new Error('Der Schloss-Code muss genau drei Ziffern enthalten, auch 000 ist erlaubt.');
   if (!stationId.trim()) throw new Error('Stations-ID fehlt');
   // Younger children should not need Caesar ciphers to open a lock.
@@ -229,9 +286,11 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   const variants: PuzzleKind[][] = age === 'young'
     ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arithmetic','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath']]
     : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','symbols','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols']];
-  const kinds=variants[hashSeed(projectSeed+':'+stationId+':types')%variants.length];
+  const pictureVariants: PuzzleKind[][] = [['maze','symbols','maze'],['symbols','maze','symbols'],['maze','maze','symbols']];
+  const pool=picture?pictureVariants:variants;
+  const kinds=pool[hashSeed(projectSeed+':'+stationId+':types')%pool.length];
   // A zero-digit must be earned by solving a real task, never by counting an empty box.
-  const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i] === 'symbols' && digit === '0' ? 'arithmetic' : kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
+  const puzzles = [...code].map((digit, i) => generateDigitPuzzle(Number(digit), kinds[i] === 'symbols' && digit === '0' ? (picture ? 'maze' : 'arithmetic') : kinds[i], age, hashSeed(projectSeed + ':' + stationId + ':' + i)));
   if (puzzles.some((p,i) => !verifyDigitPuzzle(p) || p.expectedDigit !== Number(code[i]))) throw new Error('Rätselkonsistenz fehlgeschlagen');
   return { stationId, code, puzzles };
 }

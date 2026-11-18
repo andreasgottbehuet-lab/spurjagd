@@ -36,7 +36,6 @@ export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,te
 /** Validates the complete printable packet before any sheet is shown or printed. */
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
  const issues:string[]=[];
- if(config.goal==='cards') issues.push('Das Druckpaket unterstützt Bildkarten noch nicht.');
  issues.push(...solutionWordIssues(config,plan));
  if(!config.startPoint?.trim()) issues.push('Startort fehlt.');
  if(config.finishMode==='meeting'&&!config.meetingPoint?.trim()) issues.push('Gemeinsamer Zielort fehlt.');
@@ -53,7 +52,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
  const locations=new Map(config.locations.map(location=>[location.id,location]));
  const visitedStationIds=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));
  const codeByStation=new Map<string,string>();
- for(const location of config.locations.filter(location=>config.goal==='locks'&&visitedStationIds.has(location.id))){
+ for(const location of config.locations.filter(location=>(config.goal==='locks'||config.goal==='cards')&&visitedStationIds.has(location.id))){
   const code=config.stationCodes?.[location.id]??'';
   if(!validCode(code)){
    issues.push('Ungültiger dreistelliger Code: '+(location.name||location.id));
