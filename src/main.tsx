@@ -109,6 +109,82 @@ function App() {
     if (missing) return 'At least one station name is missing ('+missing[1]+').';
     const invalid = issue.match(/^Ungültiger Code: (.*)$/);
     if (invalid) return 'Invalid code: '+invalid[1];
+    const audit: Record<string,string> = {
+      'Gemeinsamer Zielort fehlt.':'The shared finish location is missing.',
+      'Stations-IDs sind nicht eindeutig.':'Station IDs are not all different.',
+      'Gruppenplan oder Zeitberechnung stimmt nicht mit den Eingaben überein.':'The team plan or time calculation does not match your inputs.',
+      'Planungshinweise stimmen nicht mit den berechneten Gruppenrouten überein.':'The planning notes do not match the calculated team routes.',
+      'Umschlaganzahl ist falsch.':'The number of envelopes is wrong.',
+      'Anzahl der A5-Aufgabenblätter ist falsch.':'The number of A5 task sheets is wrong.',
+      'Umschlag-Blattzahlen stimmen nicht mit der Gesamtzahl der Kinderblätter überein.':'The sheets per envelope do not add up to the total number of children\'s sheets.',
+      'Anzahl der A5-Spielleitungsseiten ist falsch.':'The number of A5 organizer pages is wrong.',
+      'Anzahl der A5-Etikettenseiten ist falsch.':'The number of A5 label pages is wrong.',
+      'Mindestumfang der Druckseiten ist falsch.':'The minimum number of print pages is wrong.',
+      'Die angezeigte Gesamtblattzahl stimmt nicht mit den ausgewiesenen Teilmengen überein.':'The total number of sheets shown does not match the parts it is made of.',
+      'Umschlagkennungen sind nicht eindeutig.':'Envelope IDs are not all different.',
+      'Leere Umschlagkennung ist nicht zulässig.':'An envelope ID must not be empty.',
+      'Umschlag enthält eine ungültige Blattzahl.':'An envelope has an invalid number of sheets.',
+      'Druckumfang enthält ungültige Seitenzahlen.':'The print size contains invalid page counts.',
+      'Umschlag hat eine Stationsnummer außerhalb der Gruppenroute.':'An envelope has a stop number outside the team route.',
+      'Umschlag hat keine gültige Stationsgesamtzahl.':'An envelope has no valid total number of stops.',
+      'Umschlag enthält eine leere Gruppen-, Stations- oder Zielangabe.':'An envelope has an empty team, stop or destination entry.',
+      'Umschlag enthält führende oder nachgestellte Leerzeichen in einer Kennzeichnung.':'An envelope label has spaces at the start or end.',
+      'Umschlagkennung passt nicht zur Gruppe und Station.':'An envelope ID does not fit its team and stop.',
+      'Umschlag hat einen ungültigen Gruppenindex.':'An envelope has an invalid team number.',
+      'Umschlagreihenfolge weicht vom Gruppenplan ab.':'The envelope order differs from the team plan.',
+      'Umschlagreihenfolge oder Gruppenzuordnung ist ungültig.':'The envelope order or team assignment is invalid.',
+    };
+    if (audit[issue]) return audit[issue];
+    const tails: Record<string,string> = {
+      'Stationszahl stimmt nicht.':'The number of stops is wrong.',
+      'Station doppelt in Route.':'A stop appears twice on the route.',
+      'Nächster Zielort fehlt.':'The next destination is missing.',
+      'Umschlag fehlt oder ist doppelt.':'An envelope is missing or appears twice.',
+      'falsche Station auf dem Umschlag.':'wrong stop on the envelope.',
+      'Umschlagkennung stimmt nicht mit der Station überein.':'The envelope ID does not match the stop.',
+      'falscher nächster Zielort.':'wrong next destination.',
+      'Umschlag enthält eine falsche Anzahl A5-Blätter.':'The envelope has the wrong number of A5 sheets.',
+      'Umschlagbeschriftung stimmt nicht.':'The envelope label is wrong.',
+    };
+    const puzzleErrors: Record<string,string> = {
+      'Code stimmt nicht überein':'The code does not match',
+      'Zielort stimmt nicht überein':'The destination does not match',
+      'Das Rätsel nennt bereits den Zielort.':'The puzzle already names the destination.',
+      'Wegrätsel ist nicht eindeutig prüfbar oder verrät den Zielort.':'The route puzzle cannot be checked clearly or gives away the destination.',
+      'Ziffer muss zwischen 0 und 9 liegen':'The digit must be between 0 and 9',
+      'Unbekannte Rätselart':'Unknown puzzle type',
+      'Kein vollständiger Pfeilpfad erzeugbar':'No complete arrow path could be made',
+      'Kein eindeutiges Zahlwort-Suchgitter erzeugbar':'No clear number-word search grid could be made',
+      'Keine nichttriviale Rechnung erzeugbar':'No suitable sum could be made',
+      'Der Schloss-Code muss genau drei Ziffern enthalten, auch 000 ist erlaubt.':'The lock code must have exactly three digits; 000 is allowed.',
+      'Stations-ID fehlt':'Station ID is missing',
+      'Rätselkonsistenz fehlgeschlagen':'Puzzle consistency check failed',
+      'Rätselprüfung fehlgeschlagen':'Puzzle check failed',
+      'Schloss-Code stimmt nicht mit den Rätseln überein':'The lock code does not match the puzzles',
+      'Ungültiger Zielort':'Invalid destination',
+      'Für diesen Zielnamen bitte ein anderes Wegrätsel wählen.':'Please choose a different route puzzle for this destination name.',
+      'Ein eigenes Wegrätsel fehlt':'A custom route puzzle is missing',
+      'Eigenes Wegrätsel ist zu lang (maximal 400 Zeichen).':'The custom route puzzle is too long (at most 400 characters).',
+      'Für ein Beschreibungsrätsel bitte mindestens 12 Zeichen Ortsbeschreibung eingeben.':'For a description puzzle, please enter a location description of at least 12 characters.',
+      'Die Ortsbeschreibung verrät den Zielnamen auch nach dem Ausblenden. Bitte den Text umformulieren.':'The location description still gives away the destination name even after hiding it. Please reword the text.',
+      'Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.':'Question puzzles with a solution word do not work with digits in the location name. Please choose another puzzle type.',
+      'Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.':'There are no suitable questions for this location name yet. Please choose another puzzle type.',
+      'Fragenrätsel ist nicht konsistent.':'The question puzzle is not consistent.',
+    };
+    const planCheck = issue.match(/^Gruppenplanung konnte nicht geprüft werden: (.*)$/s);
+    if (planCheck) return 'The team planning could not be checked: '+planText(planCheck[1]);
+    const route = issue.match(/^Gruppenroute (.*) weicht von der Planung ab\.$/s);
+    if (route) return 'Team route '+teamLabel(route[1])+' differs from the plan.';
+    const validCodeIssue = issue.match(/^Ungültiger dreistelliger Code: (.*)$/s);
+    if (validCodeIssue) return 'Invalid three-digit code: '+validCodeIssue[1];
+    const challenge = issue.match(/^Stationsrätsel (.*?): ([^:]*)$/s);
+    if (challenge && puzzleErrors[challenge[2]]) return 'Station puzzle '+challenge[1]+': '+puzzleErrors[challenge[2]];
+    const routeClue = issue.match(/^(.*?) \/ (.*) → (.*): ([^:]*)$/s);
+    if (routeClue && puzzleErrors[routeClue[4]]) return teamLabel(routeClue[1])+' / '+routeClue[2]+' → '+routeClue[3]+': '+puzzleErrors[routeClue[4]];
+    const missingCode = issue.match(/^(.*?): Stationscode fehlt für (.*)$/s);
+    if (missingCode) return teamLabel(missingCode[1])+': station code missing for '+missingCode[2];
+    const teamTail = issue.match(/^(.*?): (.*)$/s);
+    if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
   const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, teamProfiles };

@@ -70,3 +70,28 @@ test('Planungsfehler und Hinweise aus generator.ts werden in der Oberfläche üb
   for(const m of generator.matchAll(/checkInt\([^,]+,[^,]+,[^,]+, '([^']+)'\)/g))assert.ok(block.includes("'"+m[1]+"':'"),'Feldname fehlt: '+m[1]);
   for(const text of ['Possible crowding at stop ',': invalid value','planText(issue)','{planText(plan.error)}','<p key={i}>{planText(warning)}</p>','<p key={i}>• {planText(warning)}</p>'])assert.ok(source.includes(text),text);
 });
+
+test('Meldungen aus print-audit.ts, print-manifest-audit.ts und puzzles.ts werden im englischen Modus übersetzt',()=>{
+  const start=source.indexOf('const issueText');
+  const block=source.slice(start,source.indexOf('\n    return planText(issue);',start));
+  const keys=new Map([...block.matchAll(/^\s*'((?:[^'\\]|\\.)*)':'((?:[^'\\]|\\.)*)',$/gm)].map(m=>[m[1],m[2]]));
+  const files=['print-audit.ts','print-manifest-audit.ts','puzzles.ts'].map(f=>readFileSync(new URL('../src/'+f,import.meta.url),'utf8'));
+  const literals=[];
+  for(const s of files)for(const m of s.matchAll(/throw new Error\('((?:[^'\\]|\\.)*)'\)/g))literals.push(m[1]);
+  for(const s of files.slice(0,2))for(const m of s.matchAll(/(?:issues|errors)\.push\((?:[a-z.]+\+)?'(?:: )?((?:[^'\\]|\\.)*)'\)/g))literals.push(m[1]);
+  assert.ok(literals.length>40,'zu wenige Meldungen: '+literals.length);
+  const skip=/^(Gruppenroute |Gruppenplanung |Stationsrätsel |Ungültiger dreistelliger Code|Stationscode fehlt für |Das Druckpaket unterstützt|Startort fehlt|Rätselart|[^a-zäöü]*$)/;
+  let checked=0;
+  for(const de of literals){
+    if(skip.test(de)||/^ ?(→|\/)/.test(de)||/^[^:]*: .*\+$/.test(de))continue;
+    const known=keys.has(de)||/(Stationszahl stimmt nicht\.|Station doppelt in Route\.|Nächster Zielort fehlt\.|Umschlag fehlt oder ist doppelt\.|falsche Station auf dem Umschlag\.|Umschlagkennung stimmt nicht mit der Station überein\.|falscher nächster Zielort\.|Umschlag enthält eine falsche Anzahl A5-Blätter\.|Umschlagbeschriftung stimmt nicht\.)/.test(de)||block.includes("'"+de+"'");
+    assert.ok(known,'Übersetzung fehlt: '+de);
+    checked++;
+  }
+  assert.ok(checked>30,'zu wenige geprüft: '+checked);
+  for(const en of keys.values()){
+    assert.equal(/[äöüß]/i.test(en),false,'Deutsche Zeichen im englischen Text: '+en);
+    assert.equal(GERMAN_WORDS.test(en),false,'Deutsches Wort im englischen Text: '+en);
+  }
+  for(const de of keys.keys())if(de.length>25)assert.equal(ENGLISH_WORDS.test(de),false,'Englisches Wort im deutschen Text: '+de);
+});
