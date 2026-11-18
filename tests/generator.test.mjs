@@ -153,6 +153,16 @@ test('Gruppenprofile werden beim Erzeugen des Spielplans vom Eingabeobjekt entko
  assert.deepEqual(createPlan(c).teams[0].profile,original['0']);
 });
 
+test('Schwierigkeit je Team: Option schaltet Teamprofile an/aus, Kinderblätter nutzen die Teamstufe',async()=>{
+ assert.ok(createPlan({...config(),teamProfiles:{}}).teams.every(t=>t.profile===undefined));
+ assert.deepEqual(createPlan({...config(),teamProfiles:{'1':{age:'4–6',difficulty:'normal'}}}).teams.map(t=>t.profile?.age),[undefined,'4–6',undefined,undefined]);
+ const {readFile}=await import('node:fs/promises');
+ const src=await readFile(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.ok(src.includes("checked={Object.keys(teamProfiles).length>0} onChange={event=>setTeamProfiles(event.target.checked?Object.fromEntries(groupDistribution.map((_,i)=>[String(i),{age,difficulty:'normal' as const}])):{})}"),'Aktivieren legt je Team ein Profil an, Deaktivieren leert es');
+ assert.ok(src.includes("{Object.keys(teamProfiles).length>0 && <div className=\"team-age-assignments\""),'Teamauswahl nur bei aktiver Option');
+ assert.ok(src.includes('const ageGroup=team.profile?.age??age;')&&src.includes('generateStationChallenge(location.id,code,ageLevelFor(ageGroup)'),'Stationsrätsel der Kinderblätter nach Teamstufe');
+});
+
 test('Teams share station IDs but not mutable station objects',()=>{
  const c=config({players:12,groupSize:3,startMode:'shared'});
  const plan=createPlan(c);

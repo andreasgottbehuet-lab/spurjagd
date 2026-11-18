@@ -279,16 +279,37 @@ const variantClues=(c,projectId)=>{
  const plan=createPlan(c);
  return {plan,clues:plan.teams.map((team,t)=>team.stations.map((_,s)=>({destination:team.stations[s+1]?.name??team.finish,clue:routeClueFor(c,plan,projectId,t,s)})))};
 };
-test('Rätsel „alle Gruppen gleich“: identische Wegrätsel auch bei verschiedenen Teamaltern',()=>{
+test('Rätsel „alle Gruppen gleich“: identische Wegrätsel je Ziel und Altersstufe',()=>{
  const c={...config(),routeVariants:'same',teamProfiles:{'0':{age:'4–6',difficulty:'normal'},'1':{age:'12–14',difficulty:'normal'}}};
  const {plan,clues}=variantClues(c,'gleich');
  const byDestination=new Map();
- for(const entry of clues.flat()){
-  if(byDestination.has(entry.destination)) assert.deepEqual(entry.clue,byDestination.get(entry.destination),entry.destination);
-  else byDestination.set(entry.destination,entry.clue);
- }
+ clues.forEach((team,t)=>team.forEach(entry=>{
+  const key=entry.destination+'|'+(plan.teams[t].profile?.age??c.age);
+  if(byDestination.has(key)) assert.deepEqual(entry.clue,byDestination.get(key),key);
+  else byDestination.set(key,entry.clue);
+ }));
  assert.ok(byDestination.size<clues.flat().length,'mehrere Teams teilen Ziele');
  assert.deepEqual(auditPrintPacket(c,plan,'gleich'),[]);
+});
+test('Schwierigkeit je Team: Wegrätsel und Druckprüfung nutzen die Teamstufe, ohne Option unverändert',()=>{
+ for(const routeVariants of ['same','perTeam']){
+  const base={...config(),routeVariants};
+  const withOption={...base,teamProfiles:{'0':{age:'4–6',difficulty:'normal'},'1':{age:'14+',difficulty:'normal'}}};
+  const plan=createPlan(withOption);
+  assert.equal(plan.teams[0].profile.age,'4–6');
+  assert.equal(plan.teams[2].profile,undefined);
+  for(const [t,teamAge] of [[0,'4–6'],[1,'14+']]){
+   const asWholeGroup={...base,age:teamAge};
+   for(let s=0;s<plan.stopsPerTeam;s++) assert.deepEqual(routeClueFor(withOption,plan,'stufe',t,s),routeClueFor(asWholeGroup,createPlan(asWholeGroup),'stufe',t,s),routeVariants+' Team '+t);
+  }
+  assert.deepEqual(auditPrintPacket(withOption,plan,'stufe'),[]);
+  const off={...base,teamProfiles:{}};
+  const offPlan=createPlan(off);
+  assert.ok(offPlan.teams.every(team=>team.profile===undefined));
+  assert.deepEqual(offPlan,createPlan(base));
+  for(let s=0;s<offPlan.stopsPerTeam;s++) assert.deepEqual(routeClueFor(off,offPlan,'stufe',1,s),routeClueFor(base,createPlan(base),'stufe',1,s));
+  assert.deepEqual(auditPrintPacket(off,offPlan,'stufe'),auditPrintPacket(base,createPlan(base),'stufe'));
+ }
 });
 test('Rätsel „je Gruppe unterschiedlich“ (Voreinstellung): deterministisch, verschieden, ohne Doppelung im Team',()=>{
  for(const routeVariants of [undefined,'perTeam']){

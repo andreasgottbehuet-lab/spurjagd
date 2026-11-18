@@ -7,7 +7,7 @@ export function routeClueSeed(projectId:string,targetKey:string,teamIndex:number
  const base=projectId+':destination:'+targetKey;
  return hashSeed(variants==='same'?base:base+':team:'+teamIndex);
 }
-/** Wegraetsel genau so, wie es fuer Team/Station gedruckt wird. Bei 'same' gelten Seed und Alter der Gesamtgruppe fuer alle Teams. */
+/** Wegraetsel genau so, wie es fuer Team/Station gedruckt wird. Bei 'same' gilt der Seed fuer alle Teams; das Alter ist die Teamstufe (ohne Option: Gesamtgruppe). */
 export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,teamIndex:number,stationIndex:number):RouteClue {
  const team=plan.teams[teamIndex];
  const used=new Set<string>();
@@ -17,7 +17,7 @@ export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,te
   const destination=team.stations[index+1]?.name??team.finish;
   const target=config.locations.find(location=>location.name.trim()===destination.trim());
   const mode=config.routeClueModes?.[target?.id??'']??(target?'description':'letters');
-  const age=ageLevelFor(config.routeVariants==='same'?config.age:team.profile?.age??config.age);
+  const age=ageLevelFor(team.profile?.age??config.age);
   const base=routeClueSeed(projectId,target?.id??destination,teamIndex,config.routeVariants);
   for(let attempt=0;attempt<100;attempt++){
    const seed=attempt?hashSeed(base+':variant:'+attempt):base;
@@ -59,9 +59,8 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
    continue;
   }
   try{
-   const age=config.age==='4–6'||config.age==='6–8'?'young':config.age==='8–10'?'middle':'older';
-   const challenge=generateStationChallenge(location.id,code,age,hashSeed(projectId));
-   if(codeFromPuzzles(challenge)!==code) throw new Error('Code stimmt nicht überein');
+   const ages=new Set(plan.teams.filter(team=>team.stations.some(station=>station.id===location.id)).map(team=>ageLevelFor(team.profile?.age??config.age)));
+   for(const age of ages) if(codeFromPuzzles(generateStationChallenge(location.id,code,age,hashSeed(projectId)))!==code) throw new Error('Code stimmt nicht überein');
    codeByStation.set(location.id,code);
   }catch(error){
    issues.push('Stationsrätsel '+location.name+': '+(error instanceof Error?error.message:String(error)));
