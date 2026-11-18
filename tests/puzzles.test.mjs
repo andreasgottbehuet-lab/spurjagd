@@ -541,8 +541,8 @@ test('Neue Spiele wählen Textbeschreibungen und die Wiese beschreibt Blumen sta
 });
 
 test('Altersgruppen decken den Zweijahresrhythmus bis 14+ und optional 18+ ab',()=>{
- assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+','18+']);
- assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','expert','adult']);
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','11–13','12–14','14+','18+']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','advanced','expert','adult']);
 });
 
 test('Text-Wegrätsel formt Ortsmerkmale aus einer Liste zu einem lesbaren Hinweis',()=>{
@@ -552,8 +552,8 @@ test('Text-Wegrätsel formt Ortsmerkmale aus einer Liste zu einem lesbaren Hinwe
 });
 
 test('Die optionalen Erwachsenen erhalten eine eigene Altersstufe und Schwierigkeitsklasse',()=>{
- assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','12–14','14+','18+']);
- assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','expert','adult']);
+ assert.deepEqual(AGE_GROUPS,['4–6','6–8','8–10','10–12','11–13','12–14','14+','18+']);
+ assert.deepEqual(AGE_GROUPS.map(ageLevelFor),['young','early','middle','older','advanced','advanced','expert','adult']);
 });
 
 test('Zählrätsel für 6- bis 8-Jährige mischen mehrere Zeichen und bleiben eindeutig',()=>{
@@ -617,4 +617,14 @@ test('Ältere Stufen bevorzugen anspruchsvollere Fragen und akzeptieren sie in d
   assert.equal(verifyCreativeRouteClue(clue),true);
  }
  assert.notEqual(generateCreativeRouteClue('J','','questions',5,'','middle').rows[0].solution,'Jupiter');
+});
+
+test('11–13-Teamprofile wählen fortgeschrittene Fragen mit ausgewiesener Stufe',async()=>{
+ assert.equal(ageLevelFor('11–13'),'advanced');
+ const {QUESTION_BANK}=await import('../src/question-bank.ts');
+ assert.ok(QUESTION_BANK.every(row=>['older','advanced'].includes(row.altersstufe)));
+ const bank=new Map(QUESTION_BANK.map(row=>[row.frage,row]));
+ const clue=generateCreativeRouteClue('Bu','','questions',5,'',ageLevelFor('11–13'));
+ assert.ok(clue.rows.some(row=>bank.get(row.question)?.altersstufe==='advanced'));
+ assert.ok(clue.rows.every(row=>!bank.has(row.question)||bank.get(row.question).altersstufe==='advanced'));
 });
