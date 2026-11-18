@@ -558,3 +558,29 @@ test('Geheimschrift ab 14+ erklärt die Verschiebung mit einem Beispiel statt Al
   assert.equal(verifyDigitPuzzle(p),true);
  }
 });
+
+test('Fragenrätsel enthalten keine doppelten Fragen oder Lösungen',()=>{
+ const longest='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.repeat(3)+'AB';
+ for(const name of ['AAAA','Ärger Öfen Überweg','Feuerwehr','Schloßplatz','Spielplatz','Schotterplatz neben der Feuerwehr',longest]){
+  for(const age of ['middle','older','advanced']){
+   for(let seed=0;seed<40;seed++){
+    const clue=generateCreativeRouteClue(name,'','questions',seed,'',age);
+    assert.equal(verifyCreativeRouteClue(clue),true,name);
+    assert.equal(new Set(clue.rows.map(r=>r.question)).size,clue.rows.length,name);
+    assert.equal(new Set(clue.rows.map(r=>r.solution)).size,clue.rows.length,name);
+   }
+  }
+ }
+ const long=generateCreativeRouteClue('AAAAA','','questions',3);
+ assert.equal(new Set(long.rows.map(r=>r.solution)).size,5);
+ assert.throws(()=>generateCreativeRouteClue('X'.repeat(10),'','questions',3),/fehlen noch passende Fragen/);
+});
+
+test('Ältere Stufen bevorzugen anspruchsvollere Fragen und akzeptieren sie in der Prüfung',()=>{
+ for(const age of ['older','advanced']){
+  const clue=generateCreativeRouteClue('Jupiter','','questions',5,'',age);
+  assert.equal(clue.rows[0].solution,'Jupiter');
+  assert.equal(verifyCreativeRouteClue(clue),true);
+ }
+ assert.notEqual(generateCreativeRouteClue('J','','questions',5,'','middle').rows[0].solution,'Jupiter');
+});

@@ -289,10 +289,10 @@ const QUESTION_BANK: Record<string,{question:string;solution:string;letterIndex:
  Z:{question:'Womit putzt man sich die Zähne?',solution:'Zahnbürste',letterIndex:0}
 };
 const QUESTION_ALTERNATIVES: Partial<Record<string,{question:string;solution:string;letterIndex:number}[]>> = {
- A:[{question:'Was wächst am Baum und kann rot oder grün sein?',solution:'Apfel',letterIndex:0}],
+ A:[{question:'Was wächst am Baum und kann rot oder grün sein?',solution:'Apfel',letterIndex:0},{question:'Welches kleine Insekt baut große Hügel im Wald?',solution:'Ameise',letterIndex:0},{question:'Welches Tier klettert auf Bäume und isst gern Bananen?',solution:'Affe',letterIndex:0},{question:'Welches Fahrzeug hat vier Räder, einen Motor und einen Kofferraum?',solution:'Auto',letterIndex:0}],
  B:[{question:'Welches Tier baut Dämme in Flüssen?',solution:'Biber',letterIndex:0}],
  D:[{question:'Was ist das Gegenteil von hell?',solution:'Dunkel',letterIndex:0}],
- E:[{question:'Wie heißt gefrorenes Wasser?',solution:'Eis',letterIndex:0}],
+ E:[{question:'Wie heißt gefrorenes Wasser?',solution:'Eis',letterIndex:0},{question:'Welcher Vogel schwimmt auf dem Teich und quakt?',solution:'Ente',letterIndex:0},{question:'Welches graue Tier mit langen Ohren sagt „I-A“?',solution:'Esel',letterIndex:0},{question:'Auf welchem Planeten leben wir?',solution:'Erde',letterIndex:0},{question:'Womit trägt man Wasser mit einem Henkel?',solution:'Eimer',letterIndex:0},{question:'Was legt ein Huhn?',solution:'Ei',letterIndex:0}],
  G:[{question:'Was wächst auf einer Wiese und ist grün?',solution:'Gras',letterIndex:0}],
  H:[{question:'Welches Tier hat lange Ohren und hoppelt?',solution:'Hase',letterIndex:0}],
  J:[{question:'Welcher Monat kommt nach Mai?',solution:'Juni',letterIndex:0}],
@@ -301,13 +301,55 @@ const QUESTION_ALTERNATIVES: Partial<Record<string,{question:string;solution:str
  M:[{question:'Welcher Monat kommt nach April?',solution:'Mai',letterIndex:0}],
  N:[{question:'Was ist das Gegenteil von ja?',solution:'Nein',letterIndex:0}],
  P:[{question:'Was wächst auf einem Baum und hat einen Kern?',solution:'Apfel',letterIndex:1}],
- R:[{question:'Was fällt als Wasser aus den Wolken?',solution:'Regen',letterIndex:0}],
- S:[{question:'Was trägt man an den Füßen unter den Schuhen?',solution:'Socken',letterIndex:0}],
+ R:[{question:'Was fällt als Wasser aus den Wolken?',solution:'Regen',letterIndex:0},{question:'Welche Blume hat Dornen am Stiel?',solution:'Rose',letterIndex:0}],
+ S:[{question:'Was trägt man an den Füßen unter den Schuhen?',solution:'Socken',letterIndex:0},{question:'Was fällt im Winter weiß und kalt vom Himmel?',solution:'Schnee',letterIndex:0}],
  T:[{question:'Womit schreibt man auf Papier?',solution:'Stift',letterIndex:1}],
  U:[{question:'Was zeigt eine Uhr an?',solution:'Uhrzeit',letterIndex:0}],
  W:[{question:'Was weht bei stürmischem Wetter?',solution:'Wind',letterIndex:0}],
  Z:[{question:'Welches gestreifte Tier sieht einem Pferd ähnlich?',solution:'Zebra',letterIndex:0}]
 };
+const HARD_ALTERNATIVES: Record<string,{question:string;solution:string;letterIndex:number}> = {
+ A:{question:'Wie heißt die Hauptschlagader des menschlichen Körpers?',solution:'Aorta',letterIndex:0},
+ C:{question:'Wie heißt der grüne Farbstoff in den Blättern der Pflanzen?',solution:'Chlorophyll',letterIndex:0},
+ D:{question:'Wie nennt man die Strecke durch den Mittelpunkt eines Kreises von Rand zu Rand?',solution:'Durchmesser',letterIndex:0},
+ E:{question:'Welches Metall hat das chemische Symbol Fe?',solution:'Eisen',letterIndex:0},
+ G:{question:'Wie nennt man ein Dreieck mit zwei gleich langen Seiten?',solution:'Gleichschenklig',letterIndex:0},
+ H:{question:'Wie heißt die längste Seite im rechtwinkligen Dreieck?',solution:'Hypotenuse',letterIndex:0},
+ J:{question:'Wie heißt der größte Planet unseres Sonnensystems?',solution:'Jupiter',letterIndex:0},
+ K:{question:'Wie heißt das Treibhausgas mit der chemischen Formel CO2?',solution:'Kohlenstoffdioxid',letterIndex:0},
+ P:{question:'Wie nennt man eine Zahl größer als 1, die nur durch 1 und sich selbst teilbar ist?',solution:'Primzahl',letterIndex:0}
+};
+// Weitere Fragen, damit auch lange Ortsnamen (bis 80 Buchstaben) ohne doppelte Frage oder Lösung auskommen.
+const EXTRA_ALTERNATIVES: Record<string,[string,string,number?][]> = {
+ A:[['Mit welchem Werkzeug spaltet man Holz?','Axt']],
+ B:[['Welche gelbe Frucht ist krumm?','Banane'],['Womit spielt man Fußball?','Ball'],['Was hat einen Stamm, Äste und Blätter?','Baum']],
+ C:[['Wie heißt die kleine Münze, von der 100 einen Euro ergeben?','Cent'],['Welches Gerät hat Tastatur, Maus und Bildschirm?','Computer'],['Wie heißt ein Platz, auf dem man im Urlaub zeltet?','Campingplatz']],
+ D:[['Welches Fabelwesen speit Feuer?','Drache'],['Was ist ganz oben auf einem Haus?','Dach']],
+ E:[['Welcher Vogel ruft nachts „Schuhu“?','Eule'],['Welche rote Frucht wächst am Boden und hat kleine Kerne außen?','Erdbeere']],
+ F:[['Welches grüne Tier quakt am Teich?','Frosch'],['Welches Tier hat einen buschigen roten Schwanz und lebt im Wald?','Fuchs'],['Was hat ein Vogel statt Fell am Körper?','Feder']],
+ G:[['Welches Tier hat den längsten Hals?','Giraffe'],['Welches grüne Gemüse ist lang und kommt in den Salat?','Gurke']],
+ H:[['Worin wohnt eine Familie?','Haus'],['Was setzt ein Zauberer auf den Kopf?','Hut']],
+ I:[['Welches Tier hat Stacheln und rollt sich ein?','Igel'],['Wie nennt man Land, das ganz von Wasser umgeben ist?','Insel'],['Wie heißt ein Haus aus Schnee?','Iglu']],
+ J:[['Was zieht man bei Kälte über den Pullover?','Jacke'],['Welche Milchspeise isst man oft mit Früchten aus dem Becher?','Joghurt']],
+ K:[['Welches Tier gibt Milch und sagt „Muh“?','Kuh'],['Was zündet man an, damit es hell wird, und hat einen Docht?','Kerze']],
+ L:[['Womit isst man Suppe?','Löffel'],['Worauf steigt man, um hoch hinauf zu kommen?','Leiter']],
+ M:[['Welches kleine Tier frisst gern Käse?','Maus'],['Welches weiße Getränk gibt die Kuh?','Milch']],
+ N:[['Womit riecht man?','Nase'],['Was baut ein Vogel für seine Eier?','Nest']],
+ O:[['Womit hört man?','Ohr'],['Wie heißt ein riesiges Meer, zum Beispiel der Atlantik?','Ozean'],['Wie nennt man die Mutter von Mama oder Papa?','Oma']],
+ P:[['Was wächst im Wald und hat einen Hut, aber keinen Kopf?','Pilz'],['Womit malt man mit Wasserfarben?','Pinsel']],
+ Q:[['Welches Meerestier ist durchsichtig und kann nesseln?','Qualle'],['Wie nennt man ein Viereck mit vier gleich langen Seiten und vier rechten Winkeln?','Quadrat'],['Welche weiße Milchspeise isst man oft mit Leinöl und Kartoffeln?','Quark']],
+ R:[['Welcher schwarze Vogel krächzt laut?','Rabe']],
+ S:[['Welches Tier gibt uns Wolle?','Schaf']],
+ T:[['An welchem Möbelstück isst man?','Tisch'],['Welches rote Gemüse wird zu Ketchup?','Tomate']],
+ U:[['Was ist das Gegenteil von oben?','Unten'],['Wie nennt man Zahlen wie 3, 5 und 7, die nicht durch 2 teilbar sind?','Ungerade']],
+ V:[['Welches Tier hat Federn und kann fliegen?','Vogel'],['Worin stellt man Blumen mit Wasser?','Vase'],['Welcher Berg kann Lava spucken?','Vulkan']],
+ W:[['Was schwebt weiß am Himmel?','Wolke'],['Welches lange Tier kriecht durch die Erde?','Wurm']],
+ X:[['Welches Auto bringt Fahrgäste gegen Bezahlung ans Ziel?','Taxi',2],['Wer fliegt im Märchen auf einem Besen?','Hexe',2]],
+ Y:[['Wie heißt ein kleines Pferd?','Pony',3],['Wie nennt man ein ganz kleines Kind?','Baby',3],['Welches zottelige Rind lebt im Himalaya-Gebirge?','Yak']],
+ Z:[['Welche gelbe Frucht ist sehr sauer?','Zitrone'],['Welches Fahrzeug fährt auf Schienen?','Zug']]
+};
+for(const [letter,rows] of Object.entries(EXTRA_ALTERNATIVES)) (QUESTION_ALTERNATIVES[letter]??=[]).push(...rows.map(([question,solution,letterIndex=0])=>({question,solution,letterIndex})));
+for(const [letter,row] of Object.entries(HARD_ALTERNATIVES)) (QUESTION_ALTERNATIVES[letter]??=[]).push(row);
 export function normalizeSolutionWord(value:string):string {
  return value.toLocaleUpperCase('de').replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/ß/g,'SS').replace(/[^A-Z]/g,'');
 }
@@ -371,16 +413,19 @@ export function generateCreativeRouteClue(destination: string, description: stri
    if (/\d/.test(answer)) throw new Error('Fragenrätsel mit Lösungswort unterstützen keine Ziffern im Ortsnamen. Bitte eine andere Rätselart wählen.');
    const letters=[...normalizeSolutionWord(answer)];
    if(!letters.length || letters.some(ch=>!QUESTION_BANK[ch])) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
-   const used=new Map<string,number>();
+   const hardAge=age==='older'||age==='advanced';
    const usedQuestions=new Set<string>();
+   const usedSolutions=new Set<string>();
    const rows=letters.map(ch=>{
-     const variants=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])];
-     const count=used.get(ch)??0;
-     used.set(ch,count+1);
-     const start=(hashSeed(seed+':'+ch)%variants.length+count)%variants.length;
-     const selected=Array.from({length:variants.length},(_,offset)=>variants[(start+offset)%variants.length]).find(row=>!usedQuestions.has(row.question));
-     const row=selected??variants[start];
+     const hard=hardAge&&HARD_ALTERNATIVES[ch]?[HARD_ALTERNATIVES[ch]]:[];
+     const rest=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])].filter(r=>r!==HARD_ALTERNATIVES[ch]);
+     const start=hashSeed(seed+':'+ch)%rest.length;
+     const variants=[...hard,...rest.slice(start),...rest.slice(0,start)];
+     // Innerhalb eines Rätsels darf weder eine Frage noch eine Lösung doppelt vorkommen.
+     const row=variants.find(r=>!usedQuestions.has(r.question) && !usedSolutions.has(r.solution));
+     if(!row) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
      usedQuestions.add(row.question);
+     usedSolutions.add(row.solution);
      return {...row};
    });
    if(rows.some((r,i)=>r.solution[r.letterIndex]?.toUpperCase()!==letters[i])) throw new Error('Fragenrätsel ist nicht konsistent.');
