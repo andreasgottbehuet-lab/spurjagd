@@ -469,7 +469,7 @@ function App() {
         <a className="brand" href="/" aria-label={tx('Spurjagd Startseite','Spurjagd home page')}><span className="mark">↗</span> SPURJAGD</a>
         <div className="header-actions"><span className="prototype">{tx('PROTOTYP 0.3','PROTOTYPE 0.3')}</span>
           <label className="visually-hidden" htmlFor="language">{tx('Sprache','Language')}</label>
-          <select id="language" value={lang} onChange={e => setLang(e.target.value as Language)}><option value="de">DE</option><option value="en">EN</option></select>
+          <select id="language" value={lang} onChange={e => setLang(e.target.value as Language)}><option value="de">DE</option><option value="en">EN</option><option value="fr">FR</option></select>
         </div>
       </header>
       <main>
