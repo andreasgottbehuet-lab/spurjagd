@@ -507,3 +507,16 @@ test('Das gemeinsame Buchstabengitter ist auf Quellblatt und Druckkopie mittig u
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-grid\s*\{[^}]*margin-left:auto!important/);
  assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.print-packed-content \.print-three-word-grid \.wordsearch-cell\s*\{width:5mm;height:5mm;font-size:9pt/);
 });
+
+test('Labyrinth und Fehlersuchbild behalten druckbare Maße und Schwarz-Weiß-Kontrast auf A5 und A4',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ assert.match(source,/className="maze-svg" width="36mm" height="36mm" viewBox="-1 -1 38 38"[^>]*strokeWidth="0\.5"/);
+ assert.match(css,/@media print\{[\s\S]*?\.symbol-cell\{border-color:#555\}/);
+ assert.match(css,/\.print-packet-packed\s*>\s*\.print-child-sheet\[data-sheet-kind="task"\] \.symbol-grid \.symbol-cell\s*\{width:7mm;height:7mm/);
+ const mazeSizeMm=36,mazeStrokeMm=0.5,usableA5WidthMm=128;
+ const spotTheDifferenceWidthMm=5*7+4*0.6+2*1+2*0.25;
+ assert.ok(mazeSizeMm+2*mazeStrokeMm<usableA5WidthMm);
+ assert.ok(spotTheDifferenceWidthMm<usableA5WidthMm);
+ assert.ok(mazeSizeMm<210&&spotTheDifferenceWidthMm<210,'beide Rätsel passen auch auf A4');
+});

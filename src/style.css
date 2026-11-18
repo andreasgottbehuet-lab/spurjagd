@@ -404,6 +404,7 @@
  .print-code-line{font-size:9pt;line-height:1.2}
  .print-alphabet-guide{font-size:7.5pt}
  .symbol-grid{grid-template-columns:repeat(4,8mm);gap:.7mm}
+ .symbol-cell{border-color:#555}
  .arrow-grid .arrow-start-cell,.symbol-cell{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
