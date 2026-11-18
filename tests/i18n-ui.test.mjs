@@ -7,6 +7,13 @@ const pairs=[...source.matchAll(/\btx\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*,\s*(
 const GERMAN_WORDS=/\b(und|nicht|bitte|der|die|das|ein|eine|mit|für|von|zum|zur|ist|wird|wurde|Projekt|Speichern|Löschen|fehlgeschlagen|gesperrt)\b/i;
 const ENGLISH_WORDS=/\b(the|and|not|please|with|for|of|is|failed|blocked|project|delete|export)\b/i;
 
+test('Der Spielhinweis verwendet einfache, verständliche Formulierungen',async()=>{
+  const {messages}=await import('../src/i18n.ts');
+  assert.equal(messages.de.note,'Rätsel und Blätter zum Ausdrucken können erstellt werden. Bitte prüfe die Wege, begleite die Gruppe und kontrolliere die Zahlenschlösser vor dem Spiel.');
+  assert.equal(messages.en.note,'Puzzles and printable sheets can be created. Please check the routes, supervise the group and check the combination locks before playing.');
+  assert.doesNotMatch(messages.de.note,/Druckpaket|Schloss-Code/);
+});
+
 test('tx-Paare der Bedienoberfläche enthalten pro Sprache keine Reste der anderen',()=>{
   assert.ok(pairs.length>100,'zu wenige tx-Paare gefunden: '+pairs.length);
   for(const {de,en} of pairs){
