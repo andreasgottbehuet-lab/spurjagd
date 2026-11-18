@@ -39,6 +39,12 @@ test('Vollständiges Spielpaket mit unterschiedlichen Gruppenrouten ist druckfä
  assert.equal(plan.teams.length,4);
  assert.equal(plan.teams.reduce((sum,team)=>sum+team.stations.length,0),12);
 });
+test('Weniger als drei Standorte bei wechselnder Route bleiben ein druckbarer Planungshinweis',()=>{
+ const c={...config(),locations:config().locations.slice(0,2),stationCodes:{a:'007',b:'120'}};
+ const plan=createPlan(c);
+ assert.ok(plan.cautions.some(message=>message.includes('mindestens drei Standorte')));
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+});
 test('Druckprüfung findet fehlende Schloss-Codes und unlösbare Wegrätsel',()=>{
  const c=config();
  c.stationCodes.b='12';
