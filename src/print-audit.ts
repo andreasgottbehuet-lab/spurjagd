@@ -1,6 +1,7 @@
 import {createPlan, type GameConfig, type GamePlan, type RouteVariants} from './generator.ts';
 import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue,clueRevealsDestination,type RouteClue} from './puzzles.ts';
 import {ageLevelFor} from './age-groups.ts';
+import {codeForStation,letterFromCode,solutionWordIssues} from './solution-word.ts';
 
 export function routeClueSeed(projectId:string,targetKey:string,teamIndex:number,variants?:RouteVariants):number {
  const base=projectId+':destination:'+targetKey;
@@ -35,7 +36,8 @@ export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,te
 /** Validates the complete printable packet before any sheet is shown or printed. */
 export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:string):string[] {
  const issues:string[]=[];
- if(config.goal!=='locks') issues.push('Das Druckpaket unterstützt derzeit nur Schloss-Codes.');
+ if(config.goal==='cards') issues.push('Das Druckpaket unterstützt Bildkarten noch nicht.');
+ issues.push(...solutionWordIssues(config,plan));
  if(!config.startPoint?.trim()) issues.push('Startort fehlt.');
  if(config.finishMode==='meeting'&&!config.meetingPoint?.trim()) issues.push('Gemeinsamer Zielort fehlt.');
  if(new Set(config.locations.map(location=>location.id.trim())).size!==config.locations.length) issues.push('Stations-IDs sind nicht eindeutig.');
@@ -51,7 +53,7 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
  const locations=new Map(config.locations.map(location=>[location.id,location]));
  const visitedStationIds=new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)));
  const codeByStation=new Map<string,string>();
- for(const location of config.locations.filter(location=>visitedStationIds.has(location.id))){
+ for(const location of config.locations.filter(location=>config.goal==='locks'&&visitedStationIds.has(location.id))){
   const code=config.stationCodes?.[location.id]??'';
   if(!validCode(code)){
    issues.push('Ungültiger dreistelliger Code: '+(location.name||location.id));
@@ -71,7 +73,12 @@ export function auditPrintPacket(config:GameConfig,plan:GamePlan,projectId:strin
   if(new Set(team.stations.map(location=>location.id)).size!==team.stations.length) issues.push(team.name+': Station doppelt in Route.');
   for(let i=0;i<team.stations.length;i++){
    const station=team.stations[i];
-   if(!locations.has(station.id)||!codeByStation.has(station.id)) issues.push(team.name+': Stationscode fehlt für '+station.name);
+   if(config.goal==='word'){
+    const code=codeForStation(config,plan,plan.teams.indexOf(team),i);
+    let ok=false;
+    try{ok=locations.has(station.id)&&Boolean(letterFromCode(code))&&codeFromPuzzles(generateStationChallenge(station.id,code,ageLevelFor(team.profile?.age??config.age),hashSeed(projectId)))===code;}catch{ok=false;}
+    if(!ok) issues.push(team.name+': Stationscode fehlt für '+station.name);
+   } else if(!locations.has(station.id)||!codeByStation.has(station.id)) issues.push(team.name+': Stationscode fehlt für '+station.name);
    const destination=team.stations[i+1]?.name??team.finish;
    if(!destination.trim()) {issues.push(team.name+': Nächster Zielort fehlt.');continue;}
    try{

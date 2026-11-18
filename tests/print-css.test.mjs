@@ -63,7 +63,7 @@ test('Kontrollliste verteilt sieben Umschläge je A5-Blatt ohne Randüberlauf',(
 
 test('Sicherheitshinweise stehen auf eigener A5-Seite statt zwischen Packlisten',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('key="safety-check"'));assert.ok(source.includes('Spielleitung – Umschlagkontrolle'));assert.ok(source.includes('className="print-checklist-row"'));});
 
-test('Spielleitungs-Kontrollliste enthält Code und tatsächliches Folgeziel, Kinderetiketten nicht',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const checklist=source.slice(source.indexOf("key={'control-'+page}"),source.indexOf('{plan.value.teams.map((team,teamIndex)'));const labels=source.slice(source.indexOf('className="print-label-grid"'));assert.ok(checklist.includes('stationCodes[envelope.stationId]'));assert.ok(checklist.includes('envelope.destination'));assert.ok(checklist.includes('envelope.sheetCount'));assert.equal(labels.includes('stationCodes[envelope.stationId]'),false);assert.equal(labels.includes('envelope.destination'),false);});
+test('Spielleitungs-Kontrollliste enthält Code und tatsächliches Folgeziel, Kinderetiketten nicht',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');const checklist=source.slice(source.indexOf("key={'control-'+page}"),source.indexOf('{plan.value.teams.map((team,teamIndex)'));const labels=source.slice(source.indexOf('className="print-label-grid"'));assert.ok(checklist.includes('data-code={envelopeCode(envelope)}'));assert.ok(checklist.includes('envelope.destination'));assert.ok(checklist.includes('envelope.sheetCount'));assert.equal(labels.includes('envelopeCode(envelope)'),false);assert.equal(labels.includes('envelope.destination'),false);});
 
 test('Kontrollliste zerlegt jede Blattzahl in Aufgabe und Wegrätsel',()=>{const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(source.includes('1 Aufgabe, {envelope.sheetCount-1} Wegrätsel'));});
 
@@ -237,10 +237,12 @@ test('A5 Chromium fixture checks leading zeroes and printable category order',()
 
 test('Wizard does not offer unsupported paid game goals as printable options',()=>{
  const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.match(ui,/checked={goal==='word'} disabled/);
+ assert.match(ui,/checked={goal==='word'} onChange/);
  assert.match(ui,/checked={goal==='cards'} disabled/);
  assert.ok(ui.includes("Auf unterstütztes Spielziel wechseln"));
 });
+
+test('Lösungswort-Kinderblätter benennen Zahlencode und Gitter als Buchstaben-Code',()=>{const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');assert.ok(ui.includes("goal==='word'?'Buchstaben-Code:'"));assert.ok(ui.includes("goal==='word'?'Buchstaben-Code im Buchstabengitter'"));assert.ok(ui.includes("goal==='word'?'Drei Zahlwörter für den Buchstaben-Code'"));assert.ok(ui.includes("goal==='word'?'Unser Buchstaben-Code von oben nach unten: □ □ □'"));});
 
 test('Wizard exposes print errors at station entry and offers a direct correction path',()=>{
  const ui=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
@@ -372,7 +374,8 @@ test('Browser validates organizer-only lock codes and destinations before printi
  const script=readFileSync(new URL('../scripts/verify-a5-browser.mjs',import.meta.url),'utf8');
  const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.ok(main.includes('auditRenderedOrganizerSecrets'));
- assert.ok(main.includes('data-code={stationCodes[envelope.stationId]'));
+ assert.ok(main.includes('data-code={envelopeCode(envelope)}'));
+ assert.ok(main.includes('code:envelopeCode(e)'));
  assert.ok(main.includes('data-destination={envelope.destination}'));
  assert.ok(script.includes('Tampered A5 organizer'));
  assert.ok(script.includes('Corrected A5 organizer'));

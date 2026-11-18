@@ -2,6 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
 import {auditPrintPacket,routeClueFor} from '../src/print-audit.ts';
+import {codeForStation,letterFromCode,suggestSolutionWord} from '../src/solution-word.ts';
+
+test('Lösungswort-Modus: druckfähig, Buchstabe je Routenposition, Längenprüfung',()=>{
+ const c={...config(),goal:'word',stationCodes:{},solutionWord:'ZOO'};
+ const plan=createPlan(c);
+ assert.equal(plan.stopsPerTeam,3);
+ assert.deepEqual(auditPrintPacket(c,plan,'projekt-1'),[]);
+ plan.teams.forEach((team,t)=>team.stations.forEach((_,i)=>assert.equal(letterFromCode(codeForStation(c,plan,t,i)),'ZOO'[i])));
+ assert.equal(codeForStation(c,plan,0,0),'026');
+ assert.ok(auditPrintPacket({...c,solutionWord:'BALL'},plan,'projekt-1').some(issue=>issue.includes('genau 3 Buchstaben')));
+ assert.ok(auditPrintPacket({...c,solutionWord:''},plan,'projekt-1').includes('Lösungswort fehlt.'));
+ assert.equal(suggestSolutionWord(1,'seed1').length,1);
+ for(let n=2;n<=12;n++) assert.equal(suggestSolutionWord(n,'seed'+n).length,n);
+});
 
 const config=()=>({
  players:12,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',
