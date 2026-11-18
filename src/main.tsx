@@ -99,6 +99,8 @@ function App() {
     if (invalidValue && fields[invalidValue[1]]) return fields[invalidValue[1]]+': invalid value';
     const crowd = text.match(/^Möglicher Andrang an Station (\d+) \((.*)\): (\d+) Teams bei gleichzeitigem Start\. Startzeiten oder Stationskapazität prüfen\.$/s);
     if (crowd) return 'Possible crowding at stop '+crowd[1]+' ('+crowd[2]+'): '+crowd[3]+' teams if everyone starts together. Check start times or how many teams the stop can hold.';
+    const advice = text.match(/^Empfehlung gegen Andrang: Startzeiten um (\d+) Minuten versetzen \(bis zu (\d+) Minuten für (\d+) Teams\) oder mindestens (\d+) Stationen für (\d+) Teams nutzen\. Der Plan bleibt druckbar\.$/);
+    if (advice) return 'Tip against crowding: stagger start times by '+advice[1]+' minutes (up to '+advice[2]+' minutes for '+advice[3]+' teams) or use at least '+advice[4]+' stops for '+advice[5]+' teams. The plan can still be printed.';
     return text;
   };
   const issueText = (issue: string) => {

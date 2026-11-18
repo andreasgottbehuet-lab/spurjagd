@@ -107,8 +107,15 @@ test('Gleichzeitiger Stationsbesuch mehrerer Teams wird gemeldet',()=>{
  const plan=createPlan(config({startMode:'shared',routeMode:'same'}));
  assert.ok(plan.cautions.some(w=>w.includes('Möglicher Andrang')&&w.includes('Spielplatz')));
 });
+test('Andrang erzeugt eine konkrete Empfehlung als reinen Hinweis',()=>{
+ const plan=createPlan(config({startMode:'shared',routeMode:'same'}));
+ const tip=plan.cautions.find(w=>w.startsWith('Empfehlung gegen Andrang'));
+ assert.ok(tip&&/Startzeiten um \d+ Minuten versetzen/.test(tip)&&/mindestens \d+ Stationen für \d+ Teams/.test(tip));
+ assert.ok(plan.teams.length>0);
+});
 test('Verteilte Starts ohne Stationsüberschneidung erzeugen keine Andrangwarnung',()=>{
  const plan=createPlan(config({startMode:'distributed',routeMode:'same'}));
+ assert.equal(plan.cautions.some(w=>w.startsWith('Empfehlung gegen Andrang')),false);
  assert.equal(plan.cautions.some(w=>w.includes('Möglicher Andrang')),false);
 });
 

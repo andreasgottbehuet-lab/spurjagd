@@ -111,6 +111,7 @@ export function createPlan(config: GameConfig): GamePlan {
   if (players > 1 && sizes.includes(1)) cautions.push('Mindestens eine Gruppe besteht aus nur einem Kind. Gruppeneinteilung und Aufsicht vor Ort prüfen.');
   // Compare scheduled station slots, assuming all teams start at the same time.
   // This is a warning only; real walking and puzzle times may vary.
+  let maxCrowd = 0;
   for (let slot = 0; slot < stopsPerTeam; slot++) {
     const visitors = new Map<string, string[]>();
     for (const team of teams) {
@@ -119,10 +120,13 @@ export function createPlan(config: GameConfig): GamePlan {
     }
     for (const [stationId, groupNames] of visitors) {
       if (groupNames.length < 2) continue;
+      maxCrowd = Math.max(maxCrowd, groupNames.length);
       const station = places.find(place => place.id === stationId);
       cautions.push('Möglicher Andrang an Station ' + (slot + 1) + ' (' + (station?.name ?? stationId) + '): ' + groupNames.length + ' Teams bei gleichzeitigem Start. Startzeiten oder Stationskapazität prüfen.');
     }
   }
+  // Suggestion only (never blocking): stagger starts by one puzzle duration per team, or use enough stations.
+  if (maxCrowd > 1) cautions.push('Empfehlung gegen Andrang: Startzeiten um ' + puzzleMinutes + ' Minuten versetzen (bis zu ' + (maxCrowd - 1) * puzzleMinutes + ' Minuten für ' + maxCrowd + ' Teams) oder mindestens ' + teamCount + ' Stationen für ' + teamCount + ' Teams nutzen. Der Plan bleibt druckbar.');
   if (startMode === 'distributed' && teamCount > places.length) cautions.push('Mehr Teams als Standorte: Mehrere Gruppen starten am selben Ort.');
   if (startMode === 'shared') cautions.push('Alle Teams starten an derselben Station. Bei gleichzeitigem Beginn mögliche Wartezeiten einplanen.');
   if (routeMode === 'varied' && places.length < 3) cautions.push('Für unterschiedliche Umlaufrichtungen werden mindestens drei Standorte benötigt.');
