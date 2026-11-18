@@ -16,6 +16,7 @@ import { auditRenderedPrintCategories, auditRenderedEnvelopes, auditRenderedLabe
 import { createDefaultGameConfig, DEFAULT_LOCATIONS } from './default-game';
 import {allocateLocationIds,nextLocationId as findNextLocationId} from './location-ids';
 import {issueStep} from './issue-navigation';
+import {generateMissingCodes,groupPrintIssues} from './station-codes';
 import {applyEnvironmentPreset,siteSafetyCheck} from './environment';
 import './style.css';
 
@@ -110,6 +111,8 @@ function App() {
     if (fixed[issue]) return fixed[issue];
     const missing = issue.match(/^Mindestens ein Stationsname fehlt \((\d+)\)\.$/);
     if (missing) return 'At least one station name is missing ('+missing[1]+').';
+    const noCode = issue.match(/^(\d+) Stationen? ohne Code\./);
+    if (noCode) return noCode[1]+(noCode[1]==='1'?' stop':' stops')+" without a code. Fix with 'Generate codes'.";
     const invalid = issue.match(/^Ungültiger Code: (.*)$/);
     if (invalid) return 'Invalid code: '+invalid[1];
     const audit: Record<string,string> = {
@@ -205,6 +208,7 @@ function App() {
     ...(finishMode==='meeting'&&!meetingPoint.trim()?['Zielort fehlt.']:[]),
   ];
   if (plan.value) printIssues.push(...auditPrintPacket(config,plan.value,projectId));
+  const missingCodeIds = locations.filter(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??'')).map(l=>l.id);
   const printManifest = plan.value ? createPrintManifest(plan.value,config) : null;
   if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest,config));
   const ageLevel=ageLevelFor(age);
@@ -532,9 +536,10 @@ function App() {
                 </div>
               )}</div>
               {!sameStartFinish && <div className="location-card"><div className="location-title"><strong>{tx("Ziel","Finish")}</strong></div><label>{tx("Name des Zielorts","Finish location name")}<input maxLength={80} value={meetingPoint} onChange={e=>setMeetingPoint(e.target.value)}/></label></div>}
+              {goal==='locks' && <button type="button" className="secondary" onClick={()=>setStationCodes(old=>generateMissingCodes(locations.filter(l=>visitedStationIds.has(l.id)).map(l=>l.id),old,projectId))}>{tx('Codes erzeugen','Generate codes')}</button>}
               <button type="button" className="secondary" onClick={addLocation} disabled={locations.length>=20}>+ {tx('Standort hinzufügen','Add location')}</button>
               <button type="button" className="secondary" onClick={()=>setActiveStep(4)}>{tx("Spielplan ansehen", "View game plan")}</button>
-              {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{[...new Set(printIssues)].map((issue,i)=><div className="preflight-issue" key={i}><span>{issueText(issue)}</span><button type="button" className="secondary" onClick={()=>setActiveStep(issueStep(issue))}>{tx('Eingabe bearbeiten','Edit input')}</button></div>)}</div>}
+              {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Noch zu erledigen, bevor das A5-Paket gedruckt werden kann:','To resolve before printing the A5 packet:')}</strong>{groupPrintIssues(printIssues,missingCodeIds).map((issue,i)=><div className="preflight-issue" key={i}><span>{issueText(issue)}</span><button type="button" className="secondary" onClick={()=>setActiveStep(issueStep(issue))}>{tx('Eingabe bearbeiten','Edit input')}</button></div>)}</div>}
               {printIssues.length===0 && <p className="helper" role="status" aria-live="polite">{tx('Alle Angaben für das A5-Druckpaket sind vollständig.','All A5 print packet inputs are complete.')}</p>}
             </>}
             {activeStep === 2 && <>
@@ -634,7 +639,7 @@ function App() {
                   <p>{tx('Papierbedarf: Die angezeigte Seitenzahl bezieht sich auf A5-Einzelseiten. Bei zwei A5-Seiten pro A4-Bogen oder Duplexdruck hängt die benötigte Bogenanzahl von der gewählten Druckeinstellung ab.','Paper estimate: the displayed count refers to individual A5 pages. Sheets needed for two A5 pages per A4 sheet or duplex printing depend on printer settings.')}</p>
                   <p>{tx('Schloss-Codes am echten Schloss prüfen. Die automatische Prüfung ersetzt keinen A5-Probedruck.','Check each code on the actual lock. Automated checks do not replace a physical A5 test print.')}</p>
                 </div>}
-                {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{[...new Set(printIssues)].map((issue,i)=><p key={i}>{issueText(issue)}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
+                {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{groupPrintIssues(printIssues,missingCodeIds).map((issue,i)=><p key={i}>{issueText(issue)}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
                   <article className="print-sheet print-organizer-sheet" key="safety-check">
                     <h1>Spielleitung – Start und Sicherheit</h1>
