@@ -1,5 +1,6 @@
 import {createPlan, type GameConfig, type GamePlan, type RouteVariants} from './generator.ts';
 import {codeFromPuzzles,generateCreativeRouteClue,generateStationChallenge,hashSeed,validCode,verifyCreativeRouteClue,clueRevealsDestination,type RouteClue} from './puzzles.ts';
+import type {Subject} from './question-bank.ts';
 import {ageLevelFor} from './age-groups.ts';
 import {codeForStation,letterFromCode,solutionWordIssues} from './solution-word.ts';
 
@@ -11,7 +12,7 @@ export function routeClueSeed(projectId:string,targetKey:string,teamIndex:number
  * Keine Frage kommt in einer Gruppenroute doppelt vor: Bei 'perTeam' zaehlt die bisherige Route der Gruppe, bei 'same' eine feste, fuer alle
  * Gruppen gleiche Reihenfolge aller Ziele (die Raetsel je Ziel bleiben so fuer alle Gruppen gleich). Reicht der Fragenvorrat nicht, wird fuer
  * dieses Ziel das Buchstabenraetsel gedruckt statt einer wiederholten Frage; das Paket bleibt druckbar. */
-export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,teamIndex:number,stationIndex:number):RouteClue {
+export function routeClueFor(config:GameConfig&{subjects?:readonly Subject[]},plan:GamePlan,projectId:string,teamIndex:number,stationIndex:number):RouteClue {
  const team=plan.teams[teamIndex];
  if(!team||stationIndex<0||stationIndex>=team.stations.length) throw new Error('Stationsrätsel fehlt.');
  const destinationAt=(t:GamePlan['teams'][number],i:number)=>t.stations[i+1]?.name??t.finish;
@@ -31,10 +32,10 @@ export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,te
   let clue:RouteClue|undefined;
   for(let attempt=0;attempt<100&&!clue;attempt++){
    const seed=attempt?hashSeed(base+':variant:'+attempt):base;
-   const candidate=generateCreativeRouteClue(destination,target?.description??'',mode,seed,config.routeClueTexts?.[target?.id??'']??'',age);
+   const candidate=generateCreativeRouteClue(destination,target?.description??'',mode,seed,config.routeClueTexts?.[target?.id??'']??'',age,config.subjects);
    if(!candidate.rows?.some(row=>used.has(row.question))) clue=candidate;
   }
-  clue??=generateCreativeRouteClue(destination,'','letters',base,'',age);
+  clue??=generateCreativeRouteClue(destination,'','letters',base,'',age,config.subjects);
   clue.rows?.forEach(row=>used.add(row.question));
   if(destination===wanted) result=clue;
  }

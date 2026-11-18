@@ -1,4 +1,5 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
+import {QUESTION_BANK as SUBJECT_BANK,type Subject} from './question-bank.ts';
 export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
@@ -413,7 +414,7 @@ export function normalizeSolutionWord(value:string):string {
  return value.toLocaleUpperCase('de').replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/ß/g,'SS').replace(/[^A-Z]/g,'');
 }
 export function verifyRouteQuestions(clue:RouteClue):boolean {
- return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length && [...Object.values(QUESTION_BANK),...Object.values(QUESTION_ALTERNATIVES).flatMap(rows=>rows??[])].some(known=>known.question===row.question && known.solution===row.solution && known.letterIndex===row.letterIndex)) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
+ return clue.mode==='questions' && !!clue.rows?.length && clue.rows.every(row=>Number.isInteger(row.letterIndex) && row.letterIndex>=0 && row.letterIndex<row.solution.length && [...Object.values(QUESTION_BANK),...Object.values(QUESTION_ALTERNATIVES).flatMap(rows=>rows??[]),...SUBJECT_BANK.map(b=>({question:b.frage,solution:b.loesung,letterIndex:b.letterIndex}))].some(known=>known.question===row.question && known.solution===row.solution && known.letterIndex===row.letterIndex)) && clue.rows.map(row=>row.solution[row.letterIndex].toUpperCase()).join('')===normalizeSolutionWord(clue.answer);
 }
 function maskDestination(description:string, destination:string):string {
  const source=description.trim();
@@ -448,7 +449,7 @@ export function decodeAlternatingRouteName(question:string):string|null {
  if(first.length!==second.length&&first.length!==second.length+1)return null;
  return first.map((character,index)=>character+(second[index]??'')).join('');
 }
-export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = '', age:AgeLevel='middle'): RouteClue {
+export function generateCreativeRouteClue(destination: string, description: string, mode: RouteClueMode, seed: number, custom = '', age:AgeLevel='middle', subjects?:readonly Subject[]): RouteClue {
  const answer=destination.trim();
  if(!answer || answer.length>80) throw new Error('Ungültiger Zielort');
  if(mode==='custom') {
@@ -476,10 +477,15 @@ export function generateCreativeRouteClue(destination: string, description: stri
    const usedQuestions=new Set<string>();
    const usedSolutions=new Set<string>();
    const rows=letters.map(ch=>{
+     // Ab 'older': passende Fragen der Fächerbank (optional nach Fächern gefiltert) zuerst, sonst die bisherige Bank.
+     const bankLevel=age==='older'?'older':age==='advanced'||age==='expert'||age==='adult'?'advanced':'';
+     const banked=bankLevel?SUBJECT_BANK.filter(b=>b.altersstufe===bankLevel&&(!subjects||subjects.includes(b.fach))&&b.loesung[b.letterIndex]?.toUpperCase()===ch).map(b=>({question:b.frage,solution:b.loesung,letterIndex:b.letterIndex})):[];
+     const bstart=banked.length?hashSeed(seed+':bank:'+ch)%banked.length:0;
+     const bankRows=[...banked.slice(bstart),...banked.slice(0,bstart)];
      const hard=hardAge&&HARD_ALTERNATIVES[ch]?[HARD_ALTERNATIVES[ch]]:[];
      const rest=[QUESTION_BANK[ch],...(QUESTION_ALTERNATIVES[ch]??[])].filter(r=>r!==HARD_ALTERNATIVES[ch]);
      const start=hashSeed(seed+':'+ch)%rest.length;
-     const variants=[...hard,...rest.slice(start),...rest.slice(0,start)];
+     const variants=[...bankRows,...hard,...rest.slice(start),...rest.slice(0,start)];
      // Innerhalb eines Rätsels darf weder eine Frage noch eine Lösung doppelt vorkommen.
      const row=variants.find(r=>!usedQuestions.has(r.question) && !usedSolutions.has(r.solution));
      if(!row) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
