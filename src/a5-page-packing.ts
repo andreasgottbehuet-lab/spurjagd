@@ -1,9 +1,11 @@
 /** Measured A5 packing; never combines different teams or document sections. */
 export const A5_USABLE_HEIGHT_MM = 190;
+/** Printable A4 height with 10 mm margins at the top and bottom. */
+export const A4_USABLE_HEIGHT_MM = 277;
 export interface A5Block { id:string; owner:string; section:string; heightMm:number; keepWithNext?:boolean }
 export interface A5PackedPage { owner:string; section:string; blocks:A5Block[]; usedMm:number }
 export function packA5Blocks(blocks:readonly A5Block[],usableHeightMm=A5_USABLE_HEIGHT_MM,options:{compactOrganizer?:boolean;compactAll?:boolean;noCompactBlockIds?:readonly string[]}={}):A5PackedPage[] {
- if(!Number.isFinite(usableHeightMm)||usableHeightMm<=0) throw new Error('Ungültige A5-Druckhöhe');
+ if(!Number.isFinite(usableHeightMm)||usableHeightMm<=0) throw new Error('Ungültige Druckhöhe');
  const pages:A5PackedPage[]=[];
  if(blocks.some(b=>!b.id.trim()||!b.owner.trim()||!b.section.trim()||!Number.isFinite(b.heightMm)||b.heightMm<=0||b.heightMm>usableHeightMm)) throw new Error('Ungültiger A5-Inhaltsblock');
  if(new Set(blocks.map(b=>b.id)).size!==blocks.length) throw new Error('Doppelte A5-Blockkennung');

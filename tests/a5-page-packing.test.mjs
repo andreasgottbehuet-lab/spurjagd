@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages,physicalA5Manifest,measureA5Elements} from '../src/a5-page-packing.ts';
+import {packA5Blocks,underfilledA5Pages,measureA5Sheets,compactableUnderfilledPages,auditA5PackedPages,physicalA5Manifest,measureA5Elements,A5_USABLE_HEIGHT_MM,A4_USABLE_HEIGHT_MM} from '../src/a5-page-packing.ts';
 const b=(id,owner,heightMm,section='task',keepWithNext=false)=>({id,owner,section,heightMm,keepWithNext});
 test('Underfilled compatible blocks share A5 page',()=>{
  const pages=packA5Blocks([b('a','rot',60),b('b','rot',65),b('c','rot',40)]);
@@ -43,9 +43,18 @@ test('Invalid browser measurements are rejected',()=>{
  for(const heightPx of [0,-1,NaN,Infinity]) assert.throws(()=>measureA5Sheets([{id:'a',owner:'rot',section:'task',heightPx}]));
 });
 test('190 mm usable height is consistent across packing and underfill checks',()=>{
+ assert.equal(A5_USABLE_HEIGHT_MM,190);
+ assert.equal(A4_USABLE_HEIGHT_MM,277);
  assert.throws(()=>packA5Blocks([b('a','rot',191)]));
  const pages=packA5Blocks([b('a','rot',100),b('b','rot',90)]);
  assert.equal(pages.length,1);assert.deepEqual(underfilledA5Pages(pages),[]);
+});
+
+test('A4 packing is opt-in and keeps its usable page height',()=>{
+ const pages=packA5Blocks([b('a','rot',220)],A4_USABLE_HEIGHT_MM);
+ assert.equal(pages.length,1);
+ assert.equal(pages[0].usedMm,220);
+ assert.throws(()=>packA5Blocks([b('a','rot',278)],A4_USABLE_HEIGHT_MM));
 });
 
 test('A chain of three linked blocks is never split across physical pages',()=>{
