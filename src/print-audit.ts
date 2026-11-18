@@ -7,27 +7,36 @@ export function routeClueSeed(projectId:string,targetKey:string,teamIndex:number
  const base=projectId+':destination:'+targetKey;
  return hashSeed(variants==='same'?base:base+':team:'+teamIndex);
 }
-/** Wegraetsel genau so, wie es fuer Team/Station gedruckt wird. Bei 'same' gilt der Seed fuer alle Teams; das Alter ist die Teamstufe (ohne Option: Gesamtgruppe). */
+/** Wegraetsel genau so, wie es fuer Team/Station gedruckt wird. Bei 'same' gilt der Seed fuer alle Teams; das Alter ist die Teamstufe (ohne Option: Gesamtgruppe).
+ * Keine Frage kommt in einer Gruppenroute doppelt vor: Bei 'perTeam' zaehlt die bisherige Route der Gruppe, bei 'same' eine feste, fuer alle
+ * Gruppen gleiche Reihenfolge aller Ziele (die Raetsel je Ziel bleiben so fuer alle Gruppen gleich). Reicht der Fragenvorrat nicht, wird fuer
+ * dieses Ziel das Buchstabenraetsel gedruckt statt einer wiederholten Frage; das Paket bleibt druckbar. */
 export function routeClueFor(config:GameConfig,plan:GamePlan,projectId:string,teamIndex:number,stationIndex:number):RouteClue {
  const team=plan.teams[teamIndex];
+ if(!team||stationIndex<0||stationIndex>=team.stations.length) throw new Error('Stationsrätsel fehlt.');
+ const destinationAt=(t:GamePlan['teams'][number],i:number)=>t.stations[i+1]?.name??t.finish;
+ const wanted=destinationAt(team,stationIndex);
+ const repeated=config.routeVariants==='same'&&team.stations.slice(0,stationIndex).some((_,i)=>destinationAt(team,i)===wanted);
+ if(repeated) return generateCreativeRouteClue(wanted,'','letters',routeClueSeed(projectId,wanted,teamIndex,'same'),'',ageLevelFor(team.profile?.age??config.age));
+ const order=config.routeVariants==='same'
+  ? [...new Set(plan.teams.flatMap(t=>t.stations.map((_,i)=>destinationAt(t,i))))]
+  : team.stations.slice(0,stationIndex+1).map((_,i)=>destinationAt(team,i));
+ const age=ageLevelFor(team.profile?.age??config.age);
  const used=new Set<string>();
  let result:RouteClue|undefined;
- for(let index=0;index<=stationIndex;index++){
-  result=undefined;
-  const destination=team.stations[index+1]?.name??team.finish;
+ for(const destination of order){
   const target=config.locations.find(location=>location.name.trim()===destination.trim());
   const mode=config.routeClueModes?.[target?.id??'']??(target?'description':'letters');
-  const age=ageLevelFor(team.profile?.age??config.age);
   const base=routeClueSeed(projectId,target?.id??destination,teamIndex,config.routeVariants);
-  for(let attempt=0;attempt<100;attempt++){
+  let clue:RouteClue|undefined;
+  for(let attempt=0;attempt<100&&!clue;attempt++){
    const seed=attempt?hashSeed(base+':variant:'+attempt):base;
-   const clue=generateCreativeRouteClue(destination,target?.description??'',mode,seed,config.routeClueTexts?.[target?.id??'']??'',age);
-   if(config.routeVariants!=='same'&&clue.rows?.some(row=>used.has(row.question))) continue;
-   result=clue;
-   clue.rows?.forEach(row=>used.add(row.question));
-   break;
+   const candidate=generateCreativeRouteClue(destination,target?.description??'',mode,seed,config.routeClueTexts?.[target?.id??'']??'',age);
+   if(!candidate.rows?.some(row=>used.has(row.question))) clue=candidate;
   }
-  if(!result) throw new Error('Für diesen Ortsnamen fehlen noch passende Fragen. Bitte eine andere Rätselart wählen.');
+  clue??=generateCreativeRouteClue(destination,'','letters',base,'',age);
+  clue.rows?.forEach(row=>used.add(row.question));
+  if(destination===wanted) result=clue;
  }
  if(!result) throw new Error('Stationsrätsel fehlt.');
  return result;
