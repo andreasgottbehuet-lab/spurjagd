@@ -3,7 +3,7 @@ import { nextProjectRevision } from './project-revision';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, type RouteMode, type FinishMode, type TeamProfile, type Environment } from './generator';
-import { messages, type Language } from './i18n';
+import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, generateCreativeRouteClue, type RouteClueMode } from './puzzles';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
@@ -22,6 +22,7 @@ const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...locati
 
 function App() {
   const [lang, setLang] = useState<Language>('de');
+  useEffect(()=>{ applyDocumentLanguage(document.documentElement, lang); },[lang]);
   const [players, setPlayers] = useState(12);
   const [groupSize, setGroupSize] = useState(3);
   const groupDistribution = useMemo(()=>teamSizes(players,groupSize),[players,groupSize]);

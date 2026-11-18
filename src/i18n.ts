@@ -43,3 +43,7 @@ export const messages = {
   },
 } as const;
 export type Language = keyof typeof messages;
+
+export function applyDocumentLanguage(root: { lang: string }, lang: Language): void {
+  root.lang = lang;
+}
