@@ -23,6 +23,7 @@ import {generateMissingCodes,groupPrintIssues} from './station-codes';
 import {applyEnvironmentPreset,siteSafetyCheck} from './environment';
 import './style.css';
 import { isPremiumFeature } from './features';
+import { bildPfad, designs, type DesignId, type Tinte } from './designs';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
 
@@ -59,6 +60,9 @@ function App() {
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
+  const [coverEnabled,setCoverEnabled]=useState(false);
+  const [designId,setDesignId]=useState<DesignId>('schlicht');
+  const [tinte,setTinte]=useState<Tinte>('farbig');
   const [projects, setProjects] = useState<SavedGame[]>([]);
   const [storageReady, setStorageReady] = useState(false);
   const [storageMessage, setStorageMessage] = useState('');
@@ -221,7 +225,7 @@ function App() {
   const missingCodeIds = locations.filter(l=>(goal==='locks'||goal==='cards')&&visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??'')).map(l=>l.id);
   const hasMissingPrintValues=missingCodeIds.length>0||(goal==='word'&&plan.value&&!normalizeSolutionWord(solutionWord));
   const fillPrintValues=()=>{if(!plan.value)return;const filled=fillMissingPrintValues(config,plan.value,projectId);setStationCodes(filled.stationCodes??{});setSolutionWord(filled.solutionWord);};
-  const printManifest = plan.value ? createPrintManifest(plan.value,config) : null;
+  const printManifest = plan.value ? createPrintManifest(plan.value,config,coverEnabled) : null;
   if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest,config));
   const challenges = useMemo(() => {
     if (printIssues.length || !plan.value) return [];
@@ -663,6 +667,7 @@ function App() {
                 })}</section>}
                 {(goal==='locks'||goal==='cards') &&<section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge,teamName,teamIndex,ageGroup})=><article className="location-card" key={teamIndex+'-'+location.id}><strong>{tx('Team '+teamName+' · '+ageGroup+' Jahre','Team '+teamLabel(teamName)+' · ages '+ageGroup)} · {location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || tx("□ (leer)","□ (empty)")}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label={tx("Buchstabengitter","Letter grid")}>{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid arrow-grid" data-grid-size={p.arrowGrid.rows.length} aria-label={tx("Pfeilpfad-Zahlengitter","Arrow path number grid")}>{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className={r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'wordsearch-cell arrow-start-cell':'wordsearch-cell'} key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?<><small>S</small><strong>{p.arrowGrid!.arrows[0]}</strong></>:digit}</span>)}</div>)}</div>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
                 {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{en ? <>{printManifest.envelopes.length} envelopes with at least 2 sheets each; {printManifest.taskSheets} child sheets in total, plus {printManifest.organizerSheets} organizer sheets and {printManifest.labelSheets} label sheets. Before automatic A5 packing: {printManifest.minimumSheets} A5 pages. {measuredPrintSummary?.error ? 'A5 measurement: '+measuredPrintSummary.error : measuredPrintSummary ? 'After browser measurement: '+measuredPrintSummary.total+' A5 pages ('+measuredPrintSummary.children+' children, '+measuredPrintSummary.organizer+' organizer, '+measuredPrintSummary.labels+' labels).' : 'The actual page count is measured in the browser on the print page.'}</> : <>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. {measuredPrintSummary?.error ? 'A5-Messung: '+measuredPrintSummary.error : measuredPrintSummary ? 'Nach der Browsermessung: '+measuredPrintSummary.total+' A5-Seiten ('+measuredPrintSummary.children+' Kinder, '+measuredPrintSummary.organizer+' Spielleitung, '+measuredPrintSummary.labels+' Etiketten).' : 'Die tatsächliche Seitenzahl wird auf der Druckseite im Browser gemessen.'}</>}</p></div>}
+                <fieldset className="cover-options"><legend>{tx('Deckblatt','Cover page')}</legend><label className="radio"><input type="checkbox" checked={coverEnabled} onChange={e=>setCoverEnabled(e.target.checked)}/>{tx('Deckblatt hinzufügen','Add a cover page')}</label>{coverEnabled&&<div className="form-grid"><label>{tx('Design','Design')}<select value={designId} onChange={e=>setDesignId(e.target.value as DesignId)}>{designs.map(design=><option key={design.id} value={design.id}>{design.name}</option>)}</select></label><label>{tx('Tinte','Ink')}<select value={tinte} onChange={e=>setTinte(e.target.value as Tinte)}><option value="farbig">{tx('Farbig','Color')}</option><option value="schwarzweiss">{tx('Schwarzweiß','Black and white')}</option></select></label></div>}</fieldset>
                 {printManifest && <div className="print-guidance" aria-label={tx('A5-Druckanleitung','A5 print instructions')}>
                   <strong>{tx('Druckeinstellungen und Packen','Print settings and packing')}</strong>
                   <p>{tx('A5 Hochformat · Maßstab 100 % · Browser-Kopf- und Fußzeilen ausschalten. Prüfe die Druckvorschau auf abgeschnittene Texte und zusätzliche Seiten.','A5 portrait · 100% scale · disable browser headers and footers. Check the preview for clipped text and extra pages.')}</p>
@@ -685,6 +690,7 @@ function App() {
                 </div>}
                 {printIssues.length>0 && <div className="warnings" role="status" aria-live="polite" aria-atomic="true"><strong>{tx('Vor dem Drucken prüfen:','Check before printing:')}</strong>{groupPrintIssues(printIssues,missingCodeIds).map((issue,i)=><p key={i}>{issueText(issue)}</p>)}<div className="preflight-actions"><button type="button" className="secondary" onClick={()=>setActiveStep(2)}>{tx('Spielregeln und Zeit prüfen','Review rules and timing')}</button><button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx('Standorte und Codes prüfen','Review locations and codes')}</button></div></div>}
                 {printIssues.length===0 && <section className="print-packet" aria-label="Druckpaket">
+                  {coverEnabled&&<article className="print-sheet print-organizer-sheet print-cover-sheet" data-print-section="cover" key="cover"><div className="print-cover-art">{bildPfad(designId,'cover',tinte)&&<img src={bildPfad(designId,'cover',tinte)!} alt=""/>}<div className="print-cover-title"><strong>SPURJAGD</strong><span>{projectTitle}</span></div></div></article>}
                   <article className="print-sheet print-organizer-sheet" key="safety-check">
                     <h1>Spielleitung – Start und Sicherheit</h1>
                     <h2>Vor der Ausgabe</h2>

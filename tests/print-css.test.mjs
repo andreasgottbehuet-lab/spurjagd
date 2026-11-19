@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createPlan} from '../src/generator.ts';
+import {createPrintManifest} from '../src/print-manifest.ts';
 
 test('A5 print packet is isolated from interactive planner elements',()=>{
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
@@ -92,11 +94,22 @@ test('Druckknopf kontrolliert tatsächliche DOM-Blattzahl vor dem Öffnen des Dr
 test('Alle Druckseiten werden einer der drei geprüften Blattkategorien zugeordnet',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  assert.equal((source.match(/className="print-sheet print-organizer-sheet"/g)??[]).length,6);
+ assert.match(source,/data-print-section="cover"/);
+ assert.match(source,/createPrintManifest\(plan\.value,config,coverEnabled\)/);
+ assert.match(source,/bildPfad\(designId,'cover',tinte\)/);
  assert.equal((source.match(/className="print-sheet print-child-sheet"/g)??[]).length,2);
  assert.ok(source.includes('className="print-sheet print-label-sheet"'));
  for(const name of ['print-organizer-sheet','print-child-sheet','print-label-sheet']){
   assert.ok(source.includes("packet?.querySelectorAll('."+name+"').length"));
  }
+});
+
+test('Optionales Deckblatt wird im A5-Manifest genau einmal mitgezählt',()=>{
+ const plan=createPlan({players:3,groupSize:3,durationMinutes:60,age:'8–10',goal:'locks',locations:[{id:'a',name:'Wiese',description:''},{id:'b',name:'Park',description:''},{id:'c',name:'Platz',description:''},{id:'d',name:'Wald',description:''}],puzzleMinutes:10,walkingMinutes:5,startFinishMinutes:10,meetingPoint:'Treffpunkt'});
+ const plain=createPrintManifest(plan),cover=createPrintManifest(plan,undefined,true);
+ assert.equal(cover.organizerSheets,plain.organizerSheets+1);
+ assert.equal(cover.minimumSheets,plain.minimumSheets+1);
+ assert.equal(plain.coverSheet,false);
 });
 
 test('A5-Kinderblätter tragen ihre Umschlagkennung und Blattart',()=>{
