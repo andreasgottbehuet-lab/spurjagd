@@ -4,12 +4,12 @@ import {PARTY_TASKS} from '../src/party-tasks.ts';
 import {planHunt,huntRange,defaultHuntRange} from '../src/hunt-planner.ts';
 
 test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien und Orte ab',()=>{
- const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kissenbild im Team','Blattformen entdecken','Tierisch leise','Was ist größer?','Kleiderrennen','Turmbau','Regenbogen-Suche','Wolkenbild','Regentropfen-Takt','Regentag-Rätsel','Papierbrücke','Formen in der Stadt','Drei Dinge in einer Farbe','Stadt-Detektive','Bild wie eine Statue','Stadtgeräusche entdecken'];
- assert.equal(PARTY_TASKS.length,24); // Vier angeforderte Kleinkindkarten ergänzen den Bestand.
+ const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kissenbild im Team','Blattformen entdecken','Tierisch leise','Was ist größer?','Kleiderrennen','Turmbau','Regenbogen-Suche','Wolkenbild','Regentropfen-Takt','Regentag-Rätsel','Papierbrücke','Formen in der Stadt','Drei Dinge in einer Farbe','Stadt-Detektive','Bild wie eine Statue','Stadtgeräusche entdecken','Ball zur Linie rollen','Bilder nach Farben sortieren','Wohin weht der Wind?','Klatschkette im Team'];
+ assert.equal(PARTY_TASKS.length,28); // Vier neue Karten erweitern den bestehenden Bestand.
  assert.deepEqual(PARTY_TASKS.map(task=>task.titel),expected);
  for(const key of ['id','titel','regel','alterVon','alterBis','material','dauerMinuten','kategorie','orte'])assert.ok(PARTY_TASKS.every(task=>key in task));
- for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,24);
- const kleinkind=PARTY_TASKS.filter(task=>task.id.startsWith('kleinkind-'));
+ for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,28);
+ const kleinkind=PARTY_TASKS.filter(task=>task.id.startsWith('kleinkind-neu-'));
  assert.equal(kleinkind.length,4);
  assert.deepEqual(new Set(kleinkind.map(task=>task.kategorie)),new Set(['bewegung','knobeln','natur','teamwork']));
  assert.ok(kleinkind.every(task=>task.alterVon>=4&&task.alterVon<=5&&task.alterBis>=7&&task.alterBis<=8&&task.dauerMinuten<=10));
