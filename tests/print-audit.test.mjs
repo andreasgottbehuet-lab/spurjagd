@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
 import {auditPrintPacket,routeClueFor} from '../src/print-audit.ts';
-import {codeForStation,letterFromCode,suggestSolutionWord} from '../src/solution-word.ts';
+import {codeForStation,letterFromCode,suggestSolutionWord,fillMissingPrintValues} from '../src/solution-word.ts';
 import {generateStationChallenge,hashSeed} from '../src/puzzles.ts';
 import {ageLevelFor} from '../src/age-groups.ts';
 
@@ -17,6 +17,27 @@ test('Lösungswort-Modus: druckfähig, Buchstabe je Routenposition, Längenprüf
  assert.ok(auditPrintPacket({...c,solutionWord:''},plan,'projekt-1').includes('Lösungswort fehlt.'));
  assert.equal(suggestSolutionWord(1,'seed1').length,1);
  for(let n=2;n<=12;n++) assert.equal(suggestSolutionWord(n,'seed'+n).length,n);
+});
+
+test('Automatisches Auffüllen macht fehlende Druckwerte vollständig und erhält gesetzte Werte',()=>{
+ const c={...config(),goal:'word',stationCodes:{a:'007'},solutionWord:''};
+ const plan=createPlan(c),filled=fillMissingPrintValues(c,plan,'seed');
+ assert.equal(filled.stationCodes.a,'007');
+ assert.ok(filled.stationCodes.b);
+ assert.equal(filled.solutionWord,suggestSolutionWord(plan.stopsPerTeam,'seed'));
+ assert.deepEqual(auditPrintPacket(filled,plan,'projekt-1'),[]);
+ const existing=fillMissingPrintValues({...filled,solutionWord:'ZOO'},plan,'other');
+ assert.equal(existing.solutionWord,'ZOO');
+ assert.equal(existing.stationCodes.a,'007');
+});
+test('Automatisches Auffüllen ergänzt fehlende Schloss-Codes und behält eingegebene (auch unvollständige)',()=>{
+ const c={...config(),stationCodes:{a:'007'}};
+ const plan=createPlan(c);
+ assert.ok(auditPrintPacket(c,plan,'projekt-1').length>0);
+ const filled=fillMissingPrintValues(c,plan,'seed');
+ assert.equal(filled.stationCodes.a,'007');
+ assert.deepEqual(auditPrintPacket(filled,plan,'projekt-1'),[]);
+ assert.equal(fillMissingPrintValues({...c,stationCodes:{a:'12'}},plan,'seed').stationCodes.a,'12');
 });
 
 const config=()=>({

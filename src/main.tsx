@@ -6,7 +6,7 @@ import { createPlan, teamSizes, type GameGoal, type Location, type StartMode, ty
 import { SUBJECTS, type Subject } from './question-bank';
 import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, normalizeSolutionWord, type RouteClueMode } from './puzzles';
-import { codeForStation, letterFromCode, suggestSolutionWord, LETTER_TABLE, MAX_SOLUTION_WORD_LENGTH } from './solution-word';
+import { codeForStation, letterFromCode, suggestSolutionWord, fillMissingPrintValues, LETTER_TABLE, MAX_SOLUTION_WORD_LENGTH } from './solution-word';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
 import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { stationModeLine, type StationMode } from './station-mode';
@@ -219,6 +219,8 @@ function App() {
   ];
   if (plan.value) printIssues.push(...auditPrintPacket(config,plan.value,projectId));
   const missingCodeIds = locations.filter(l=>(goal==='locks'||goal==='cards')&&visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??'')).map(l=>l.id);
+  const hasMissingPrintValues=missingCodeIds.length>0||(goal==='word'&&plan.value&&!normalizeSolutionWord(solutionWord));
+  const fillPrintValues=()=>{if(!plan.value)return;const filled=fillMissingPrintValues(config,plan.value,projectId);setStationCodes(filled.stationCodes??{});setSolutionWord(filled.solutionWord);};
   const printManifest = plan.value ? createPrintManifest(plan.value,config) : null;
   if (plan.value && printManifest) printIssues.push(...auditPrintManifest(plan.value,printManifest,config));
   const challenges = useMemo(() => {
@@ -413,6 +415,7 @@ function App() {
       version:1, id:newGameId(), title:'Neue Schnitzeljagd', updatedAt:nextProjectRevision(),
       config:createDefaultGameConfig(),
     };
+    fresh.config={...fresh.config,...fillMissingPrintValues(fresh.config,createPlan(fresh.config),fresh.id)};
     try { const updated=saveGame(fresh); setProjects(updated); applyGame(fresh); setStorageReady(true); setActiveStep(1); }
     catch(e){ setStorageMessage(tx('Neues Projekt: ', 'New project: ')+storageError(e)); }
   };
@@ -428,6 +431,7 @@ function App() {
       if(expected===undefined) throw new Error(tx('Projektversion unbekannt. Löschen zum Schutz der Daten abgebrochen.', 'Project version unknown. Delete cancelled to protect your data.'));
       if(stored.length===1 && stored[0].id===projectId){
         const fresh:SavedGame={version:1,id:newGameId(),title:'Meine Schnitzeljagd',updatedAt:nextProjectRevision(),config:createDefaultGameConfig()};
+        fresh.config={...fresh.config,...fillMissingPrintValues(fresh.config,createPlan(fresh.config),fresh.id)};
         const saved=replaceLastGame(projectId,fresh,expected??undefined);
         setProjects(saved);
         applyGame(fresh);
@@ -625,6 +629,7 @@ function App() {
                   ? tx('Bitte die unten genannten Eingaben korrigieren. Das Druckpaket wird danach automatisch aktualisiert.', 'Correct the inputs listed below. The print packet updates automatically.')
                   : tx('Alle automatischen Plausibilitätsprüfungen sind bestanden. Vor der Ausgabe die Druckvorschau und die echten Schlösser prüfen.', 'All automated consistency checks passed. Check the print preview and physical locks before use.')}</span>
               </div>
+              {hasMissingPrintValues&&<button type="button" className="secondary" onClick={fillPrintValues}>{tx('Fehlendes automatisch ausfüllen','Fill missing values automatically')}</button>}
               {plan.error ? <p className="error" role="alert">{planText(plan.error)}</p> : plan.value && <>
                 <div className="stats">
                   <div className="stat"><strong>{plan.value.teams.length}</strong><span>{t.teams}</span></div>

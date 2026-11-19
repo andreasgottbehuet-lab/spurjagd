@@ -1,5 +1,6 @@
 import {hashSeed,normalizeSolutionWord} from './puzzles.ts';
 import type {GameConfig as BaseConfig,GamePlan} from './generator.ts';
+import {generateMissingCodes} from './station-codes.ts';
 
 /** Nur bei goal 'word': A–Z, Länge = Stationen je Gruppe. Fehlt in älteren Projekten. */
 type GameConfig=BaseConfig&{solutionWord?:unknown};
@@ -12,6 +13,11 @@ export const LETTER_TABLE=Array.from({length:26},(_,i)=>String.fromCharCode(65+i
 export function suggestSolutionWord(length:number,seed:string):string {
  const options=WORDS.filter(word=>word.length===length);
  return options.length?options[hashSeed(seed)%options.length]:'';
+}
+/** Fill only empty print values (entered values, even invalid ones, stay); stable project seed keeps new projects reproducible. */
+export function fillMissingPrintValues(config:BaseConfig&{solutionWord?:string},plan:GamePlan,seed:string):BaseConfig&{solutionWord:string} {
+ const stationIds=[...new Set(plan.teams.flatMap(team=>team.stations.map(station=>station.id)))].filter(id=>!(config.stationCodes?.[id]??'').trim());
+ return {...config,stationCodes:generateMissingCodes(stationIds,config.stationCodes??{},seed),solutionWord:config.solutionWord||suggestSolutionWord(plan.stopsPerTeam,seed)};
 }
 export function letterCode(letter:string):string {
  if(!/^[A-Z]$/.test(letter)) throw new Error('Ungültiger Buchstabe im Lösungswort');
