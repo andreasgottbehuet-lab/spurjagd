@@ -48,12 +48,22 @@ test('Stationszahl bleibt im Altersbereich; drinnen liegt der Standard immer hö
  assert.throws(()=>planHunt({alter:6,ort:'garten',anzahl:11}),/zwischen 6 und 10/);
 });
 
-test('Zu wenige passende Aufgabenkarten ergeben eine klare Meldung',()=>{
- assert.throws(()=>planHunt({alter:4,ort:'park',anzahl:6}),/keine passende Teamaufgabe/);
- assert.throws(()=>planHunt({alter:6,ort:'drinnen',anzahl:10}),/Zu wenige passende Aufgaben: 10 benötigt, 6 verfügbar/);
+test('Zu wenige passende Karten ergeben einen Teilplan; keine Treffer eine klare Meldung',()=>{
+ assert.throws(()=>planHunt({alter:4,ort:'park',anzahl:6}),/keine passenden Aufgaben/);
+ const knapp=planHunt({alter:6,ort:'drinnen',anzahl:10});
+ assert.equal(knapp.anzahl,6);
+ assert.equal(knapp.zuTeil,true);
+ assert.equal(knapp.fehlend,4);
+ assert.ok(knapp.aufgaben.some(task=>task.kategorie==='teamwork'));
+ assert.equal(new Set(knapp.aufgaben.map(task=>task.id)).size,knapp.anzahl);
  const standard=planHunt({alter:6,ort:'drinnen',seed:3});
  assert.equal(standard.anzahl,6);
+ assert.equal(standard.zuTeil,true);
+ assert.ok(standard.fehlend>0);
  assert.ok(standard.aufgaben.every(task=>task.orte.includes('drinnen')&&task.alterVon<=6&&task.alterBis>=6));
  assert.equal(standard.gesamtdauerMinuten,standard.aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0));
- assert.throws(()=>planHunt({alter:8,ort:'drinnen'}),/Zu wenige passende Aufgaben: 10 benötigt, 6 verfügbar/);
+ const older=planHunt({alter:8,ort:'drinnen'});
+ assert.equal(older.anzahl,6);
+ assert.equal(older.zuTeil,true);
+ assert.ok(older.fehlend>0);
 });

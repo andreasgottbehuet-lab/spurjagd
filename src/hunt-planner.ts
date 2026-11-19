@@ -1,7 +1,7 @@
 import {PARTY_TASKS,type PartyTask,type PartyTaskPlace} from './party-tasks.ts';
 import {seededRandom} from './puzzles.ts';
 
-export type HuntPlan={aufgaben:PartyTask[];anzahl:number;gesamtdauerMinuten:number};
+export type HuntPlan={aufgaben:PartyTask[];anzahl:number;gesamtdauerMinuten:number;zuTeil:boolean;fehlend:number};
 
 /** Erlaubte Stationszahl: bis 7 Jahre 6-10, ab 8 Jahren 10-15. */
 export function huntRange(alter:number):[number,number]{return alter<=7?[6,10]:[10,15];}
@@ -19,18 +19,17 @@ export function planHunt({alter,ort,seed=0,anzahl}: {alter:number;ort:PartyTaskP
   throw new Error(`Die Anzahl der Stationen muss für Alter ${alter} zwischen ${min} und ${max} liegen.`);
  const [von,bis]=defaultHuntRange(alter,ort);
  const passend=PARTY_TASKS.filter(task=>task.alterVon<=alter&&task.alterBis>=alter&&task.orte.includes(ort));
+ if(!passend.length)throw new Error('Für dieses Alter und diesen Spielort gibt es keine passenden Aufgaben.');
  const team=passend.filter(task=>task.kategorie==='teamwork');
- if(!team.length)throw new Error('Für dieses Alter und diesen Spielort gibt es keine passende Teamaufgabe.');
  const standard=von+Math.floor(random()*(bis-von+1));
- const ziel=anzahl??Math.min(standard,Math.max(min,passend.length));
- if(passend.length<ziel)throw new Error(`Zu wenige passende Aufgaben: ${ziel} benötigt, ${passend.length} verfügbar.`);
+ const ziel=Math.min(anzahl??standard,passend.length);
  const shuffled=[...passend];
  for(let i=shuffled.length-1;i>0;i--){
   const j=Math.floor(random()*(i+1));
   [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
  }
  const ausgewaehlt=shuffled.slice(0,ziel);
- if(!ausgewaehlt.some(task=>task.kategorie==='teamwork'))ausgewaehlt[0]=team[0];
+ if(team.length&&!ausgewaehlt.some(task=>task.kategorie==='teamwork'))ausgewaehlt[0]=team[0];
  const aufgaben:PartyTask[]=[];
  while(ausgewaehlt.length){
   // Häufigste noch verbleibende Kategorie zuerst, aber nicht wie die vorige: vermeidet Wiederholungen, solange möglich.
@@ -42,5 +41,5 @@ export function planHunt({alter,ort,seed=0,anzahl}: {alter:number;ort:PartyTaskP
   });
   aufgaben.push(ausgewaehlt.splice(index<0?0:index,1)[0]);
  }
- return {aufgaben,anzahl:aufgaben.length,gesamtdauerMinuten:aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0)};
+ return {aufgaben,anzahl:aufgaben.length,gesamtdauerMinuten:aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0),zuTeil:aufgaben.length<(anzahl??standard),fehlend:Math.max(0,(anzahl??standard)-aufgaben.length)};
 }
