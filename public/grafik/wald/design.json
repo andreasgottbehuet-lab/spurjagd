@@ -1,0 +1,338 @@
+{
+  "id": "wald",
+  "name": "Wald und Natur",
+  "farben": {
+    "waldgruen": "#4D7A48",
+    "moosgruen": "#91A85A",
+    "erdbraun": "#9B6846",
+    "beerenrot": "#B94F56",
+    "warmgelb": "#E7B653",
+    "kontur": "#163526"
+  },
+  "dateien": [
+    "druck/cover_farbig.png",
+    "druck/cover_schwarzweiss.png",
+    "druck/einladung_farbig.png",
+    "druck/einladung_schwarzweiss.png",
+    "druck/raetselrahmen_farbig.png",
+    "druck/raetselrahmen_schwarzweiss.png",
+    "druck/urkunde_farbig.png",
+    "druck/urkunde_schwarzweiss.png",
+    "icons/fahne_farbig.png",
+    "icons/fahne_farbig.webp",
+    "icons/fahne_schwarzweiss.png",
+    "icons/fahne_schwarzweiss.webp",
+    "icons/fernglas_farbig.png",
+    "icons/fernglas_farbig.webp",
+    "icons/fernglas_schwarzweiss.png",
+    "icons/fernglas_schwarzweiss.webp",
+    "icons/fragezeichen_farbig.png",
+    "icons/fragezeichen_farbig.webp",
+    "icons/fragezeichen_schwarzweiss.png",
+    "icons/fragezeichen_schwarzweiss.webp",
+    "icons/fussabdruecke_farbig.png",
+    "icons/fussabdruecke_farbig.webp",
+    "icons/fussabdruecke_schwarzweiss.png",
+    "icons/fussabdruecke_schwarzweiss.webp",
+    "icons/karte_farbig.png",
+    "icons/karte_farbig.webp",
+    "icons/karte_schwarzweiss.png",
+    "icons/karte_schwarzweiss.webp",
+    "icons/kompass_farbig.png",
+    "icons/kompass_farbig.webp",
+    "icons/kompass_schwarzweiss.png",
+    "icons/kompass_schwarzweiss.webp",
+    "icons/laterne_farbig.png",
+    "icons/laterne_farbig.webp",
+    "icons/laterne_schwarzweiss.png",
+    "icons/laterne_schwarzweiss.webp",
+    "icons/lupe_farbig.png",
+    "icons/lupe_farbig.webp",
+    "icons/lupe_schwarzweiss.png",
+    "icons/lupe_schwarzweiss.webp",
+    "icons/rucksack_farbig.png",
+    "icons/rucksack_farbig.webp",
+    "icons/rucksack_schwarzweiss.png",
+    "icons/rucksack_schwarzweiss.webp",
+    "icons/schatztruhe_farbig.png",
+    "icons/schatztruhe_farbig.webp",
+    "icons/schatztruhe_schwarzweiss.png",
+    "icons/schatztruhe_schwarzweiss.webp",
+    "icons/schluessel_farbig.png",
+    "icons/schluessel_farbig.webp",
+    "icons/schluessel_schwarzweiss.png",
+    "icons/schluessel_schwarzweiss.webp",
+    "icons/uhr_farbig.png",
+    "icons/uhr_farbig.webp",
+    "icons/uhr_schwarzweiss.png",
+    "icons/uhr_schwarzweiss.webp",
+    "web/cover_farbig.webp",
+    "web/cover_schwarzweiss.webp",
+    "web/einladung_farbig.webp",
+    "web/einladung_schwarzweiss.webp",
+    "web/raetselrahmen_farbig.webp",
+    "web/raetselrahmen_schwarzweiss.webp",
+    "web/urkunde_farbig.webp",
+    "web/urkunde_schwarzweiss.webp"
+  ],
+  "bildmasse": {
+    "druck/cover_farbig.png": [
+      1748,
+      2480
+    ],
+    "druck/cover_schwarzweiss.png": [
+      1748,
+      2480
+    ],
+    "druck/einladung_farbig.png": [
+      2480,
+      1748
+    ],
+    "druck/einladung_schwarzweiss.png": [
+      2480,
+      1748
+    ],
+    "druck/raetselrahmen_farbig.png": [
+      1748,
+      2480
+    ],
+    "druck/raetselrahmen_schwarzweiss.png": [
+      1748,
+      2480
+    ],
+    "druck/urkunde_farbig.png": [
+      2480,
+      1748
+    ],
+    "druck/urkunde_schwarzweiss.png": [
+      2480,
+      1748
+    ],
+    "icons/fahne_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/fahne_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/fahne_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/fahne_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/fernglas_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/fernglas_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/fernglas_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/fernglas_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/fragezeichen_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/fragezeichen_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/fragezeichen_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/fragezeichen_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/fussabdruecke_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/fussabdruecke_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/fussabdruecke_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/fussabdruecke_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/karte_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/karte_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/karte_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/karte_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/kompass_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/kompass_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/kompass_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/kompass_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/laterne_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/laterne_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/laterne_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/laterne_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/lupe_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/lupe_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/lupe_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/lupe_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/rucksack_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/rucksack_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/rucksack_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/rucksack_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/schatztruhe_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/schatztruhe_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/schatztruhe_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/schatztruhe_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/schluessel_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/schluessel_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/schluessel_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/schluessel_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "icons/uhr_farbig.png": [
+      1024,
+      1024
+    ],
+    "icons/uhr_farbig.webp": [
+      256,
+      256
+    ],
+    "icons/uhr_schwarzweiss.png": [
+      1024,
+      1024
+    ],
+    "icons/uhr_schwarzweiss.webp": [
+      256,
+      256
+    ],
+    "web/cover_farbig.webp": [
+      874,
+      1240
+    ],
+    "web/cover_schwarzweiss.webp": [
+      874,
+      1240
+    ],
+    "web/einladung_farbig.webp": [
+      1240,
+      874
+    ],
+    "web/einladung_schwarzweiss.webp": [
+      1240,
+      874
+    ],
+    "web/raetselrahmen_farbig.webp": [
+      874,
+      1240
+    ],
+    "web/raetselrahmen_schwarzweiss.webp": [
+      874,
+      1240
+    ],
+    "web/urkunde_farbig.webp": [
+      1240,
+      874
+    ],
+    "web/urkunde_schwarzweiss.webp": [
+      1240,
+      874
+    ]
+  },
+  "hat_transparenz": "ja",
+  "lizenz": "eigene Erstellung"
+}
