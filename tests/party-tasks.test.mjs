@@ -4,11 +4,11 @@ import {PARTY_TASKS} from '../src/party-tasks.ts';
 import {planHunt,huntRange,defaultHuntRange} from '../src/hunt-planner.ts';
 
 test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien und Orte ab',()=>{
- const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kleiderrennen','Turmbau'];
- assert.equal(PARTY_TASKS.length,10);
+ const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kleiderrennen','Turmbau','Regenbogen-Suche','Wolkenbild','Regentropfen-Takt','Regentag-Rätsel','Papierbrücke','Formen in der Stadt','Drei Dinge in einer Farbe','Stadt-Detektive','Bild wie eine Statue','Stadtgeräusche entdecken'];
+ assert.equal(PARTY_TASKS.length,20);
  assert.deepEqual(PARTY_TASKS.map(task=>task.titel),expected);
  for(const key of ['id','titel','regel','alterVon','alterBis','material','dauerMinuten','kategorie','orte'])assert.ok(PARTY_TASKS.every(task=>key in task));
- for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,10);
+ for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,20);
  for(const task of PARTY_TASKS){
   assert.ok(Object.values(task).every(value=>Array.isArray(value)?value.length>0:value!==''&&value!==null&&value!==undefined));
   assert.ok(task.alterVon<=task.alterBis);
@@ -17,6 +17,19 @@ test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien un
  }
  for(const category of ['bewegung','knobeln','natur','teamwork'])assert.ok(PARTY_TASKS.filter(task=>task.kategorie===category).length>=2,category);
  for(const place of ['drinnen','garten','park'])assert.ok(PARTY_TASKS.filter(task=>task.orte.includes(place)).length>=2,place);
+});
+
+test('Für jedes Alter und jeden Ort gibt es passende Karten',()=>{
+ for(let alter=4;alter<=14;alter++)assert.ok(planHunt({alter,ort:'drinnen'}).anzahl>0,`Alter ${alter}`);
+ for(const ort of ['drinnen','garten','park'])assert.ok(planHunt({alter:7,ort}).anzahl>0,ort);
+ const regen=PARTY_TASKS.filter(task=>task.id.startsWith('regen'));
+ assert.equal(regen.length,5);
+ assert.ok(regen.every(task=>task.orte.length===1&&task.orte[0]==='drinnen'));
+ for(const alter of [4,5,6,7,8,9,10,11,12,13,14])assert.ok(regen.some(task=>task.alterVon<=alter&&task.alterBis>=alter),`Regen Alter ${alter}`);
+ const fotos=PARTY_TASKS.filter(task=>task.id.startsWith('stadt')||task.id==='teamfoto');
+ assert.equal(fotos.length,5);
+ assert.ok(fotos.every(task=>task.alterVon>=7&&task.alterVon<=10&&task.alterBis===14&&task.orte.length===1&&task.orte[0]==='park'));
+ assert.ok(fotos.every(task=>/Erlaubnis der Erwachsenen/i.test(task.regel)&&/fremden Personen/i.test(task.regel)));
 });
 
 test('Jagden sind seedfest, orts- und altersgerecht, abwechslungsreich und summieren Dauern',()=>{
@@ -51,19 +64,19 @@ test('Stationszahl bleibt im Altersbereich; drinnen liegt der Standard immer hö
 test('Zu wenige passende Karten ergeben einen Teilplan; keine Treffer eine klare Meldung',()=>{
  assert.throws(()=>planHunt({alter:4,ort:'park',anzahl:6}),/keine passenden Aufgaben/);
  const knapp=planHunt({alter:6,ort:'drinnen',anzahl:10});
- assert.equal(knapp.anzahl,6);
+ assert.equal(knapp.anzahl,8);
  assert.equal(knapp.zuTeil,true);
- assert.equal(knapp.fehlend,4);
+ assert.equal(knapp.fehlend,2);
  assert.ok(knapp.aufgaben.some(task=>task.kategorie==='teamwork'));
  assert.equal(new Set(knapp.aufgaben.map(task=>task.id)).size,knapp.anzahl);
  const standard=planHunt({alter:6,ort:'drinnen',seed:3});
- assert.equal(standard.anzahl,6);
+ assert.equal(standard.anzahl,8);
  assert.equal(standard.zuTeil,true);
- assert.ok(standard.fehlend>0);
+ assert.equal(standard.fehlend,2);
  assert.ok(standard.aufgaben.every(task=>task.orte.includes('drinnen')&&task.alterVon<=6&&task.alterBis>=6));
  assert.equal(standard.gesamtdauerMinuten,standard.aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0));
  const older=planHunt({alter:8,ort:'drinnen'});
- assert.equal(older.anzahl,6);
+ assert.equal(older.anzahl,8);
  assert.equal(older.zuTeil,true);
  assert.ok(older.fehlend>0);
 });
