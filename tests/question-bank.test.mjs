@@ -5,7 +5,13 @@ import {generateCreativeRouteClue,verifyCreativeRouteClue} from '../src/puzzles.
 
 test('Fragenbank: 24 Fragen, alle Fächer, keine Dubletten',()=>{
  assert.equal(QUESTION_BANK.length,24);
- assert.equal(new Set(QUESTION_BANK.map(x=>x.frage)).size,QUESTION_BANK.length);
+ const questionsByText=new Map();
+ for(const question of QUESTION_BANK){
+  const normalized=question.frage.toLowerCase().replace(/\s+/g,' ').trim();
+  questionsByText.set(normalized,[...(questionsByText.get(normalized)??[]),question.frage]);
+ }
+ const duplicates=[...questionsByText.values()].filter(questions=>questions.length>1);
+ assert.deepEqual(duplicates,[],'Doppelte Fragetexte (Groß-/Kleinschreibung und Leerzeichen normalisiert)');
  for(const f of SUBJECTS) assert.ok(QUESTION_BANK.filter(x=>x.fach===f).length>=3,f);
  for(const x of QUESTION_BANK) assert.ok(['older','advanced'].includes(x.altersstufe));
 });
