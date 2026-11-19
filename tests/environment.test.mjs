@@ -81,7 +81,7 @@ test('gespeichertes altes Projekt ohne Umgebung wird als outdoor geladen',()=>{
   memory.set('spurjagd-projects-v1',JSON.stringify([legacy]));
   const [loaded]=loadGames();
   assert.equal(loaded.config.environment,'outdoor');
-  assert.deepEqual(loaded,{...legacy,config:{...legacy.config,environment:'outdoor'}});
+  assert.deepEqual(loaded,{...legacy,config:{...legacy.config,environment:'outdoor',designId:'schlicht'}});
   assert.deepEqual(createPlan(loaded.config),createPlan(legacy.config));
  }finally{
   if(old===undefined)delete globalThis.localStorage;

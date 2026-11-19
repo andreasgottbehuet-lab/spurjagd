@@ -1,6 +1,7 @@
 import { isStationMode } from './station-mode.ts';
 import { SUBJECTS } from './question-bank.ts';
 import type { Environment, GameConfig, Location } from './generator';
+import { designs, type DesignId } from './designs.ts';
 
 export interface SavedGame {
   version: 1;
@@ -31,6 +32,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
   // Older projects have no environment field and are read as 'outdoor'.
   if (p.environment !== undefined && !['outdoor', 'indoor', 'mixed'].includes(String(p.environment))) return false;
+  if (p.designId !== undefined && !designs.some(d => d.id === p.designId)) return false;
   if (p.teamProfiles !== undefined) {
     if (!p.teamProfiles || typeof p.teamProfiles !== 'object' || Array.isArray(p.teamProfiles)) return false;
     const profiles=Object.entries(p.teamProfiles as Record<string,unknown>);
@@ -66,8 +68,8 @@ export function isGameConfig(data: unknown): data is GameConfig {
     && new Set(locations.filter(x=>x.name.trim()).map(x => x.name.trim().toLocaleLowerCase('de'))).size === locations.filter(x=>x.name.trim()).length;
 }
 /** Older projects have no environment field; they load as 'outdoor'. */
-export function normalizeGameConfig(config: GameConfig): GameConfig & { environment: Environment } {
-  return { ...config, environment: config.environment ?? 'outdoor' };
+export function normalizeGameConfig(config: GameConfig & { designId?: DesignId }): GameConfig & { environment: Environment; designId: DesignId } {
+  return { ...config, environment: config.environment ?? 'outdoor', designId: config.designId ?? 'schlicht' };
 }
 export function isSavedGame(raw: unknown): raw is SavedGame {
   if (!raw || typeof raw !== 'object') return false;

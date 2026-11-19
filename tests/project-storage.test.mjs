@@ -63,10 +63,14 @@ test('Gespeicherte Projekte laden gleich; alte und beschädigte Browserdaten sin
  try{
   const project=sample();
   saveGame(project);
-  assert.deepEqual(loadGames(),[{...project,config:{...project.config,environment:'outdoor'}}]);
+  assert.deepEqual(loadGames(),[{...project,config:{...project.config,environment:'outdoor',designId:'schlicht'}}]);
 
-  memory.set('spurjagd-projects-v1',JSON.stringify([project]));
+  saveGame({...project,config:{...project.config,designId:'piraten'}});
+  assert.equal(loadGames()[0].config.designId,'piraten');
+  const legacy={...project,config:{...project.config}}; delete legacy.config.designId;
+  memory.set('spurjagd-projects-v1',JSON.stringify([legacy]));
   assert.equal(loadGames()[0].config.environment,'outdoor');
+  assert.equal(loadGames()[0].config.designId,'schlicht');
 
   memory.set('spurjagd-projects-v1','{kaputt');
   assert.throws(()=>loadGames(),/ungültiges JSON.*Sicherung importieren/);

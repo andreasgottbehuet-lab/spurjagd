@@ -2,7 +2,7 @@
 
 /* Version 0.2: guided planning flow */
 .wizard{padding:34px 5% 55px;max-width:950px;margin:0 auto}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:18px}
 .step-button{background:#e4eae5;border:1px solid #d5e0d8;padding:13px 9px;border-radius:11px;color:#37534b;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:750;cursor:pointer}
 .step-button span{opacity:.6;font-size:12px}
 .step-button.active{background:#17323a;border-color:#17323a;color:white}
@@ -15,6 +15,7 @@
 .location-card label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:13px}
 .location-card input,.location-card textarea{font-weight:400}
 .location-title{display:flex;justify-content:space-between;gap:15px;align-items:center}
+.design-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}.design-tile{display:grid;justify-items:start;gap:10px;padding:12px;border:1px solid #d6e3db;border-radius:12px;background:#f8faf8;color:#17323a;cursor:pointer}.design-tile img{width:120px;max-width:100%;height:auto}.design-tile.selected{outline:3px solid #2e654f}
 .location-title strong{font-size:15px}
 .text-button{border:0;color:#a43d37;background:transparent;cursor:pointer;font-size:13px}
 .text-button:disabled{opacity:.35;cursor:not-allowed}

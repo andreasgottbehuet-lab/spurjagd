@@ -208,11 +208,11 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
-  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
+  }, [players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
   const visitedStationIds = new Set(plan.value?.teams.flatMap(team=>team.stations.map(station=>station.id)) ?? []);
   const printIssues = [
     ...(plan.error ? [plan.error] : []),
@@ -322,6 +322,7 @@ function App() {
     setStartPoint(c.startPoint ?? c.meetingPoint ?? 'Treffpunkt');
     setSameStartFinish(c.finishMode === 'origin');
     setEnvironment(c.environment);
+    setDesignId(c.designId);
     setStationCodes(c.stationCodes ?? {});
     setTeamProfiles(c.teamProfiles ?? {});
     setRouteClueModes(c.routeClueModes ?? {});
@@ -373,7 +374,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -530,6 +531,7 @@ function App() {
               tx('Spielregeln', 'Game rules'),
               tx('Standorte', 'Locations'),
               tx('Spielplan', 'Game plan'),
+              tx('Design wählen', 'Choose a design'),
             ].map((label, i) => <button key={i} className={activeStep === i + 1 ? 'step-button active' : 'step-button'} onClick={() => setActiveStep(i + 1)} aria-current={activeStep === i + 1 ? 'step' : undefined}><span>{String(i + 1).padStart(2, '0')}</span>{label}</button>)}
           </nav>
           <div className="panel wizard-panel">
@@ -632,6 +634,10 @@ function App() {
               </div>
               <button type="button" className="secondary" onClick={()=>setActiveStep(3)}>{tx("Weiter zu den Standorten", "Continue to locations")}</button>
             </>}
+            {activeStep === 5 && <>
+              <div className="section-line"><span className="step">05</span><h2>{tx('Design wählen','Choose a design')}</h2></div>
+              <div className="design-tiles">{designs.map(design=><button type="button" key={design.id} className={designId===design.id?'design-tile selected':'design-tile'} aria-pressed={designId===design.id} onClick={()=>setDesignId(design.id)}><strong>{tx(design.name,({schlicht:'Plain',entdecker:'Explorer',wald:'Forest and nature',detektiv:'Detective',piraten:'Pirates'} as Record<string,string>)[design.id]??design.name)}</strong>{design.id!=='schlicht'&&<img src={`/grafik/${design.id}/cover_farbig.webp`} alt=""/>}</button>)}</div>
+            </>}
             {activeStep === 4 && <>
               <div className="section-line"><span className="step">04</span><h2>{t.route}</h2></div>
               <div className={printIssues.length ? 'preflight-status preflight-blocked' : 'preflight-status preflight-ready'} role="status" aria-live="polite">
@@ -667,7 +673,7 @@ function App() {
                 })}</section>}
                 {(goal==='locks'||goal==='cards') &&<section className="challenge-preview"><h3>{tx("Schlossrätsel – Vorschau für die Spielleitung","Lock puzzles – organizer preview")}</h3>{locations.some(l=>visitedStationIds.has(l.id)&&!validCode(stationCodes[l.id]??"")) && <p className="error">{tx("Bitte für jede besuchte Rätselstation einen dreistelligen Code eingeben.","Enter a three-digit code for every visited puzzle station.")}</p>}{challenges.map(({location,challenge,teamName,teamIndex,ageGroup})=><article className="location-card" key={teamIndex+'-'+location.id}><strong>{tx('Team '+teamName+' · '+ageGroup+' Jahre','Team '+teamLabel(teamName)+' · ages '+ageGroup)} · {location.name}: {challenge.code}</strong>{challenge.puzzles.map((p,i)=><div key={p.id}><p><b>{i+1}. {p.instruction}</b> {p.question}</p>{p.render && <p className="symbols">{p.render.symbol.repeat(p.render.count) || tx("□ (leer)","□ (empty)")}</p>}{p.wordGrid && <div className="wordsearch-grid" aria-label={tx("Buchstabengitter","Letter grid")}>{p.wordGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((letter,c)=><span className="wordsearch-cell" key={c}>{letter}</span>)}</div>)}</div>}{p.arrowGrid && <div className="wordsearch-grid arrow-grid" data-grid-size={p.arrowGrid.rows.length} aria-label={tx("Pfeilpfad-Zahlengitter","Arrow path number grid")}>{p.arrowGrid.rows.map((row,r)=><div className="wordsearch-row" key={r}>{[...row].map((digit,c)=><span className={r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?'wordsearch-cell arrow-start-cell':'wordsearch-cell'} key={c}>{r===p.arrowGrid!.startRow&&c===p.arrowGrid!.startCol?<><small>S</small><strong>{p.arrowGrid!.arrows[0]}</strong></>:digit}</span>)}</div>)}</div>}<p className="helper">{tx("Lösung","Answer")}: {p.expectedDigit} – {p.explanation}</p></div>)}</article>)}</section>}
                 {printManifest && <div className="warnings"><strong>{tx("Druckumfang A5", "A5 print volume")}</strong><p>{en ? <>{printManifest.envelopes.length} envelopes with at least 2 sheets each; {printManifest.taskSheets} child sheets in total, plus {printManifest.organizerSheets} organizer sheets and {printManifest.labelSheets} label sheets. Before automatic A5 packing: {printManifest.minimumSheets} A5 pages. {measuredPrintSummary?.error ? 'A5 measurement: '+measuredPrintSummary.error : measuredPrintSummary ? 'After browser measurement: '+measuredPrintSummary.total+' A5 pages ('+measuredPrintSummary.children+' children, '+measuredPrintSummary.organizer+' organizer, '+measuredPrintSummary.labels+' labels).' : 'The actual page count is measured in the browser on the print page.'}</> : <>{printManifest.envelopes.length} Umschläge mit je mindestens 2 Blättern; zusammen {printManifest.taskSheets} Kinderblätter, dazu {printManifest.organizerSheets} Spielleitungsblätter und {printManifest.labelSheets} Etikettenblätter. Vor der automatischen A5-Verdichtung: {printManifest.minimumSheets} A5-Seiten. {measuredPrintSummary?.error ? 'A5-Messung: '+measuredPrintSummary.error : measuredPrintSummary ? 'Nach der Browsermessung: '+measuredPrintSummary.total+' A5-Seiten ('+measuredPrintSummary.children+' Kinder, '+measuredPrintSummary.organizer+' Spielleitung, '+measuredPrintSummary.labels+' Etiketten).' : 'Die tatsächliche Seitenzahl wird auf der Druckseite im Browser gemessen.'}</>}</p></div>}
-                <fieldset className="cover-options"><legend>{tx('Deckblatt','Cover page')}</legend><label className="radio"><input type="checkbox" checked={coverEnabled} onChange={e=>setCoverEnabled(e.target.checked)}/>{tx('Deckblatt hinzufügen','Add a cover page')}</label>{coverEnabled&&<div className="form-grid"><label>{tx('Design','Design')}<select value={designId} onChange={e=>setDesignId(e.target.value as DesignId)}>{designs.map(design=><option key={design.id} value={design.id}>{design.name}</option>)}</select></label><label>{tx('Tinte','Ink')}<select value={tinte} onChange={e=>setTinte(e.target.value as Tinte)}><option value="farbig">{tx('Farbig','Color')}</option><option value="schwarzweiss">{tx('Schwarzweiß','Black and white')}</option></select></label></div>}</fieldset>
+                <fieldset className="cover-options"><legend>{tx('Deckblatt','Cover page')}</legend><label className="radio"><input type="checkbox" checked={coverEnabled} onChange={e=>setCoverEnabled(e.target.checked)}/>{tx('Deckblatt hinzufügen','Add a cover page')}</label>{coverEnabled&&<div className="form-grid"><label>{tx('Tinte','Ink')}<select value={tinte} onChange={e=>setTinte(e.target.value as Tinte)}><option value="farbig">{tx('Farbig','Color')}</option><option value="schwarzweiss">{tx('Schwarzweiß','Black and white')}</option></select></label></div>}</fieldset>
                 {printManifest && <div className="print-guidance" aria-label={tx('A5-Druckanleitung','A5 print instructions')}>
                   <strong>{tx('Druckeinstellungen und Packen','Print settings and packing')}</strong>
                   <p>{tx('A5 Hochformat · Maßstab 100 % · Browser-Kopf- und Fußzeilen ausschalten. Prüfe die Druckvorschau auf abgeschnittene Texte und zusätzliche Seiten.','A5 portrait · 100% scale · disable browser headers and footers. Check the preview for clipped text and extra pages.')}</p>
@@ -779,7 +785,7 @@ function App() {
             </>}
             <div className="wizard-actions">
               <button type="button" className="secondary" disabled={activeStep===1} onClick={()=>setActiveStep(s=>Math.max(1,s-1))}>← {tx('Zurück','Back')}</button>
-              {activeStep<4 && <button type="button" className="next" onClick={()=>setActiveStep(s=>Math.min(4,s+1))}>{tx('Weiter','Continue')} →</button>}
+              {activeStep<5 && <button type="button" className="next" onClick={()=>setActiveStep(s=>Math.min(5,s+1))}>{tx('Weiter','Continue')} →</button>}
             </div>
           </div>
         </section>
