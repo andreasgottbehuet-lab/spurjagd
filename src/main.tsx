@@ -69,7 +69,7 @@ function App() {
   const [selectedProject, setSelectedProject] = useState('');
 
   const t = messages[lang];
-  const en = lang === 'en';
+  const en = lang !== 'de';
   const tx = (de: string, english: string) => en ? english : de;
   const teamColors: Record<string,string> = {Rot:'Red',Blau:'Blue','Grün':'Green',Gelb:'Yellow',Orange:'Orange',Lila:'Purple','Türkis':'Turquoise',Silber:'Silver',Gold:'Gold',Pink:'Pink'};
   const teamLabel = (name: string) => en ? (teamColors[name] ?? name) : name;

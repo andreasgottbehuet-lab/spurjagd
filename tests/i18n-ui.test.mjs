@@ -7,6 +7,15 @@ const pairs=[...source.matchAll(/\btx\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*,\s*(
 const GERMAN_WORDS=/\b(und|nicht|bitte|der|die|das|ein|eine|mit|für|von|zum|zur|ist|wird|wurde|Projekt|Speichern|Löschen|fehlgeschlagen|gesperrt)\b/i;
 const ENGLISH_WORDS=/\b(the|and|not|please|with|for|of|is|failed|blocked|project|delete|export)\b/i;
 
+test('tx zeigt bei Deutsch deutsche, bei jeder anderen Sprache englische Texte',()=>{
+  const languageCheck=source.match(/const en = (lang[^;]+);/);
+  assert.ok(languageCheck,'Sprachbedingung fehlt');
+  const isEnglish=new Function('lang','return '+languageCheck[1]);
+  const tx=(lang,de,english)=>isEnglish(lang)?english:de;
+  assert.equal(tx('de','Deutsch','English'),'Deutsch');
+  assert.equal(tx('fr','Deutsch','English'),'English');
+});
+
 test('Der Spielhinweis verwendet einfache, verständliche Formulierungen',async()=>{
   const {messages}=await import('../src/i18n.ts');
   assert.equal(messages.de.note,'Rätsel und Blätter zum Ausdrucken können erstellt werden. Bitte prüfe die Wege, begleite die Gruppe und kontrolliere die Zahlenschlösser vor dem Spiel.');
