@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {PARTY_TASKS} from '../src/party-tasks.ts';
+import {planHunt,huntRange,defaultHuntRange} from '../src/hunt-planner.ts';
 
 test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien und Orte ab',()=>{
  const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kleiderrennen','Turmbau'];
@@ -16,4 +17,43 @@ test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien un
  }
  for(const category of ['bewegung','knobeln','natur','teamwork'])assert.ok(PARTY_TASKS.filter(task=>task.kategorie===category).length>=2,category);
  for(const place of ['drinnen','garten','park'])assert.ok(PARTY_TASKS.filter(task=>task.orte.includes(place)).length>=2,place);
+});
+
+test('Jagden sind seedfest, orts- und altersgerecht, abwechslungsreich und summieren Dauern',()=>{
+ for(let seed=0;seed<20;seed++){
+  const input={alter:7,ort:'garten',seed};
+  const plan=planHunt(input);
+  assert.deepEqual(planHunt(input),plan);
+  assert.ok(plan.anzahl>=6&&plan.anzahl<=8,String(plan.anzahl));
+  assert.ok(plan.aufgaben.some(task=>task.kategorie==='teamwork'));
+  assert.equal(new Set(plan.aufgaben.map(task=>task.id)).size,plan.anzahl);
+  assert.ok(plan.aufgaben.every(task=>task.orte.includes('garten')&&task.alterVon<=7&&task.alterBis>=7));
+  assert.ok(plan.aufgaben.every((task,index)=>index===0||task.kategorie!==plan.aufgaben[index-1].kategorie));
+  assert.equal(plan.gesamtdauerMinuten,plan.aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0));
+ }
+ assert.equal(planHunt({alter:6,ort:'garten',seed:3,anzahl:8}).anzahl,8);
+});
+
+test('Stationszahl bleibt im Altersbereich; drinnen liegt der Standard immer höher',()=>{
+ assert.deepEqual(huntRange(7),[6,10]);
+ assert.deepEqual(huntRange(8),[10,15]);
+ for(const alter of [5,7,8,12]){
+  const [min,max]=huntRange(alter),[innenVon,innenBis]=defaultHuntRange(alter,'drinnen');
+  for(const ort of ['garten','park']){
+   const [vonDraussen,bisDraussen]=defaultHuntRange(alter,ort);
+   assert.ok(min<=vonDraussen&&bisDraussen<innenVon&&innenBis<=max);
+  }
+ }
+ assert.throws(()=>planHunt({alter:10,ort:'garten',anzahl:4}),/zwischen 10 und 15/);
+ assert.throws(()=>planHunt({alter:6,ort:'garten',anzahl:11}),/zwischen 6 und 10/);
+});
+
+test('Zu wenige passende Aufgabenkarten ergeben eine klare Meldung',()=>{
+ assert.throws(()=>planHunt({alter:4,ort:'park',anzahl:6}),/keine passende Teamaufgabe/);
+ assert.throws(()=>planHunt({alter:6,ort:'drinnen',anzahl:10}),/Zu wenige passende Aufgaben: 10 benötigt, 6 verfügbar/);
+ const standard=planHunt({alter:6,ort:'drinnen',seed:3});
+ assert.equal(standard.anzahl,6);
+ assert.ok(standard.aufgaben.every(task=>task.orte.includes('drinnen')&&task.alterVon<=6&&task.alterBis>=6));
+ assert.equal(standard.gesamtdauerMinuten,standard.aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0));
+ assert.throws(()=>planHunt({alter:8,ort:'drinnen'}),/Zu wenige passende Aufgaben: 10 benötigt, 6 verfügbar/);
 });
