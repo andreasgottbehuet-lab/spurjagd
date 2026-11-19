@@ -479,10 +479,17 @@ function App() {
       </header>
       <main>
         <section className="hero">
-          <p className="eyebrow">{tx('DEIN SPIEL. DEINE REGELN.', 'YOUR GAME. YOUR RULES.')}</p>
-          <h1>{t.tagline}</h1>
-          <p className="intro">{t.intro}</p>
-          <a href="#planer" className="hero-link">{t.plan} <span aria-hidden="true">↘</span></a>
+          <div className="hero-copy">
+            <p className="eyebrow">{t.heroEyebrow}</p>
+            <h1>{t.heroTitle}</h1>
+            <p className="intro">{t.heroIntro}</p>
+            <a href="#planer" className="hero-link">{t.heroCta} <span aria-hidden="true">↘</span></a>
+          </div>
+          <div className="hero-cards" aria-label={t.heroCards}>
+            <article className="hero-card"><span>01</span><h2>{t.heroCard1}</h2></article>
+            <article className="hero-card"><span>02</span><h2>{t.heroCard2}</h2></article>
+            <article className="hero-card"><span>03</span><h2>{t.heroCard3}</h2></article>
+          </div>
         </section>
         <section className="project-bar" aria-label={tx('Projektverwaltung','Project management')}>
           <div className="project-title">
