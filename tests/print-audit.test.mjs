@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {createPlan} from '../src/generator.ts';
 import {auditPrintPacket,routeClueFor} from '../src/print-audit.ts';
 import {codeForStation,letterFromCode,suggestSolutionWord} from '../src/solution-word.ts';
+import {generateStationChallenge,hashSeed} from '../src/puzzles.ts';
+import {ageLevelFor} from '../src/age-groups.ts';
 
 test('Lösungswort-Modus: druckfähig, Buchstabe je Routenposition, Längenprüfung',()=>{
  const c={...config(),goal:'word',stationCodes:{},solutionWord:'ZOO'};
@@ -31,6 +33,13 @@ const config=()=>({
  stationCodes:{a:'007',b:'120',c:'999',d:'000'},
  routeClueModes:{a:'questions',b:'description',c:'letters',d:'questions'},
  routeClueTexts:{}
+});
+test('Spielplan mit Spiegelschrift-Rätsel besteht die Druckprüfung',()=>{
+ const c={...config(),age:'4–6'};
+ const plan=createPlan(c);
+ const projectId=Array.from({length:200},(_,i)=>'spiegel-'+i).find(id=>c.locations.some(l=>generateStationChallenge(l.id,c.stationCodes[l.id],ageLevelFor(c.age),hashSeed(id)).puzzles.some(p=>p.kind==='mirror')));
+ assert.ok(projectId);
+ assert.deepEqual(auditPrintPacket(c,plan,projectId),[]);
 });
 test('Vollständiges Spielpaket mit unterschiedlichen Gruppenrouten ist druckfähig',()=>{
  const c=config();

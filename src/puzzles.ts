@@ -1,6 +1,6 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
 import {QUESTION_BANK as SUBJECT_BANK,type Subject} from './question-bank.ts';
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'mirror' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
@@ -92,7 +92,7 @@ export function mazePath(rows:string[]):number[]|null {
 }
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
-  if (!['arithmetic','symbols','cipher','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
+  if (!['arithmetic','symbols','cipher','mirror','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
@@ -172,6 +172,10 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
       return {id,kind,instruction:'Finde ein ausgeschriebenes Zahlwort im Buchstabengitter. Die Zahl ist deine Code-Ziffer.',question:age==='young'?'Suche waagerecht oder senkrecht.':age==='middle'?'Suche auch diagonal.':'Suche waagerecht, senkrecht und diagonal – auch rückwärts.',hint:'Die Buchstaben stehen direkt nebeneinander in einer geraden Linie.',explanation:'Das versteckte Wort '+word+' ergibt die Ziffer '+target+'.',expectedDigit:target,wordGrid:{rows,startRow:selected.r,startCol:selected.c,deltaRow:selected.dr,deltaCol:selected.dc,word}};
     }
     throw new Error('Kein eindeutiges Zahlwort-Suchgitter erzeugbar');
+  }
+  if (kind === 'mirror') {
+    const word = DIGIT_WORDS[target];
+    return {id,kind,instruction:age==='young'?'Halte den Zettel vor einen Spiegel.':'',question:word,hint:'',explanation:word+' ergibt die Ziffer '+target+'.',expectedDigit:target};
   }
   if (kind === 'picturesearch') {
     // Bild-Suchrätsel: ein Symbol zählen ODER ein in Symbolen verstecktes Zahlwort lesen (Buchstaben nur in einer Zeile).
@@ -306,6 +310,7 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     const decoded = [...puzzle.question].map(char => ALPHABET[(ALPHABET.indexOf(char) - Number(shift[1]) + 26) % 26]).join('');
     return decoded === DIGIT_WORDS[target];
   }
+  if (puzzle.kind === 'mirror') return puzzle.question === DIGIT_WORDS[target];
   return false;
 }
 export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number, picture = false): StationChallenge {
@@ -314,8 +319,8 @@ export function generateStationChallenge(stationId: string, code: string, age: A
   // Younger children should not need Caesar ciphers to open a lock.
   // Keep three independent digits and the existing deterministic seeds.
   const variants: PuzzleKind[][] = age === 'young'
-    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arithmetic','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath']]
-    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','symbols','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols']];
+    ? [['arithmetic','symbols','arithmetic'],['symbols','wordsearch','arithmetic'],['wordsearch','arithmetic','symbols'],['arrowpath','arithmetic','symbols'],['sequence','symbols','arrowpath'],['mirror','arithmetic','symbols']]
+    : [['arithmetic','symbols','cipher'],['wordsearch','arithmetic','cipher'],['symbols','wordsearch','arithmetic'],['cipher','symbols','wordsearch'],['arrowpath','symbols','arithmetic'],['arithmetic','arrowpath','cipher'],['sequence','wordsearch','cipher'],['cipher','sequence','symbols'],['mirror','symbols','arithmetic']];
   const pictureVariants: PuzzleKind[][] = [['maze','symbols','maze'],['symbols','maze','symbols'],['maze','maze','symbols']];
   const pool=picture?pictureVariants:variants;
   const kinds=pool[hashSeed(projectSeed+':'+stationId+':types')%pool.length];

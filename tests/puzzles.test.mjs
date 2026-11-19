@@ -361,6 +361,26 @@ test('Zahlwort-Suchgitter: alle Ziffern, Altersstufen, deterministisch und über
   assert.equal(verifyDigitPuzzle(tampered),false);
  }
 });
+test('Spiegelschrift nutzt Zahlwörter deterministisch und ist im A5-Drucklayout gespiegelt',()=>{
+ for(let digit=0;digit<10;digit++){
+  const puzzle=generateDigitPuzzle(digit,'mirror','young',digit+20);
+  assert.deepEqual(generateDigitPuzzle(digit,'mirror','young',digit+20),puzzle);
+  assert.equal(puzzle.expectedDigit,digit);
+  assert.equal(puzzle.question,['NULL','EINS','ZWEI','DREI','VIER','FUENF','SECHS','SIEBEN','ACHT','NEUN'][digit]);
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  const expert=generateDigitPuzzle(digit,'mirror','expert',digit+20);
+  assert.deepEqual({...expert,instruction:''},{...puzzle,instruction:''});
+  assert.equal(puzzle.instruction,'Halte den Zettel vor einen Spiegel.');
+  assert.equal(expert.instruction,'');
+ }
+ const challenge=Array.from({length:100},(_,seed)=>generateStationChallenge('mirror','007','young',seed)).find(c=>c.puzzles.some(p=>p.kind==='mirror'));
+ assert.ok(challenge);
+ assert.equal(codeFromPuzzles(challenge),'007');
+ const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ assert.match(source,/p\.kind==='mirror'\?<span className="mirror-word">\{p\.question\}<\/span>/);
+ assert.match(css,/\.mirror-word\s*\{[^}]*transform:\s*scaleX\(-1\)/);
+});
 test('Stationsrätsel mischen Zahlwortgitter und bestehende Rätsel ohne falsche Schlossziffern',()=>{
  let wordsearchCount=0;
  for(let i=0;i<100;i++){
@@ -417,7 +437,7 @@ test('Referenzspiel deckt alle sechs Schlossrätselarten mit gültigen Codes ab'
   assert.equal(challenge.puzzles.length,3);
   challenge.puzzles.forEach(p=>kinds.add(p.kind));
  }
- assert.deepEqual([...kinds].sort(),['arithmetic','arrowpath','cipher','sequence','symbols','wordsearch']);
+ assert.deepEqual([...kinds].sort(),['arithmetic','arrowpath','cipher','mirror','sequence','symbols','wordsearch']);
 });
 
 test('Pfeilpfade haben auch bei schwierigen Seeds immer die volle altersgerechte Länge',()=>{
