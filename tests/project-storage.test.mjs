@@ -56,6 +56,28 @@ test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=
   }
 });
 
+test('Gespeicherte Projekte laden gleich; alte und beschädigte Browserdaten sind klar behandelt',()=>{
+ const old=globalThis.localStorage;
+ const memory=new Map();
+ globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
+ try{
+  const project=sample();
+  saveGame(project);
+  assert.deepEqual(loadGames(),[{...project,config:{...project.config,environment:'outdoor'}}]);
+
+  memory.set('spurjagd-projects-v1',JSON.stringify([project]));
+  assert.equal(loadGames()[0].config.environment,'outdoor');
+
+  memory.set('spurjagd-projects-v1','{kaputt');
+  assert.throws(()=>loadGames(),/ungültiges JSON.*Sicherung importieren/);
+  memory.set('spurjagd-projects-v1',JSON.stringify([{version:99}]));
+  assert.throws(()=>loadGames(),/beschädigt.*Sicherung importieren/);
+ }finally{
+  if(old===undefined)delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
 test('Unvollständige Codes und unbenannte Stationen bleiben als Entwurf speicherbar',()=>{
   const draft=sample();
   draft.config.locations=[{id:'1',name:'',description:''},{id:'2',name:'',description:''}];
