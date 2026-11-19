@@ -534,7 +534,7 @@ export function generateCreativeRouteClue(destination: string, description: stri
   const p=generateRoutePuzzle(answer,seed);
   return {mode:'letters',instruction:p.instruction,question:p.question,hint:p.hint,answer};
  }
- return {mode:'letters',instruction:'Die erste Gruppe zeigt die Zeichen an den Stellen 1, 3, 5 usw.; nach dem senkrechten Strich folgen die Zeichen an den Stellen 2, 4, 6 usw. Setzt die Zeichen abwechselnd zusammen.',question:encodeAlternatingRouteName(answer),hint:'Lest links vom senkrechten Strich ein Zeichen und ergänzt dann rechts das nächste.',answer};
+ return {mode:'letters',instruction:'Setzt die Buchstaben abwechselnd zusammen: erst alle ungeraden, dann alle geraden. Die erste Gruppe zeigt die Zeichen an den Stellen 1, 3, 5 usw.; nach dem senkrechten Strich folgen die Zeichen an den Stellen 2, 4, 6 usw.',question:encodeAlternatingRouteName(answer),hint:'Lest links vom senkrechten Strich ein Zeichen und ergänzt dann rechts das nächste.',answer};
 }
 
 /** Normalize punctuation and repeated spaces before checking whether a clue reveals its answer. */
