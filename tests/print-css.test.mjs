@@ -3,6 +3,30 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createPlan} from '../src/generator.ts';
 import {createPrintManifest} from '../src/print-manifest.ts';
+import { build } from 'esbuild';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+const frameBuild = await build({ entryPoints: [new URL('../src/RiddleFrame.tsx', import.meta.url).pathname], bundle: true, format: 'esm', jsx: 'automatic', packages: 'external', write: false });
+const frameCode = frameBuild.outputFiles[0].text.replace('"react/jsx-runtime"', JSON.stringify(import.meta.resolve('react/jsx-runtime')));
+const { RiddleFrame } = await import('data:text/javascript,' + encodeURIComponent(frameCode));
+
+test('Stationsaufgaben zeigen den Designrahmen ohne Blattabstand zu verändern',()=>{
+ const main=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ for(const [design,path] of [['detektiv','/grafik/detektiv/raetselrahmen_farbig.webp'],['wald','/grafik/wald/raetselrahmen_farbig.webp']]) {
+  const html=renderToStaticMarkup(createElement(RiddleFrame,{designId:design,tinte:'farbig'}));
+  assert.ok(html.includes(path));
+  assert.match(html,/class="print-riddle-frame" aria-hidden="true" style="background-image:url\(/);
+ }
+ assert.equal(renderToStaticMarkup(createElement(RiddleFrame,{designId:'schlicht',tinte:'farbig'})),'');
+ assert.match(main,/className="print-sheet print-child-sheet"[^>]*data-sheet-kind="task">\s*<RiddleFrame designId=\{designId\} tinte=\{tinte\} \/>/);
+ assert.match(main,/data-envelope-id=\{teamIndex\+'-'\+location\.id\} data-sheet-kind="task"/);
+ assert.match(css,/\.print-child-sheet\[data-sheet-kind="task"\]\s*\{position:relative\}/);
+ assert.match(css,/\.print-riddle-frame\s*\{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:0\}/);
+ const sheetRule=css.match(/\.print-child-sheet\[data-sheet-kind="task"\]\s*\{([^}]*)\}/)?.[1]??'';
+ assert.doesNotMatch(sheetRule,/\b(?:padding|margin)\s*:/);
+});
 
 test('A5 print packet is isolated from interactive planner elements',()=>{
  const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');

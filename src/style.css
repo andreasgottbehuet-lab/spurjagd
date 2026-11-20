@@ -63,6 +63,7 @@
 /* Printable scavenger hunt package */
 .print-packet{display:none}
 .print-cover-art{position:relative;height:165mm;max-height:165mm;overflow:hidden}.print-cover-art img{display:block;width:100%;height:165mm;object-fit:contain}.print-cover-title{position:absolute;top:8mm;left:8mm;right:8mm;text-align:center;display:grid;gap:2mm;color:#17303a;font-size:18pt}
+.print-child-sheet[data-sheet-kind="task"]{position:relative}.print-riddle-frame{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:0}.print-child-sheet[data-sheet-kind="task"]>*:not(.print-riddle-frame){position:relative;z-index:1}
 .cover-options{margin:12px 0}.cover-options .form-grid{margin-top:12px}
 .print:disabled{opacity:.45;cursor:not-allowed}
 @media print{

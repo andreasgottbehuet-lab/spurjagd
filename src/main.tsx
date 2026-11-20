@@ -24,6 +24,7 @@ import {applyEnvironmentPreset,siteSafetyCheck} from './environment';
 import './style.css';
 import { isPremiumFeature } from './features';
 import { bildPfad, designs, type DesignId, type Tinte } from './designs';
+import { RiddleFrame } from './RiddleFrame';
 import { planHunt, huntRange, clampHuntCount } from './hunt-planner';
 import type { PartyTaskPlace } from './party-tasks';
 
@@ -770,6 +771,7 @@ function App() {
                     catch {return null;}
                     return <React.Fragment key={teamIndex+'-'+location.id}>
                       <article className="print-sheet print-child-sheet" data-team-color={team.name.toLowerCase()} data-age-group={team.profile?.age??age} data-envelope-id={teamIndex+'-'+location.id} data-sheet-kind="task">
+                        <RiddleFrame designId={designId} tinte={tinte} />
                         <h1>{projectTitle}</h1>
                         <p><strong>Team {team.name} · {team.profile?.age??age} Jahre</strong> · Station {stationIndex+1} von {team.stations.length} · Blatt 1/{1+routeSheetCount(destination,config)}</p>
                         <h2>Stationsaufgaben: {location.name}</h2>
