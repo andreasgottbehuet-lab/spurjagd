@@ -3,6 +3,7 @@ import { SUBJECTS } from './question-bank.ts';
 import type { Environment, GameConfig, Location } from './generator';
 import { designs, type DesignId } from './designs.ts';
 import { createDefaultGameConfig } from './default-game.ts';
+import { clampHuntCount } from './hunt-planner.ts';
 
 export interface SavedGame {
   version: 1;
@@ -31,14 +32,18 @@ export function isGameConfig(data: unknown): data is GameConfig {
   const p = data as Record<string, unknown>;
   const integer = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
   const text = (v: unknown, max: number) => typeof v === 'string' && v.length <= max;
+  const place = (v: unknown) => ['drinnen','garten','park'].includes(String(v));
+  const cards = (v: unknown) => Array.isArray(v) && v.length<=15 && !v.some(task=>{
+    if(!task || typeof task!=='object') return true;
+    const t=task as Record<string,unknown>;
+    return !text(t.id,100) || !text(t.titel,200) || !text(t.regel,2000) || !integer(t.alterVon,4,14) || !integer(t.alterBis,4,14) || !Array.isArray(t.material) || t.material.some(x=>!text(x,100)) || !integer(t.dauerMinuten,1,240) || !['bewegung','knobeln','natur','teamwork'].includes(String(t.kategorie)) || !Array.isArray(t.orte) || t.orte.some(x=>!place(x));
+  });
   if (p.huntGames !== undefined) {
     const h=p.huntGames as Record<string,unknown>;
-    if (!h || typeof h!=='object' || Array.isArray(h) || !integer(h.alter,4,14) || !['drinnen','garten','park'].includes(String(h.ort)) || (h.anzahl!==undefined && !integer(h.anzahl,1,15)) || !Array.isArray(h.aufgaben) || h.aufgaben.length>15 || h.aufgaben.some(task=>{
-      if(!task || typeof task!=='object') return true;
-      const t=task as Record<string,unknown>;
-      return !text(t.id,100) || !text(t.titel,200) || !text(t.regel,2000) || !integer(t.alterVon,4,14) || !integer(t.alterBis,4,14) || !Array.isArray(t.material) || t.material.some(x=>!text(x,100)) || !integer(t.dauerMinuten,1,240) || !['bewegung','knobeln','natur','teamwork'].includes(String(t.kategorie)) || !Array.isArray(t.orte) || t.orte.some(x=>!['drinnen','garten','park'].includes(String(x)));
-    })) return false;
+    if (!h || typeof h!=='object' || Array.isArray(h) || !integer(h.alter,4,14) || !place(h.ort) || (h.anzahl!==undefined && !integer(h.anzahl,1,15)) || !cards(h.aufgaben)) return false;
   }
+  // Ungültige Anzahl wird beim Laden auf die Altersgrenze gesetzt (normalizeGameConfig).
+  if ((p.huntAge!==undefined && !integer(p.huntAge,4,14)) || (p.huntPlace!==undefined && !place(p.huntPlace)) || (p.huntCount!==undefined && (typeof p.huntCount!=='number' || !Number.isFinite(p.huntCount))) || (p.huntCards!==undefined && !cards(p.huntCards))) return false;
   if (!integer(p.players, 1, 100) || !integer(p.groupSize, 1, 10) || !integer(p.durationMinutes, 15, 480)) return false;
   if (!text(p.age, 24) || !(p.age as string).trim() || !['locks', 'word', 'cards'].includes(String(p.goal))) return false;
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
@@ -83,7 +88,7 @@ export function isGameConfig(data: unknown): data is GameConfig {
 }
 /** Older projects have no environment field; they load as 'outdoor'. */
 export function normalizeGameConfig(config: GameConfig & { designId?: DesignId }): GameConfig & { environment: Environment; designId: DesignId } {
-  return { ...config, environment: config.environment ?? 'outdoor', designId: config.designId ?? 'schlicht' };
+  return { ...config, environment: config.environment ?? 'outdoor', designId: config.designId ?? 'schlicht', ...(config.huntCount===undefined?{}:{huntCount:clampHuntCount(config.huntAge??8,config.huntCount)}) };
 }
 export function isSavedGame(raw: unknown): raw is SavedGame {
   if (!raw || typeof raw !== 'object') return false;

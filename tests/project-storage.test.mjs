@@ -52,9 +52,26 @@ test('Spielauswahl und ausgewählte Karten bleiben beim Speichern und Laden erha
   try{
     const project=sample();
     project.config.huntGames={alter:8,ort:'garten',anzahl:1,aufgaben:[{id:'fangen',titel:'Fangen',regel:'Fangt euch.',alterVon:4,alterBis:14,material:[],dauerMinuten:5,kategorie:'bewegung',orte:['garten']}]};
+    project.config.huntAge=7; project.config.huntPlace='park'; project.config.huntCount=8;
+    project.config.huntCards=project.config.huntGames.aufgaben;
     saveGame(project);
     assert.deepEqual(loadGames()[0].config.huntGames,project.config.huntGames);
+    assert.deepEqual([loadGames()[0].config.huntAge,loadGames()[0].config.huntPlace,loadGames()[0].config.huntCount,loadGames()[0].config.huntCards],[7,'park',8,project.config.huntCards]);
+    project.config.huntCount=99; saveGame(project);
+    assert.equal(loadGames()[0].config.huntCount,10);
+    project.config.huntCount=-500; saveGame(project);
+    assert.equal(loadGames()[0].config.huntCount,6);
+    project.config.huntCount=1001; saveGame(project);
+    assert.equal(loadGames()[0].config.huntCount,10);
+    project.config.huntAge=9; project.config.huntCount=2; saveGame(project);
+    assert.equal(loadGames()[0].config.huntCount,10);
+    assert.equal(isGameConfig({...sample().config,huntAge:3}),false);
+    assert.equal(isGameConfig({...sample().config,huntAge:15}),false);
+    assert.equal(isGameConfig({...sample().config,huntPlace:'strand'}),false);
     assert.equal(isGameConfig(sample().config),true);
+    const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+    const deps=source.match(/\}, 650\);\s*return \(\) => window\.clearTimeout\(timeout\);\s*\}, \[([^\]]*)\]/)[1];
+    for(const field of ['huntAge','huntPlace','huntCount','huntCards']) assert.match(deps,new RegExp(`\\b${field}\\b`));
   }finally{globalThis.localStorage=old;}
 });
 test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=>{

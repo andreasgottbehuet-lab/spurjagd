@@ -37,6 +37,10 @@ export interface GameConfig {
   teamProfiles?: Record<string, TeamProfile>;
   /** Spiele und Aufgaben; fehlt in alten Projekten. */
   huntGames?: HuntGames;
+  huntAge?: number;
+  huntPlace?: PartyTaskPlace;
+  huntCount?: number;
+  huntCards?: PartyTask[];
 }
 export type HuntGames = { alter: number; ort: PartyTaskPlace; anzahl?: number; aufgaben: PartyTask[] };
 export interface TeamPlan {

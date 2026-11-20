@@ -24,6 +24,8 @@ import {applyEnvironmentPreset,siteSafetyCheck} from './environment';
 import './style.css';
 import { isPremiumFeature } from './features';
 import { bildPfad, designs, type DesignId, type Tinte } from './designs';
+import { planHunt, huntRange, clampHuntCount } from './hunt-planner';
+import type { PartyTaskPlace } from './party-tasks';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
 
@@ -38,6 +40,11 @@ function App() {
   const [goal, setGoal] = useState<GameGoal>('locks');
   const [solutionWord, setSolutionWord] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([...SUBJECTS]);
+  const [huntAge,setHuntAge]=useState(8);
+  const [huntPlace,setHuntPlace]=useState<PartyTaskPlace>('drinnen');
+  const [huntCount,setHuntCount]=useState<number|undefined>();
+  const [huntCards,setHuntCards]=useState<ReturnType<typeof planHunt>['aufgaben']>([]);
+  const [huntPartial,setHuntPartial]=useState(false);
   const [locations, setLocations] = useState<Location[]>(initialLocations);
   const [puzzleMinutes, setPuzzleMinutes] = useState(10);
   const [walkingMinutes, setWalkingMinutes] = useState(5);
@@ -208,7 +215,7 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
@@ -310,6 +317,7 @@ function App() {
     setSolutionWord(normalizeSolutionWord(String((c as {solutionWord?:unknown}).solutionWord ?? '')).slice(0,MAX_SOLUTION_WORD_LENGTH));
     const savedSubjects=(c as {subjects?:Subject[]}).subjects;
     setSubjects(savedSubjects?.length?[...savedSubjects]:[...SUBJECTS]);
+    setHuntAge(c.huntAge??8); setHuntPlace(c.huntPlace??'drinnen'); setHuntCount(c.huntCount===undefined?undefined:clampHuntCount(c.huntAge??8,c.huntCount)); setHuntCards(c.huntCards??[]); setHuntPartial(false);
     setLocations(c.locations.map(x => ({...x})));
     setHiddenLocations([]);
     setPuzzleMinutes(c.puzzleMinutes);
@@ -374,7 +382,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -532,6 +540,7 @@ function App() {
               tx('Standorte', 'Locations'),
               tx('Spielplan', 'Game plan'),
               tx('Design wählen', 'Choose a design'),
+              tx('Spiele und Aufgaben', 'Games and activities'),
             ].map((label, i) => <button key={i} className={activeStep === i + 1 ? 'step-button active' : 'step-button'} onClick={() => setActiveStep(i + 1)} aria-current={activeStep === i + 1 ? 'step' : undefined}><span>{String(i + 1).padStart(2, '0')}</span>{label}</button>)}
           </nav>
           <div className="panel wizard-panel">
@@ -637,6 +646,17 @@ function App() {
             {activeStep === 5 && <>
               <div className="section-line"><span className="step">05</span><h2>{tx('Design wählen','Choose a design')}</h2></div>
               <div className="design-tiles">{designs.map(design=><button type="button" key={design.id} className={designId===design.id?'design-tile selected':'design-tile'} aria-pressed={designId===design.id} onClick={()=>setDesignId(design.id)}><strong>{tx(design.name,({schlicht:'Plain',entdecker:'Explorer',wald:'Forest and nature',detektiv:'Detective',piraten:'Pirates'} as Record<string,string>)[design.id]??design.name)}</strong>{design.id!=='schlicht'&&<img src={`/grafik/${design.id}/cover_farbig.webp`} alt=""/>}</button>)}</div>
+            </>}
+            {activeStep === 6 && <>
+              <div className="section-line"><span className="step">06</span><h2>{tx('Spiele und Aufgaben','Games and activities')}</h2></div>
+              <div className="form-grid">
+                <label>{tx('Alter','Age')}<select value={huntAge} onChange={e=>{const a=Number(e.target.value);setHuntAge(a);if(huntCount!==undefined)setHuntCount(clampHuntCount(a,huntCount));}}>{Array.from({length:11},(_,i)=>i+4).map(a=><option key={a}>{a}</option>)}</select></label>
+                <label>{tx('Ort','Place')}<select value={huntPlace} onChange={e=>setHuntPlace(e.target.value as PartyTaskPlace)}>{(['drinnen','garten','park'] as const).map((p,i)=><option key={p} value={p}>{tx(p,['indoors','garden','park'][i])}</option>)}</select></label>
+                <label>{tx('Anzahl (optional)','Count (optional)')}<select value={huntCount??''} onChange={e=>setHuntCount(e.target.value===''?undefined:Number(e.target.value))}><option value="">{tx('Vorschlag','Suggested')}</option>{Array.from({length:huntRange(huntAge)[1]-huntRange(huntAge)[0]+1},(_,i)=>huntRange(huntAge)[0]+i).map(n=><option key={n}>{n}</option>)}</select></label>
+              </div>
+              <button type="button" className="secondary" onClick={()=>{const proposal=planHunt({alter:huntAge,ort:huntPlace,anzahl:huntCount});setHuntCards(proposal.aufgaben);setHuntPartial(proposal.zuTeil);}}>{tx('Vorschlag erstellen','Create suggestion')}</button>
+              {huntCards.length>0 && <ul>{huntCards.map(card=><li key={card.id}><strong>{card.titel}</strong> — {card.regel}<p>{tx('Material','Materials')}: {card.material.join(', ')} · {card.dauerMinuten} {tx('Min.','min')} · {tx(({bewegung:'Bewegung',knobeln:'Knobeln',natur:'Natur',teamwork:'Teamarbeit'} as Record<string,string>)[card.kategorie],({bewegung:'Movement',knobeln:'Puzzles',natur:'Nature',teamwork:'Teamwork'} as Record<string,string>)[card.kategorie])}</p><button type="button" className="text-button" onClick={()=>setHuntCards(cards=>cards.filter(c=>c.id!==card.id))}>{tx('Entfernen','Remove')}</button></li>)}</ul>}
+              {huntPartial&&<p className="helper" role="status">{tx('Es gab nicht genug passende Karten','There were not enough suitable cards')}</p>}
             </>}
             {activeStep === 4 && <>
               <div className="section-line"><span className="step">04</span><h2>{t.route}</h2></div>
@@ -785,7 +805,7 @@ function App() {
             </>}
             <div className="wizard-actions">
               <button type="button" className="secondary" disabled={activeStep===1} onClick={()=>setActiveStep(s=>Math.max(1,s-1))}>← {tx('Zurück','Back')}</button>
-              {activeStep<5 && <button type="button" className="next" onClick={()=>setActiveStep(s=>Math.min(5,s+1))}>{tx('Weiter','Continue')} →</button>}
+              {activeStep<6 && <button type="button" className="next" onClick={()=>setActiveStep(s=>Math.min(6,s+1))}>{tx('Weiter','Continue')} →</button>}
             </div>
           </div>
         </section>

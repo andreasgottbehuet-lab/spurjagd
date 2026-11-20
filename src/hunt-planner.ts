@@ -5,6 +5,7 @@ export type HuntPlan={aufgaben:PartyTask[];anzahl:number;gesamtdauerMinuten:numb
 
 /** Erlaubte Stationszahl: bis 7 Jahre 6-10, ab 8 Jahren 10-15. */
 export function huntRange(alter:number):[number,number]{return alter<=7?[6,10]:[10,15];}
+export function clampHuntCount(alter:number,count:number):number{const [min,max]=huntRange(alter);return Math.max(min,Math.min(max,Math.round(count)));}
 
 /** Standardbereich: drinnen die obere, sonst die untere Hälfte des Altersbereichs. */
 export function defaultHuntRange(alter:number,ort:PartyTaskPlace):[number,number]{
