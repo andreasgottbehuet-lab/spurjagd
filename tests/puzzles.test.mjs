@@ -381,6 +381,26 @@ test('Spiegelschrift nutzt Zahlwörter deterministisch und ist im A5-Drucklayout
  assert.match(source,/p\.kind==='mirror'\?<span className="mirror-word">\{p\.question\}<\/span>/);
  assert.match(css,/\.mirror-word\s*\{[^}]*transform:\s*scaleX\(-1\)/);
 });
+test('Fehlersuche hat genau die Zielanzahl, bleibt seedfest und prüft alle Aufgabendaten',()=>{
+ const question='Wie oft kommt das abweichende Zeichen vor?';
+ for(let digit=0;digit<=9;digit++) for(let seed=0;seed<30;seed++){
+  const puzzle=generateDigitPuzzle(digit,'oddone','middle',seed);
+  assert.deepEqual(generateDigitPuzzle(digit,'oddone','middle',seed),puzzle);
+  assert.equal(puzzle.expectedDigit,digit);
+  assert.equal(puzzle.question,question);
+  assert.ok(puzzle.instruction);
+  assert.ok(puzzle.hint);
+  assert.ok(puzzle.explanation);
+  const {items,symbol:ground,replacement}=puzzle.render;
+  assert.equal(items.length,20);
+  assert.notEqual(ground,replacement);
+  assert.ok(items.every(item=>item===ground||item===replacement));
+  assert.equal(items.filter(item=>item===replacement).length,digit);
+  assert.equal(verifyDigitPuzzle(puzzle),true);
+  for(let other=0;other<=9;other++) if(other!==digit)
+   assert.equal(verifyDigitPuzzle({...puzzle,expectedDigit:other}),false);
+ }
+});
 test('Stationsrätsel mischen Zahlwortgitter und bestehende Rätsel ohne falsche Schlossziffern',()=>{
  let wordsearchCount=0;
  for(let i=0;i<100;i++){

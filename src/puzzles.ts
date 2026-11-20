@@ -1,6 +1,6 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
 import {QUESTION_BANK as SUBJECT_BANK,type Subject} from './question-bank.ts';
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'mirror' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'mirror' | 'oddone' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
@@ -10,7 +10,7 @@ export interface Puzzle {
   hint: string;
   explanation: string;
   expectedDigit: number;
-  render?: { symbol: string; count: number; items?: string[]; columns?: number };
+  render?: { symbol: string; count: number; items?: string[]; columns?: number; replacement?: string };
   workedExample?: string;
   wordGrid?: { rows: string[]; startRow: number; startCol: number; deltaRow: number; deltaCol: number; word: string };
   arrowGrid?: {rows:string[]; startRow:number; startCol:number; arrows:string};
@@ -92,7 +92,7 @@ export function mazePath(rows:string[]):number[]|null {
 }
 export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
-  if (!['arithmetic','symbols','cipher','mirror','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
+  if (!['arithmetic','symbols','cipher','mirror','oddone','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
@@ -176,6 +176,13 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   if (kind === 'mirror') {
     const word = DIGIT_WORDS[target];
     return {id,kind,instruction:age==='young'?'Halte den Zettel vor einen Spiegel.':'',question:word,hint:'',explanation:word+' ergibt die Ziffer '+target+'.',expectedDigit:target};
+  }
+  if (kind === 'oddone') {
+    const symbol=SYMBOLS[chooseInt(rng,0,SYMBOLS.length-1)];
+    const replacement=SYMBOLS.filter(candidate=>candidate!==symbol)[chooseInt(rng,0,SYMBOLS.length-2)];
+    const items=Array.from({length:20},(_,i)=>i<target?replacement:symbol);
+    for(let i=items.length-1;i>0;i--){const j=chooseInt(rng,0,i);[items[i],items[j]]=[items[j],items[i]];}
+    return {id,kind,instruction:'Finde das Zeichen, das anders ist, und zähle es.',question:'Wie oft kommt das abweichende Zeichen vor?',hint:'Vergleiche die Zeichen miteinander.',explanation:'Grundzeichen '+symbol+', abweichendes Zeichen '+replacement+': '+target+' Abweichungen.',expectedDigit:target,render:{symbol,count:target,items,replacement}};
   }
   if (kind === 'picturesearch') {
     // Bild-Suchrätsel: ein Symbol zählen ODER ein in Symbolen verstecktes Zahlwort lesen (Buchstaben nur in einer Zeile).
@@ -296,6 +303,11 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     const render=puzzle.render;
     if(!render||render.count!==target||typeof render.symbol!=='string'||!render.symbol.trim()||render.symbol.length>4) return false;
     return render.items===undefined || (render.items.length>=16 && render.items.length<=49 && render.items.every(item=>SYMBOLS.includes(item)) && render.items.filter(item=>item===render.symbol).length===target);
+  }
+  if (puzzle.kind === 'oddone') {
+    const r=puzzle.render,items=r?.items,g=r?.symbol,e=r?.replacement;
+    if(!r||!items||items.length!==20||typeof g!=='string'||typeof e!=='string'||!SYMBOLS.includes(g)||!SYMBOLS.includes(e)||g===e||r.count!==target||items.some(item=>item!==g&&item!==e)) return false;
+    return items.filter(item=>item===e).length===target&&puzzle.question==='Wie oft kommt das abweichende Zeichen vor?'&&!!puzzle.instruction&&!!puzzle.hint&&!!puzzle.explanation;
   }
   if (puzzle.kind === 'arithmetic') {
     const match=puzzle.question.match(/^\d+(?:\s*[+−]\s*\d+){1,6}\s*=\s*\?$/);
