@@ -27,11 +27,18 @@ import { bildPfad, designs, type DesignId, type Tinte } from './designs';
 import { RiddleFrame } from './RiddleFrame';
 import { planHunt, huntRange, clampHuntCount } from './hunt-planner';
 import type { PartyTaskPlace } from './party-tasks';
+import { Datenschutz, Impressum, viewFromHash } from './legal';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
 
 function App() {
   const [lang, setLang] = useState<Language>('de');
+  const [legalView, setLegalView] = useState(() => viewFromHash(location.hash));
+  useEffect(() => {
+    const updateView = () => setLegalView(viewFromHash(location.hash));
+    window.addEventListener('hashchange', updateView);
+    return () => window.removeEventListener('hashchange', updateView);
+  }, []);
   useEffect(()=>{ applyDocumentLanguage(document.documentElement, lang); },[lang]);
   const [players, setPlayers] = useState(12);
   const [groupSize, setGroupSize] = useState(3);
@@ -482,6 +489,11 @@ function App() {
     } catch(e){ setStorageMessage(tx('Import fehlgeschlagen: ', 'Import failed: ')+storageError(e)); }
     finally { if (importRef.current) importRef.current.value=''; }
   };
+  if (legalView !== 'app') return <main className="legal-view">
+    <a href="#">{tx('Zurück','Back')}</a>
+    {legalView === 'impressum' ? <Impressum /> : <Datenschutz />}
+    <footer><a href="#impressum">{tx('Impressum','Legal notice')}</a><a href="#datenschutz">{tx('Datenschutz','Privacy')}</a></footer>
+  </main>;
   return (
     <div className="app">
       <header className="site-header">
@@ -811,7 +823,7 @@ function App() {
             </div>
           </div>
         </section>
-        <footer><span>SPURJAGD · 2026</span><span>{t.privacy}</span></footer>
+        <footer><span>SPURJAGD · 2026</span><span>{t.privacy}</span><nav><a href="#impressum">{tx('Impressum','Legal notice')}</a> · <a href="#datenschutz">{tx('Datenschutz','Privacy')}</a></nav></footer>
       </main>
     </div>
   );

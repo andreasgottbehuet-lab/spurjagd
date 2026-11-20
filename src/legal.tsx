@@ -2,6 +2,12 @@ import { legalData } from './legal-data.ts';
 
 const isEn = () => document.documentElement.lang.toLowerCase().startsWith('en');
 
+export function viewFromHash(hash: string): 'impressum' | 'datenschutz' | 'app' {
+  if (hash.endsWith('#impressum')) return 'impressum';
+  if (hash.endsWith('#datenschutz')) return 'datenschutz';
+  return 'app';
+}
+
 export function Impressum() {
   const en = isEn();
   return <section>
@@ -21,6 +27,6 @@ export function Datenschutz() {
   return <section>
     <h2>{en ? 'Privacy' : 'Datenschutz'}</h2>
     <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
-    <p>Vom Betreiber vor der Veroeffentlichung rechtlich zu pruefen.</p>
+    <p>{en ? 'To be legally reviewed by the operator before publication.' : 'Vom Betreiber vor der Veroeffentlichung rechtlich zu pruefen.'}</p>
   </section>;
 }

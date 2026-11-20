@@ -8,7 +8,13 @@ import { legalData } from '../src/legal-data.ts';
 // Node kann .tsx nicht direkt laden; esbuild (kommt mit vite) übersetzt die Datei.
 const out = await build({ entryPoints: [new URL('../src/legal.tsx', import.meta.url).pathname], bundle: true, format: 'esm', jsx: 'automatic', packages: 'external', write: false });
 const code = out.outputFiles[0].text.replace('"react/jsx-runtime"', JSON.stringify(import.meta.resolve('react/jsx-runtime')));
-const { Impressum, Datenschutz } = await import('data:text/javascript,' + encodeURIComponent(code));
+const { Impressum, Datenschutz, viewFromHash } = await import('data:text/javascript,' + encodeURIComponent(code));
+
+test('viewFromHash erkennt Rechtsansichten und fällt auf die App zurück', () => {
+  assert.equal(viewFromHash('#impressum'), 'impressum');
+  assert.equal(viewFromHash('/app#datenschutz'), 'datenschutz');
+  assert.equal(viewFromHash('#other'), 'app');
+});
 
 for (const lang of ['de', 'en']) {
   test(`Impressum und Datenschutz liefern Text (${lang})`, () => {
@@ -18,6 +24,10 @@ for (const lang of ['de', 'en']) {
     const datenschutz = renderToStaticMarkup(createElement(Datenschutz));
     assert.match(datenschutz, /Cloudflare/);
     assert.match(datenschutz, /localStorage/);
-    assert.match(datenschutz, /Vom Betreiber vor der Veroeffentlichung rechtlich zu pruefen\./);
+    if (lang === 'de') assert.match(datenschutz, /Vom Betreiber vor der Veroeffentlichung rechtlich zu pruefen\./);
+    else {
+      assert.match(datenschutz, /To be legally reviewed by the operator before publication\./);
+      assert.doesNotMatch(datenschutz, /Vom Betreiber vor der Veroeffentlichung rechtlich zu pruefen\./);
+    }
   });
 }
