@@ -4,11 +4,11 @@ import {PARTY_TASKS} from '../src/party-tasks.ts';
 import {planHunt,huntRange,defaultHuntRange} from '../src/hunt-planner.ts';
 
 test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien und Orte ab',()=>{
- const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kissenbild im Team','Blattformen entdecken','Tierisch leise','Was ist größer?','Kleiderrennen','Turmbau','Regenbogen-Suche','Wolkenbild','Regentropfen-Takt','Regentag-Rätsel','Papierbrücke','Formen in der Stadt','Drei Dinge in einer Farbe','Stadt-Detektive','Bild wie eine Statue','Stadtgeräusche entdecken','Ball zur Linie rollen','Bilder nach Farben sortieren','Wohin weht der Wind?','Klatschkette im Team','Morsecode-Knacker','Hindernisstaffel','Pflanzen-Detektive','Knotenwerkstatt','Spiegelbewegung','Geschichte in sechs Sätzen','Bewegung wie eingefroren','Formen-Suchbild','Farbspuren beobachten','Gemeinsam ein Muster'];
- assert.equal(PARTY_TASKS.length,38); // Vier neue Parkkarten ergänzen den Bestand.
+ const expected=['Sackhüpfen','Eierlauf','Stopptanz','Ballonplatzen','Fühlsack','Geräuschequiz','Tierpantomime','Hindernisparcours','Kissenbild im Team','Blattformen entdecken','Tierisch leise','Was ist größer?','Kleiderrennen','Turmbau','Regenbogen-Suche','Wolkenbild','Regentropfen-Takt','Regentag-Rätsel','Papierbrücke','Kisseninsel','Zeitung wird klein','Pflanzen-Detektivblick','Schattentheater im Team','Formen in der Stadt','Drei Dinge in einer Farbe','Stadt-Detektive','Bild wie eine Statue','Stadtgeräusche entdecken','Ball zur Linie rollen','Bilder nach Farben sortieren','Wohin weht der Wind?','Klatschkette im Team','Morsecode-Knacker','Hindernisstaffel','Pflanzen-Detektive','Knotenwerkstatt','Spiegelbewegung','Geschichte in sechs Sätzen','Bewegung wie eingefroren','Formen-Suchbild','Farbspuren beobachten','Gemeinsam ein Muster'];
+ assert.equal(PARTY_TASKS.length,42);
  assert.deepEqual(PARTY_TASKS.map(task=>task.titel),expected);
  for(const key of ['id','titel','regel','alterVon','alterBis','material','dauerMinuten','kategorie','orte'])assert.ok(PARTY_TASKS.every(task=>key in task));
- for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,38);
+ for(const field of ['id','titel'])assert.equal(new Set(PARTY_TASKS.map(task=>task[field])).size,42);
  const kleinkind=PARTY_TASKS.filter(task=>task.id.startsWith('kleinkind-neu-'));
  assert.equal(kleinkind.length,4);
  const aeltere=PARTY_TASKS.filter(task=>task.id.startsWith('aeltere-neu-'));
@@ -32,10 +32,11 @@ test('Party-Aufgabenkarten sind vollständig, eindeutig und decken Kategorien un
 test('Für jedes Alter und jeden Ort gibt es passende Karten',()=>{
  for(let alter=4;alter<=14;alter++)assert.ok(planHunt({alter,ort:'drinnen'}).anzahl>0,`Alter ${alter}`);
  for(const ort of ['drinnen','garten','park'])assert.ok(planHunt({alter:7,ort}).anzahl>0,ort);
- const regen=PARTY_TASKS.filter(task=>task.id.startsWith('regen'));
- assert.equal(regen.length,5);
- assert.ok(regen.every(task=>task.orte.length===1&&task.orte[0]==='drinnen'));
- for(const alter of [4,5,6,7,8,9,10,11,12,13,14])assert.ok(regen.some(task=>task.alterVon<=alter&&task.alterBis>=alter),`Regen Alter ${alter}`);
+ const regen=PARTY_TASKS.filter(task=>task.id.startsWith('regen-'));
+ assert.equal(regen.length,4);
+ assert.deepEqual(regen.map(task=>task.alterVon),[4,6,9,11]);
+ assert.deepEqual(new Set(regen.map(task=>task.kategorie)),new Set(['bewegung','knobeln','natur','teamwork']));
+ assert.ok(regen.every(task=>task.orte.length===1&&task.orte[0]==='drinnen'&&task.alterBis>=task.alterVon+3&&task.alterBis<=14&&task.regel.split(/[.!?]+/).filter(Boolean).length<=2));
  const fotos=PARTY_TASKS.filter(task=>task.id.startsWith('stadt')||task.id==='teamfoto');
  assert.equal(fotos.length,5);
  assert.ok(fotos.every(task=>task.alterVon>=7&&task.alterVon<=10&&task.alterBis===14&&task.orte.length===1&&task.orte[0]==='park'));
@@ -94,7 +95,7 @@ test('Zu wenige passende Karten ergeben einen Teilplan; keine Treffer eine klare
  assert.ok(standard.aufgaben.every(task=>task.orte.includes('drinnen')&&task.alterVon<=6&&task.alterBis>=6));
  assert.equal(standard.gesamtdauerMinuten,standard.aufgaben.reduce((sum,task)=>sum+task.dauerMinuten,0));
  const older=planHunt({alter:8,ort:'drinnen'});
- assert.equal(older.anzahl,11); // Zwei neue Karten passen auch für Alter 8 drinnen.
+ assert.equal(older.anzahl,12); // Die größere Kartenauswahl passt auch für Alter 8 drinnen.
  assert.equal(older.zuTeil,true);
  assert.ok(older.fehlend>0);
 });
