@@ -8,7 +8,7 @@ import { messages, applyDocumentLanguage, type Language } from './i18n';
 import { generateStationChallenge, codeFromPuzzles, hashSeed, validCode, normalizeSolutionWord, type RouteClueMode } from './puzzles';
 import { codeForStation, letterFromCode, suggestSolutionWord, fillMissingPrintValues, LETTER_TABLE, MAX_SOLUTION_WORD_LENGTH } from './solution-word';
 import { AGE_GROUPS, ageLevelFor } from './age-groups';
-import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, saveGame, setActiveGameId, type SavedGame } from './project-storage';
+import { activeGameId, deleteGame, downloadBackup, loadGames, newGameId, normalizeGameConfig, importedProjectTitle, parseGameBackup, projectListChanged, replaceLastGame, resetStorage, saveGame, setActiveGameId, type SavedGame } from './project-storage';
 import { stationModeLine, type StationMode } from './station-mode';
 import { storageErrorText } from './storage-messages';
 import { auditPrintPacket, routeClueFor } from './print-audit';
@@ -794,4 +794,15 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+class AppErrorBoundary extends React.Component<React.PropsWithChildren, { failed: boolean }> {
+  state = { failed: false };
+  componentDidCatch() { this.setState({ failed: true }); }
+  render() {
+    if (this.state.failed) {
+      const en = document.documentElement.lang.toLowerCase().startsWith('en');
+      return <main><h1>{en ? 'Something went wrong' : 'Etwas ist schiefgelaufen'}</h1><button onClick={() => resetStorage(localStorage, () => location.reload())}>{en ? 'Reset saved data and reload' : 'Gespeicherte Daten zurücksetzen und neu laden'}</button></main>;
+    }
+    return this.props.children;
+  }
+}
+createRoot(document.getElementById('root')!).render(<React.StrictMode><AppErrorBoundary><App/></AppErrorBoundary></React.StrictMode>);

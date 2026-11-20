@@ -15,6 +15,11 @@ const KEY = 'spurjagd-projects-v1';
 const ACTIVE = 'spurjagd-active-project-v1';
 const MAX_PROJECTS = 40;
 const MAX_FILE_BYTES = 200_000;
+export function resetStorage(storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>, reload: () => void = () => {}): void {
+  for (const key of [KEY, ACTIVE]) try { const value = storage.getItem(key); if (value !== null) storage.setItem(key + '-sicherung', value); } catch {}
+  for (const key of [KEY, ACTIVE]) try { storage.removeItem(key); } catch {}
+  try { reload(); } catch {}
+}
 /** Only project-list changes invalidate an open editor; active-tab selection alone does not. */
 export function projectListChanged(key:string|null):boolean {
   return key===KEY || key===null;

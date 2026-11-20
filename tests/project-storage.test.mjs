@@ -2,7 +2,20 @@ import {createDefaultGameConfig} from '../src/default-game.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame, backupFilename } from '../src/project-storage.ts';
+import { isGameConfig, isSavedGame, parseGameBackup, serializeGameBackup, saveGame, loadGames, deleteGame, setActiveGameId, activeGameId, importedProjectTitle, projectListChanged, replaceLastGame, backupFilename, resetStorage } from '../src/project-storage.ts';
+
+test('resetStorage entfernt Schlüssel trotz fehlgeschlagener Sicherung und lädt danach neu',()=>{
+ const data=new Map([['spurjagd-projects-v1','projects'],['spurjagd-active-project-v1','active']]);
+ const calls=[];
+ resetStorage({getItem:key=>data.get(key)??null,setItem(){throw Error('quota');},removeItem:key=>{calls.push(key);data.delete(key);}},()=>calls.push('reload'));
+ assert.deepEqual(calls,['spurjagd-projects-v1','spurjagd-active-project-v1','reload']);
+ assert.equal(data.size,0);
+});
+test('resetStorage sichert den zweiten Schlüssel, auch wenn der erste nicht lesbar ist',()=>{
+ const data=new Map([['spurjagd-projects-v1','projects'],['spurjagd-active-project-v1','active']]);
+ resetStorage({getItem:key=>{if(key==='spurjagd-projects-v1')throw Error('kaputt');return data.get(key)??null;},setItem:(key,value)=>data.set(key,value),removeItem:key=>data.delete(key)});
+ assert.deepEqual([...data],[['spurjagd-active-project-v1-sicherung','active']]);
+});
 
 const sample = () => ({
   version:1,
