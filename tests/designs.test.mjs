@@ -18,3 +18,13 @@ test('unbekanntes Design fällt auf schlicht zurück', () => {
   assert.equal(bildPfad('unbekannt', 'cover', 'farbig'), null);
   assert.equal(bildPfad('schlicht', 'cover', 'schwarzweiss'), null);
 });
+
+test('Weltraumdesign liefert vorhandene Druckgrafiken', () => {
+  assert.equal(getDesign('weltraum').id, 'weltraum');
+  for (const bild of ['cover', 'urkunde', 'raetselrahmen', 'einladung']) {
+    for (const tinte of ['farbig', 'schwarzweiss']) {
+      const pfad = bildPfad('weltraum', bild, tinte);
+      assert.ok(pfad && existsSync(new URL(`../public${pfad}`, import.meta.url)), pfad);
+    }
+  }
+});
