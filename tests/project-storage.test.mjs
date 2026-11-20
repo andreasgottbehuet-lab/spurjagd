@@ -67,26 +67,44 @@ test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=
   }
 });
 
-test('Gespeicherte Projekte laden gleich; alte und beschädigte Browserdaten sind klar behandelt',()=>{
+test('Gespeicherte Projekte laden gleich; alte und unbrauchbare Browserdaten werden ergänzt oder gesichert',()=>{
  const old=globalThis.localStorage;
  const memory=new Map();
  globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
  try{
   const project=sample();
   saveGame(project);
-  assert.deepEqual(loadGames(),[{...project,config:{...project.config,environment:'outdoor',designId:'schlicht'}}]);
+  assert.deepEqual(loadGames(),[{...project,config:{...createDefaultGameConfig(),...project.config,environment:'outdoor',designId:'schlicht'}}]);
 
   saveGame({...project,config:{...project.config,designId:'piraten'}});
   assert.equal(loadGames()[0].config.designId,'piraten');
-  const legacy={...project,config:{...project.config}}; delete legacy.config.designId;
+  const legacy={...project,config:{...project.config,players:17}}; delete legacy.config.designId;
   memory.set('spurjagd-projects-v1',JSON.stringify([legacy]));
-  assert.equal(loadGames()[0].config.environment,'outdoor');
-  assert.equal(loadGames()[0].config.designId,'schlicht');
+  delete legacy.config.environment;
+  const loadedLegacy=loadGames()[0];
+  assert.deepEqual(loadedLegacy.config,{...createDefaultGameConfig(),...legacy.config,environment:'outdoor',designId:'schlicht'});
+  assert.equal(loadedLegacy.config.players,17);
 
-  memory.set('spurjagd-projects-v1','{kaputt');
-  assert.throws(()=>loadGames(),/ungültiges JSON.*Sicherung importieren/);
-  memory.set('spurjagd-projects-v1',JSON.stringify([{version:99}]));
-  assert.throws(()=>loadGames(),/beschädigt.*Sicherung importieren/);
+  for(const raw of ['{kaputt','{}']){
+   memory.set('spurjagd-projects-v1',raw);
+   const fallback=loadGames()[0];
+   assert.equal(isGameConfig(fallback.config),true);
+   assert.deepEqual(fallback.config,createDefaultGameConfig());
+   assert.equal(memory.get('spurjagd-projects-v1-sicherung'),raw);
+  }
+ }finally{
+  if(old===undefined)delete globalThis.localStorage;
+  else globalThis.localStorage=old;
+ }
+});
+
+test('Verweigerter localStorage-Zugriff liefert Standarddaten ohne Sicherungsversuch',()=>{
+ const old=globalThis.localStorage;
+ globalThis.localStorage={getItem(){throw new Error('Zugriff verweigert')},setItem(){throw new Error('Zugriff verweigert')}};
+ try{
+  const project=loadGames()[0];
+  assert.equal(isGameConfig(project.config),true);
+  assert.deepEqual(project.config,createDefaultGameConfig());
  }finally{
   if(old===undefined)delete globalThis.localStorage;
   else globalThis.localStorage=old;
@@ -176,7 +194,7 @@ test('Projektwechsel speichert offene Eingaben vor dem Laden eines anderen Entwu
  assert.ok(importer.includes('if(!saveCurrentBeforeSwitch()) return'));
 });
 
-test('Beschädigte Browserdaten dürfen durch Autostart nicht überschrieben werden',()=>{
+test('Beschädigte Browserdaten liefern ein Standardprojekt und werden zuvor gesichert',()=>{
  const source=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
  const init=source.slice(source.indexOf('useEffect(() => {\n    try {\n      const saved = loadGames()'),source.indexOf('useEffect(() => {\n    if (!storageReady)'));
  assert.ok(init.includes('setStorageReady(true)'));
@@ -194,9 +212,8 @@ test('Beschädigte Browserdaten bleiben beim fehlgeschlagenen Speichern unverän
   removeItem:key=>memory.delete(key)
  };
  try{
-  assert.throws(()=>loadGames(),/ungültiges JSON/);
-  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
-  assert.equal(memory.get('spurjagd-projects-v1'),'{kaputt');
+  assert.equal(isGameConfig(loadGames()[0].config),true);
+  assert.equal(memory.get('spurjagd-projects-v1-sicherung'),'{kaputt');
  }finally{
   if(old===undefined) delete globalThis.localStorage;
   else globalThis.localStorage=old;
@@ -223,13 +240,14 @@ test('Bei mehr als vierzig Projekten bleibt der bisherige Datenbestand erhalten'
  }
 });
 
-test('Doppelte Projektkennungen werden beim Laden abgewiesen',()=>{
+test('Doppelte Projektkennungen werden gesichert und durch Standardprojekt ersetzt',()=>{
  const old=globalThis.localStorage;
  const memory=new Map([['spurjagd-projects-v1',JSON.stringify([sample(),sample()])]]);
  globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
  try{
-  assert.throws(()=>loadGames(),/doppelte Projektkennungen/);
-  assert.equal(memory.get('spurjagd-projects-v1'),JSON.stringify([sample(),sample()]));
+  const raw=JSON.stringify([sample(),sample()]);
+  assert.equal(isGameConfig(loadGames()[0].config),true);
+  assert.equal(memory.get('spurjagd-projects-v1-sicherung'),raw);
  }finally{
   if(old===undefined) delete globalThis.localStorage;
   else globalThis.localStorage=old;
@@ -314,10 +332,11 @@ test('Cross-tab edits stop autosave and deletion',()=>{
  assert.ok(source.includes('storageConflict.current || !storageReady'));
 });
 
-test('Empty saved list is corrupt, not first-run',()=>{
+test('Leere gespeicherte Daten werden gesichert und durch Standardprojekt ersetzt',()=>{
  const old=globalThis.localStorage;
- globalThis.localStorage={getItem:()=>'',setItem:()=>{},removeItem:()=>{}};
- try{assert.throws(()=>loadGames(),/leer oder beschädigt/);}
+ const memory=new Map([['spurjagd-projects-v1','']]);
+ globalThis.localStorage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)};
+ try{assert.equal(isGameConfig(loadGames()[0].config),true);assert.equal(memory.get('spurjagd-projects-v1-sicherung'),'');}
  finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });
 
@@ -629,13 +648,13 @@ test('Browser report records an explicit result and timestamps',()=>{
  assert.ok(script.includes('passed: errors.length === 0'));
 });
 
-test('Malformed local project JSON is rejected without being overwritten',()=>{
+test('Malformed local project JSON is backed up before a default project is returned',()=>{
  const previous=globalThis.localStorage;
  const entries=new Map([['spurjagd-projects-v1','{invalid']]);
  globalThis.localStorage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,String(value)),removeItem:key=>entries.delete(key)};
  try{
-  assert.throws(()=>loadGames(),/ungültiges JSON/);
-  assert.throws(()=>saveGame(sample()),/ungültiges JSON/);
+  assert.equal(isGameConfig(loadGames()[0].config),true);
+  assert.equal(entries.get('spurjagd-projects-v1-sicherung'),'{invalid');
   assert.equal(entries.get('spurjagd-projects-v1'),'{invalid');
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });

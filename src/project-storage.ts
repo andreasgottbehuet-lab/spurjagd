@@ -2,6 +2,7 @@ import { isStationMode } from './station-mode.ts';
 import { SUBJECTS } from './question-bank.ts';
 import type { Environment, GameConfig, Location } from './generator';
 import { designs, type DesignId } from './designs.ts';
+import { createDefaultGameConfig } from './default-game.ts';
 
 export interface SavedGame {
   version: 1;
@@ -103,16 +104,34 @@ export function serializeGameBackup(project: SavedGame): string {
   return serialized;
 }
 export function loadGames(): SavedGame[] {
-  const raw = localStorage.getItem(KEY);
+  let raw: string | null;
+  try { raw = localStorage.getItem(KEY); }
+  catch { return [defaultProject()]; }
   if (raw === null) return [];
-  if (raw === '') throw new Error('Lokale Projektdaten sind leer oder beschädigt.');
+  const recover = (): SavedGame[] => {
+    try { localStorage.setItem(`${KEY}-sicherung`, raw!); } catch { /* Keep the default available even if backup storage fails. */ }
+    return [defaultProject()];
+  };
+  if (raw === '') return recover();
   let items: unknown;
   try { items = JSON.parse(raw); }
-  catch { throw new Error('Lokale Projektdaten enthalten ungültiges JSON. Bitte eine Sicherung importieren.'); }
-  if (!Array.isArray(items) || items.length > MAX_PROJECTS || !items.every(isSavedGame)) throw new Error('Lokale Projektdaten sind beschädigt. Bitte eine Sicherung importieren.');
-  const projects=items as SavedGame[];
-  if(new Set(projects.map(project=>project.id)).size!==projects.length) throw new Error('Lokale Projektdaten enthalten doppelte Projektkennungen. Bitte eine Sicherung importieren.');
-  return projects.map(project => ({ ...project, config: normalizeGameConfig(project.config) })).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  catch { return recover(); }
+  if (!Array.isArray(items) || items.length > MAX_PROJECTS) return recover();
+  const projects: SavedGame[] = [];
+  for (const item of items) {
+    if (!item || typeof item !== 'object') return recover();
+    const project = item as Record<string, unknown>;
+    const config = project.config && typeof project.config === 'object' && !Array.isArray(project.config)
+      ? { ...createDefaultGameConfig(), ...project.config } as GameConfig : project.config;
+    const candidate = { ...project, config };
+    if (!isSavedGame(candidate)) return recover();
+    projects.push({ ...candidate, config: normalizeGameConfig(candidate.config) } as SavedGame);
+  }
+  if(new Set(projects.map(project=>project.id)).size!==projects.length) return recover();
+  return projects.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+}
+function defaultProject(): SavedGame {
+  return { version: 1, id: 'default-project', title: 'Neue Schnitzeljagd', updatedAt: new Date().toISOString(), config: createDefaultGameConfig() };
 }
 /** Writes project list and active selection together, restoring both on a partial failure. */
 function persistProjects(next:SavedGame[],active:string|null):void {
