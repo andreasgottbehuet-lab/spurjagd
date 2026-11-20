@@ -25,6 +25,14 @@ export function isGameConfig(data: unknown): data is GameConfig {
   const p = data as Record<string, unknown>;
   const integer = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
   const text = (v: unknown, max: number) => typeof v === 'string' && v.length <= max;
+  if (p.huntGames !== undefined) {
+    const h=p.huntGames as Record<string,unknown>;
+    if (!h || typeof h!=='object' || Array.isArray(h) || !integer(h.alter,4,14) || !['drinnen','garten','park'].includes(String(h.ort)) || (h.anzahl!==undefined && !integer(h.anzahl,1,15)) || !Array.isArray(h.aufgaben) || h.aufgaben.length>15 || h.aufgaben.some(task=>{
+      if(!task || typeof task!=='object') return true;
+      const t=task as Record<string,unknown>;
+      return !text(t.id,100) || !text(t.titel,200) || !text(t.regel,2000) || !integer(t.alterVon,4,14) || !integer(t.alterBis,4,14) || !Array.isArray(t.material) || t.material.some(x=>!text(x,100)) || !integer(t.dauerMinuten,1,240) || !['bewegung','knobeln','natur','teamwork'].includes(String(t.kategorie)) || !Array.isArray(t.orte) || t.orte.some(x=>!['drinnen','garten','park'].includes(String(x)));
+    })) return false;
+  }
   if (!integer(p.players, 1, 100) || !integer(p.groupSize, 1, 10) || !integer(p.durationMinutes, 15, 480)) return false;
   if (!text(p.age, 24) || !(p.age as string).trim() || !['locks', 'word', 'cards'].includes(String(p.goal))) return false;
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;

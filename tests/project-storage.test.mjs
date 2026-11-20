@@ -33,6 +33,17 @@ test('Routendaten und Standorte werden überprüft',()=>{
   assert.equal(isGameConfig({...sample().config,locations:[{id:'1',name:'Wiese',description:''},{id:'1',name:'Wald',description:''}]}),false);
   assert.equal(isGameConfig(sample().config),true);
 });
+test('Spielauswahl und ausgewählte Karten bleiben beim Speichern und Laden erhalten',()=>{
+  const memory=new Map(),old=globalThis.localStorage;
+  globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+  try{
+    const project=sample();
+    project.config.huntGames={alter:8,ort:'garten',anzahl:1,aufgaben:[{id:'fangen',titel:'Fangen',regel:'Fangt euch.',alterVon:4,alterBis:14,material:[],dauerMinuten:5,kategorie:'bewegung',orte:['garten']}]};
+    saveGame(project);
+    assert.deepEqual(loadGames()[0].config.huntGames,project.config.huntGames);
+    assert.equal(isGameConfig(sample().config),true);
+  }finally{globalThis.localStorage=old;}
+});
 test('Mehrere Entwürfe lassen sich speichern, überschreiben und entfernen',()=>{
   const memory = new Map();
   const old = globalThis.localStorage;

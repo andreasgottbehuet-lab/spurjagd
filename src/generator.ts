@@ -1,3 +1,4 @@
+import type { PartyTask, PartyTaskPlace } from './party-tasks.ts';
 export type GameGoal = 'locks' | 'word' | 'cards';
 export type StartMode = 'shared' | 'distributed';
 export type RouteMode = 'same' | 'varied';
@@ -34,7 +35,10 @@ export interface GameConfig {
   stationModes?: Record<string, 'auto' | 'single' | 'group'>;
   /** Future paid option: per-team age and difficulty. Not enabled by default. */
   teamProfiles?: Record<string, TeamProfile>;
+  /** Spiele und Aufgaben; fehlt in alten Projekten. */
+  huntGames?: HuntGames;
 }
+export type HuntGames = { alter: number; ort: PartyTaskPlace; anzahl?: number; aufgaben: PartyTask[] };
 export interface TeamPlan {
   name: string;
   memberCount: number;
