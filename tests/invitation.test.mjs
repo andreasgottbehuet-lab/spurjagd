@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { clampNote, formatInvitationDate, invitationTitle, INVITATION_NOTE_MAX } from '../src/invitation.ts';
+
+const cardBuild = await build({ entryPoints: [new URL('../src/InvitationCard.tsx', import.meta.url).pathname], bundle: true, format: 'esm', jsx: 'automatic', packages: 'external', write: false });
+const cardCode = cardBuild.outputFiles[0].text.replace('"react/jsx-runtime"', JSON.stringify(import.meta.resolve('react/jsx-runtime')));
+const { InvitationCard } = await import('data:text/javascript,' + encodeURIComponent(cardCode));
+
+test('InvitationCard escapes text and selects its design background', () => {
+  const props = { title: '<script>alert(1)</script>', date: '2026-12-24', time: '12:00', place: '<script>alert(1)</script>', note: '<script>alert(1)</script>', tinte: 'farbig', lang: 'de' };
+  const wald = renderToStaticMarkup(createElement(InvitationCard, { ...props, designId: 'wald' }));
+  assert.match(wald, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.doesNotMatch(wald, /<script>/);
+  assert.ok(wald.includes('/grafik/wald/einladung_farbig.webp'));
+  const schlicht = renderToStaticMarkup(createElement(InvitationCard, { ...props, designId: 'schlicht' }));
+  assert.ok(schlicht.includes('invitation-card-plain'));
+  assert.ok(!schlicht.includes('url('));
+});
 
 test('invitationTitle respects touched state and project renames', () => {
   assert.equal(invitationTitle('Projekt', 'Titel', false), 'Projekt');

@@ -66,6 +66,8 @@
 .print-child-sheet[data-sheet-kind="task"]{position:relative}.print-riddle-frame{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:0}.print-child-sheet[data-sheet-kind="task"]>*:not(.print-riddle-frame){position:relative;z-index:1}
 .cover-options{margin:12px 0}.cover-options .form-grid{margin-top:12px}
 .print:disabled{opacity:.45;cursor:not-allowed}
+.invitation-card{position:relative;box-sizing:border-box;width:210mm;max-width:100%;aspect-ratio:210 / 148;padding:9mm;background-size:100% 100%;background-repeat:no-repeat;overflow:hidden}
+.invitation-card-plain{border:2px solid #17323a}
 @media print{
  @page{size:A5 portrait;margin:10mm}
  body{background:#fff;color:#111}
