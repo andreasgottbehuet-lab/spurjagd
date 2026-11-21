@@ -49,6 +49,8 @@ export function isGameConfig(data: unknown): data is GameConfig {
   if (!integer(p.puzzleMinutes, 1, 60) || !integer(p.walkingMinutes, 0, 60) || !integer(p.startFinishMinutes, 0, 120)) return false;
   if (!['shared', 'distributed'].includes(String(p.startMode)) || !['same', 'varied'].includes(String(p.routeMode)) || !['meeting', 'start', 'origin'].includes(String(p.finishMode)) || !text(p.meetingPoint, 80)) return false;
   if (p.startPoint !== undefined && !text(p.startPoint, 80)) return false;
+  for (const field of ['inviteTitle','inviteDate','inviteTime','invitePlace','inviteNote']) if (p[field] !== undefined && typeof p[field] !== 'string') return false;
+  if (p.inviteTitleTouched !== undefined && typeof p.inviteTitleTouched !== 'boolean') return false;
   // Older projects have no environment field and are read as 'outdoor'.
   if (p.environment !== undefined && !['outdoor', 'indoor', 'mixed'].includes(String(p.environment))) return false;
   if (p.designId !== undefined && !designs.some(d => d.id === p.designId)) return false;
@@ -133,6 +135,12 @@ export function loadGames(): SavedGame[] {
     const project = item as Record<string, unknown>;
     const config = project.config && typeof project.config === 'object' && !Array.isArray(project.config)
       ? { ...createDefaultGameConfig(), ...project.config } as GameConfig : project.config;
+    if (config && typeof config === 'object') {
+      for (const field of ['inviteTitle','inviteTitleTouched','inviteDate','inviteTime','invitePlace','inviteNote'] as const) {
+        const value = (project.config as Record<string, unknown>)[field];
+        if (typeof value !== (field === 'inviteTitleTouched' ? 'boolean' : 'string')) delete (config as Record<string, unknown>)[field];
+      }
+    }
     const candidate = { ...project, config };
     if (!isSavedGame(candidate)) return recover();
     projects.push({ ...candidate, config: normalizeGameConfig(candidate.config) } as SavedGame);

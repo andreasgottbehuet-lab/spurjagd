@@ -34,6 +34,23 @@ test('Sichere Backup-Rundreise', () => {
   assert.ok(isSavedGame(original));
   assert.deepEqual(parseGameBackup(serializeGameBackup(original)),original);
 });
+test('Einladungsfelder bleiben optional und werden typgeprüft geladen',()=>{
+ const old=globalThis.localStorage,memory=new Map();
+ globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+ try{
+  const fields={inviteTitle:'Einladung',inviteTitleTouched:true,inviteDate:'2026-12-24',inviteTime:'15:00',invitePlace:'Wiese',inviteNote:'Bis bald'};
+  const project=sample(); project.config={...project.config,...fields}; saveGame(project);
+  const saved=loadGames(); assert.equal(saved.length,1);
+  assert.deepEqual(Object.fromEntries(Object.keys(fields).map(k=>[k,saved[0].config[k]])),fields);
+  memory.clear(); saveGame(sample());
+  const legacy=loadGames(); assert.equal(legacy.length,1);
+  for(const key of Object.keys(fields)) assert.equal(Object.hasOwn(legacy[0].config,key),false);
+  const wrong={inviteTitle:1,inviteTitleTouched:'ja',inviteDate:42,inviteTime:false,invitePlace:{},inviteNote:[]};
+  memory.set('spurjagd-projects-v1',JSON.stringify([{...sample(),config:{...sample().config,...wrong}}]));
+  const malformed=loadGames()[0].config;
+  for(const key of Object.keys(wrong)) assert.equal(Object.hasOwn(malformed,key),false);
+ }finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
+});
 test('Ungültige und falsche Backups werden abgewiesen',()=>{
   assert.throws(()=>parseGameBackup('{"format":"anderes","project":{}}'),/Kein Spurjagd/);
   assert.throws(()=>parseGameBackup('{"format":"spurjagd-backup-1","project":{"version":1}}'),/Ungültige/);

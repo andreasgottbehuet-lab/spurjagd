@@ -41,6 +41,12 @@ export interface GameConfig {
   huntPlace?: PartyTaskPlace;
   huntCount?: number;
   huntCards?: PartyTask[];
+  inviteTitle?: string;
+  inviteTitleTouched?: boolean;
+  inviteDate?: string;
+  inviteTime?: string;
+  invitePlace?: string;
+  inviteNote?: string;
 }
 export type HuntGames = { alter: number; ort: PartyTaskPlace; anzahl?: number; aufgaben: PartyTask[] };
 export interface TeamPlan {
