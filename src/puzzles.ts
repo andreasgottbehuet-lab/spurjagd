@@ -1,6 +1,6 @@
 /** Deterministic, client-side puzzles. No LLM or network calls. */
 import {QUESTION_BANK as SUBJECT_BANK,type Subject} from './question-bank.ts';
-export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'mirror' | 'oddone' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
+export type PuzzleKind = 'arithmetic' | 'symbols' | 'cipher' | 'mirror' | 'foreign' | 'oddone' | 'wordsearch' | 'arrowpath' | 'sequence' | 'maze' | 'picturesearch';
 export type AgeLevel = 'young' | 'early' | 'middle' | 'older' | 'advanced' | 'expert' | 'adult';
 export interface Puzzle {
   id: string;
@@ -24,6 +24,7 @@ export interface StationChallenge {
 }
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const DIGIT_WORDS = ['NULL','EINS','ZWEI','DREI','VIER','FUENF','SECHS','SIEBEN','ACHT','NEUN'] as const;
+const FOREIGN_WORDS: Record<'en'|'fr'|'es', readonly string[]> = {en:['zero','one','two','three','four','five','six','seven','eight','nine'],fr:['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf'],es:['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve']};
 const SYMBOLS = ['★','●','◆','▲','■','♥','✿','☀','⬟','♣'];
 export function hashSeed(text: string): number {
   let hash = 2166136261;
@@ -90,9 +91,9 @@ export function mazePath(rows:string[]):number[]|null {
   for(let i=n*n-1;i>=0;i=parent.get(i)!) path.unshift(i);
   return path;
 }
-export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number): Puzzle {
+export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLevel, seed: number, lang: 'en'|'fr'|'es' = 'en'): Puzzle {
   if (!Number.isInteger(target) || target < 0 || target > 9) throw new Error('Ziffer muss zwischen 0 und 9 liegen');
-  if (!['arithmetic','symbols','cipher','mirror','oddone','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
+  if (!['arithmetic','symbols','cipher','mirror','foreign','oddone','wordsearch','arrowpath','sequence','maze','picturesearch'].includes(kind)) throw new Error('Unbekannte Rätselart');
   const rng = seededRandom(seed);
   const id = kind + '-' + (seed >>> 0).toString(16) + '-' + target;
   if (kind === 'sequence') {
@@ -176,6 +177,15 @@ export function generateDigitPuzzle(target: number, kind: PuzzleKind, age: AgeLe
   if (kind === 'mirror') {
     const word = DIGIT_WORDS[target];
     return {id,kind,instruction:age==='young'?'Halte den Zettel vor einen Spiegel.':'',question:word,hint:'',explanation:word+' ergibt die Ziffer '+target+'.',expectedDigit:target};
+  }
+  if (kind === 'foreign') {
+    const language = Object.prototype.hasOwnProperty.call(FOREIGN_WORDS, lang) ? lang : 'en';
+    const words = FOREIGN_WORDS[language];
+    const plus = rng() < 0.5;
+    const b = chooseInt(rng, 0, plus ? target : 9-target);
+    const a = plus ? target-b : target+b;
+    const question = language==='en' ? `How much is ${words[a]} ${plus?'plus':'minus'} ${words[b]}?` : language==='fr' ? `Combien font ${words[a]} ${plus?'plus':'moins'} ${words[b]} ?` : `¿Cuánto es ${words[a]} ${plus?'más':'menos'} ${words[b]}?`;
+    return {id,kind,instruction:age==='young'?'Löse die Rechnung. Das Ergebnis ist deine Code-Ziffer.':'',question,hint:'Achte auf das Rechenwort und rechne mit den Zahlwörtern.',explanation:`${question} ${words[target]} heißt auf Deutsch ${['null','eins','zwei','drei','vier','fuenf','sechs','sieben','acht','neun'][target]}.`,expectedDigit:target};
   }
   if (kind === 'oddone') {
     const symbol=SYMBOLS[chooseInt(rng,0,SYMBOLS.length-1)];
@@ -323,6 +333,14 @@ export function verifyDigitPuzzle(puzzle: Puzzle): boolean {
     return decoded === DIGIT_WORDS[target];
   }
   if (puzzle.kind === 'mirror') return puzzle.question === DIGIT_WORDS[target];
+  if (puzzle.kind === 'foreign') {
+    for (const [language,words] of Object.entries(FOREIGN_WORDS)) for (const operation of ['plus','minus']) {
+      const template = language==='en' ? `^How much is (${words.join('|')}) ${operation} (${words.join('|')})\\?$` : language==='fr' ? `^Combien font (${words.join('|')}) ${operation==='plus'?'plus':'moins'} (${words.join('|')}) \\?$` : `^¿Cuánto es (${words.join('|')}) ${operation==='plus'?'más':'menos'} (${words.join('|')})\\?$`;
+      const match=puzzle.question.match(new RegExp(template));
+      if(match){const a=words.indexOf(match[1]),b=words.indexOf(match[2]);const result=operation==='plus'?a+b:a-b;return Number.isInteger(puzzle.expectedDigit)&&result===puzzle.expectedDigit;}
+    }
+    return false;
+  }
   return false;
 }
 export function generateStationChallenge(stationId: string, code: string, age: AgeLevel, projectSeed: number, picture = false): StationChallenge {

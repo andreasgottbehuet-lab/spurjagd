@@ -381,6 +381,27 @@ test('Spiegelschrift nutzt Zahlwörter deterministisch und ist im A5-Drucklayout
  assert.match(source,/p\.kind==='mirror'\?<span className="mirror-word">\{p\.question\}<\/span>/);
  assert.match(css,/\.mirror-word\s*\{[^}]*transform:\s*scaleX\(-1\)/);
 });
+test('Fremdsprachige Rechenrätsel entsprechen vollständigen Sprachschablonen und ihrer Zielziffer',()=>{
+ const words={en:['zero','one','two','three','four','five','six','seven','eight','nine'],fr:['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf'],es:['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve']};
+ const german=['null','eins','zwei','drei','vier','fuenf','sechs','sieben','acht','neun'];
+ for(const lang of ['en','fr','es']) for(let digit=0;digit<=9;digit++) for(let seed=0;seed<20;seed++){
+  const p=generateDigitPuzzle(digit,'foreign','middle',seed,lang),again=generateDigitPuzzle(digit,'foreign','middle',seed,lang);
+  assert.deepEqual(p,again);
+  const match=lang==='en'?p.question.match(/^How much is (\w+) (plus|minus) (\w+)\?$/):lang==='fr'?p.question.match(/^Combien font (\S+) (plus|moins) (\S+) \?$/):p.question.match(/^¿Cuánto es (\w+) (más|menos) (\w+)\?$/);
+  assert.ok(match,lang+' complete question template');
+  const a=words[lang].indexOf(match[1]),b=words[lang].indexOf(match[3]);
+  assert.ok(a>=0&&b>=0);
+  assert.equal((match[2]==='plus'||match[2]==='más'?a+b:a-b),digit);
+  const expectedQuestion=lang==='en'?`How much is ${words[lang][a]} ${match[2]} ${words[lang][b]}?`:lang==='fr'?`Combien font ${words[lang][a]} ${match[2]} ${words[lang][b]} ?`:`¿Cuánto es ${words[lang][a]} ${match[2]} ${words[lang][b]}?`;
+  assert.equal(p.question,expectedQuestion);
+  assert.equal(p.expectedDigit,digit);
+  assert.equal(verifyDigitPuzzle(p),true);
+  for(let other=0;other<=9;other++) if(other!==digit) assert.equal(verifyDigitPuzzle({...p,expectedDigit:other}),false);
+  assert.equal(p.explanation,`${expectedQuestion} ${words[lang][digit]} heißt auf Deutsch ${german[digit]}.`);
+ }
+ assert.deepEqual(generateDigitPuzzle(5,'foreign','older',123),generateDigitPuzzle(5,'foreign','older',123,'en'));
+ for(const unknown of ['xx','toString','constructor','__proto__']) assert.deepEqual(generateDigitPuzzle(5,'foreign','older',123,unknown),generateDigitPuzzle(5,'foreign','older',123,'en'));
+});
 test('Fehlersuche hat genau die Zielanzahl, bleibt seedfest und prüft alle Aufgabendaten',()=>{
  const question='Wie oft kommt das abweichende Zeichen vor?';
  for(let digit=0;digit<=9;digit++) for(let seed=0;seed<30;seed++){
