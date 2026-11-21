@@ -28,6 +28,8 @@ import { RiddleFrame } from './RiddleFrame';
 import { planHunt, huntRange, clampHuntCount } from './hunt-planner';
 import type { PartyTaskPlace } from './party-tasks';
 import { Datenschutz, Impressum, viewFromHash } from './legal';
+import { InvitationCard } from './InvitationCard';
+import { invitationTitle } from './invitation';
 
 const initialLocations: Location[] = DEFAULT_LOCATIONS.map(location=>({...location}));
 
@@ -75,6 +77,12 @@ function App() {
   const [nextLocationId, setNextLocationId] = useState(5);
   const [projectId, setProjectId] = useState<string>(() => newGameId());
   const [projectTitle, setProjectTitle] = useState('Meine Schnitzeljagd');
+  const [inviteTitle, setInviteTitle] = useState('');
+  const [inviteTitleTouched, setInviteTitleTouched] = useState(false);
+  const [inviteDate, setInviteDate] = useState('');
+  const [inviteTime, setInviteTime] = useState('');
+  const [invitePlace, setInvitePlace] = useState('');
+  const [inviteNote, setInviteNote] = useState('');
   const [coverEnabled,setCoverEnabled]=useState(false);
   const [designId,setDesignId]=useState<DesignId>('schlicht');
   const [tinte,setTinte]=useState<Tinte>('farbig');
@@ -223,7 +231,7 @@ function App() {
     if (teamTail && tails[teamTail[2]]) return teamLabel(teamTail[1])+': '+tails[teamTail[2]];
     return planText(issue);
   };
-  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards };
+  const config = { players, groupSize, durationMinutes: duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards, inviteTitle, inviteTitleTouched, inviteDate, inviteTime, invitePlace, inviteNote };
   const plan = useMemo(() => {
     try { return { value: createPlan(config), error: '' }; }
     catch (e) { return { value: null, error: e instanceof Error ? e.message : String(e) }; }
@@ -317,6 +325,12 @@ function App() {
     setProjectId(project.id);
     setSelectedProject(project.id);
     setProjectTitle(project.title);
+    setInviteTitle((c as typeof c & {inviteTitle?:string}).inviteTitle??'');
+    setInviteTitleTouched((c as typeof c & {inviteTitleTouched?:boolean}).inviteTitleTouched??false);
+    setInviteDate((c as typeof c & {inviteDate?:string}).inviteDate??'');
+    setInviteTime((c as typeof c & {inviteTime?:string}).inviteTime??'');
+    setInvitePlace((c as typeof c & {invitePlace?:string}).invitePlace??'');
+    setInviteNote((c as typeof c & {inviteNote?:string}).inviteNote??'');
     setPlayers(c.players);
     setGroupSize(c.groupSize);
     setDuration(c.durationMinutes);
@@ -390,7 +404,7 @@ function App() {
       } catch(e) { storageConflict.current=true;setStorageReady(false);setStorageMessage(tx('Automatisches Speichern gestoppt: ', 'Automatic saving stopped: ') + storageError(e) + tx(' Bitte JSON-Sicherung exportieren und die Seite erst danach neu laden.', ' Please export a JSON backup and only then reload the page.')); }
     }, 650);
     return () => window.clearTimeout(timeout);
-  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards]);
+  }, [storageReady, projectId, projectTitle, players, groupSize, duration, age, goal, locations, puzzleMinutes, walkingMinutes, startFinishMinutes, startMode, routeMode, finishMode, meetingPoint, startPoint, environment, designId, stationCodes, routeClueModes, routeClueTexts, routeVariants, stationModes, teamProfiles, solutionWord, subjects, huntAge, huntPlace, huntCount, huntCards, inviteTitle, inviteTitleTouched, inviteDate, inviteTime, invitePlace, inviteNote]);
   // Page lifecycle flush protects the last edits when the tab closes before debounce expires.
   useEffect(() => {
     if(!storageReady || storageConflict.current) return;
@@ -554,6 +568,7 @@ function App() {
               tx('Spielplan', 'Game plan'),
               tx('Design wählen', 'Choose a design'),
               tx('Spiele und Aufgaben', 'Games and activities'),
+              tx('Einladung', 'Invitation'),
             ].map((label, i) => <button key={i} className={activeStep === i + 1 ? 'step-button active' : 'step-button'} onClick={() => setActiveStep(i + 1)} aria-current={activeStep === i + 1 ? 'step' : undefined}><span>{String(i + 1).padStart(2, '0')}</span>{label}</button>)}
           </nav>
           <div className="panel wizard-panel">
@@ -670,6 +685,17 @@ function App() {
               <button type="button" className="secondary" onClick={()=>{const proposal=planHunt({alter:huntAge,ort:huntPlace,anzahl:huntCount});setHuntCards(proposal.aufgaben);setHuntPartial(proposal.zuTeil);}}>{tx('Vorschlag erstellen','Create suggestion')}</button>
               {huntCards.length>0 && <ul>{huntCards.map(card=><li key={card.id}><strong>{card.titel}</strong> — {card.regel}<p>{tx('Material','Materials')}: {card.material.join(', ')} · {card.dauerMinuten} {tx('Min.','min')} · {tx(({bewegung:'Bewegung',knobeln:'Knobeln',natur:'Natur',teamwork:'Teamarbeit'} as Record<string,string>)[card.kategorie],({bewegung:'Movement',knobeln:'Puzzles',natur:'Nature',teamwork:'Teamwork'} as Record<string,string>)[card.kategorie])}</p><button type="button" className="text-button" onClick={()=>setHuntCards(cards=>cards.filter(c=>c.id!==card.id))}>{tx('Entfernen','Remove')}</button></li>)}</ul>}
               {huntPartial&&<p className="helper" role="status">{tx('Es gab nicht genug passende Karten','There were not enough suitable cards')}</p>}
+            </>}
+            {activeStep === 7 && <>
+              <div className="section-line"><span className="step">07</span><h2>{lang==='fr'?'Invitation':tx('Einladung','Invitation')}</h2></div>
+              <div className="form-grid">
+                <label>{lang==='fr'?'Titre':tx('Titel','Title')}<input value={invitationTitle(projectTitle,inviteTitle,inviteTitleTouched)} onChange={e=>{setInviteTitle(e.target.value);setInviteTitleTouched(true);}} /></label>
+                <label>{lang==='fr'?'Date':tx('Datum','Date')}<input type="date" value={inviteDate} onChange={e=>setInviteDate(e.target.value)} /></label>
+                <label>{lang==='fr'?'Heure':tx('Uhrzeit','Time')}<input type="time" value={inviteTime} onChange={e=>setInviteTime(e.target.value)} /></label>
+                <label>{lang==='fr'?'Lieu':tx('Ort','Place')}<input value={invitePlace} onChange={e=>setInvitePlace(e.target.value)} /></label>
+                <label>{lang==='fr'?'Note':tx('Hinweis','Note')}<input maxLength={120} value={inviteNote} onChange={e=>setInviteNote(e.target.value.slice(0,120))} /></label>
+              </div>
+              <InvitationCard title={invitationTitle(projectTitle,inviteTitle,inviteTitleTouched)} date={inviteDate} time={inviteTime} place={invitePlace} note={inviteNote} designId={designId} tinte={tinte} lang={lang} />
             </>}
             {activeStep === 4 && <>
               <div className="section-line"><span className="step">04</span><h2>{t.route}</h2></div>
